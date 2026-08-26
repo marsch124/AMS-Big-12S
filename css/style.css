@@ -965,3 +965,164 @@ button { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* ─────────────────────────────────────────────── step four's inventory ──
+   Two views of the same rows. Filling one in on a phone wants the fields
+   stacked; reading them back wants them side by side, which is the shape the
+   book prints. The grid scrolls inside its own box so the page never does. */
+
+.inv-table { margin: 1.6rem 0 2rem; }
+
+.inv-head { margin-bottom: .6rem; }
+
+.inv-title {
+  font-size: 1.02rem;
+  margin: 0 0 .2rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.inv-count {
+  font-size: .74rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--bg-sunken);
+  border-radius: 999px;
+  padding: .1rem .5rem;
+}
+
+.inv-prompt {
+  margin: 0;
+  font-size: .86rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+
+.inv-views {
+  display: flex;
+  gap: .35rem;
+  margin: .7rem 0;
+}
+
+.inv-view {
+  flex: 1;
+  font: inherit;
+  font-size: .84rem;
+  padding: .38rem .6rem;
+  border: 1px solid var(--rule);
+  background: var(--bg-raised);
+  color: var(--text-dim);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.inv-view.is-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-on);
+  font-weight: 600;
+}
+
+.inv-cards { display: flex; flex-direction: column; gap: .6rem; }
+
+.inv-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  padding: .8rem .9rem .8rem 2.1rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.inv-n {
+  position: absolute;
+  left: .7rem;
+  top: .8rem;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.inv-field { display: flex; flex-direction: column; gap: .1rem; }
+
+.inv-label {
+  font-size: .7rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.inv-value {
+  font-size: .92rem;
+  line-height: 1.45;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.inv-field.is-blank .inv-value { color: var(--text-dim); font-style: italic; }
+
+.inv-gridwrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--bg-raised);
+}
+
+.inv-grid {
+  border-collapse: collapse;
+  min-width: 100%;
+  font-size: .85rem;
+}
+
+.inv-grid th,
+.inv-grid td {
+  text-align: left;
+  vertical-align: top;
+  padding: .55rem .7rem;
+  border-bottom: 1px solid var(--rule);
+  min-width: 8.5rem;
+  max-width: 13rem;
+  line-height: 1.4;
+}
+
+.inv-grid th {
+  font-size: .7rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 600;
+  background: var(--bg-sunken);
+  position: sticky;
+  top: 0;
+}
+
+.inv-grid tbody tr { cursor: pointer; }
+.inv-grid tbody tr:last-child td { border-bottom: 0; }
+.inv-grid tbody tr:active { background: var(--bg-sunken); }
+
+.inv-input { display: block; margin-bottom: .9rem; }
+.inv-input .hint { margin: .1rem 0 .3rem; }
+
+/* The row editor carries up to four fields, so it needs more room than the
+   note sheet and must stay scrollable on a short screen. */
+.sheet-tall { max-height: 88vh; overflow-y: auto; }
+
+/* An empty table sits inside a page, not on one of its own, so it does not get
+   the full-screen empty state's height. */
+.inv-cards .empty {
+  margin: .2rem 0 .6rem;
+  padding: .6rem .2rem;
+  text-align: left;
+  font-size: .88rem;
+}
+
+.inv-scrollhint { margin: .4rem 0 0; font-size: .78rem; }

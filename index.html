@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=9">
+<link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
 
@@ -163,6 +163,12 @@
           <button class="btn btn-quiet btn-small" id="step-show-hidden" hidden></button>
         </div>
         <div class="hiddenlist" id="step-hidden-questions" hidden></div>
+
+        <div id="step-work" hidden>
+          <h2 class="section-heading" id="step-work-heading">The work of this step</h2>
+          <p class="hint" id="step-work-intro"></p>
+          <div id="step-work-body"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -384,6 +390,27 @@
 
       <h2 class="section-heading">Version history</h2>
       <div class="panel panel-flush">
+
+        <details class="disclosure">
+          <summary><span>The step four inventory</span><span class="ver-tag">1.11</span></summary>
+          <div class="disclosure-body">
+            <p>Step four's three tables are built, and you can fill them in.</p>
+            <ul>
+              <li><strong>Resentments, fears and conduct</strong>, with the columns the book
+                  names — who you are resentful at, the cause, what it affects, and where you
+                  were to blame.</li>
+              <li>Two views of the same rows. <strong>Fill in</strong> gives you one entry at a
+                  time with its fields stacked, which is the view to dictate into.
+                  <strong>Read back</strong> lays them out side by side the way the book prints
+                  its example, scrolling sideways inside its own box so the page never does.</li>
+              <li><strong>Copy this table</strong> puts a whole pass into plain text, to take to
+                  whoever is going to hear it.</li>
+              <li>An entry with nothing in it is refused rather than saved, and every row is
+                  carried by the backup — so the inventory moves to a new phone with
+                  everything else.</li>
+            </ul>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Steps four and five</span><span class="ver-tag">1.10</span></summary>
@@ -730,6 +757,18 @@
   </div>
 </div>
 
+<div class="sheet sheet-tall" id="inv-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title" id="inv-sheet-title">Entry</h2>
+  <p class="sheet-quote" id="inv-sheet-prompt"></p>
+  <div id="inv-sheet-fields"></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="inv-save">Save</button>
+    <button class="btn btn-danger" id="inv-delete" hidden>Delete</button>
+    <button class="btn btn-quiet" id="inv-cancel">Cancel</button>
+  </div>
+</div>
+
 <div class="sheet" id="type-sheet" hidden>
   <div class="sheet-handle"></div>
   <h2 class="sheet-title">Text options</h2>
@@ -757,10 +796,10 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="js/parser.js?v=1"></script>
-<script src="js/db.js?v=1"></script>
-<script src="js/store.js?v=6"></script>
-<script src="js/backup.js?v=2"></script>
-<script src="js/ui.js?v=8"></script>
+<script src="js/db.js?v=2"></script>
+<script src="js/store.js?v=7"></script>
+<script src="js/backup.js?v=3"></script>
+<script src="js/ui.js?v=9"></script>
 <script src="js/app.js?v=5"></script>
 </body>
 </html>

@@ -532,6 +532,259 @@
         });
 
         renderStepQuestions(step);
+        renderStepWork(step);
+    }
+
+    /* ---------------------------------------------------- the step's work */
+
+    // Which view each table is showing, by table id. Filling and reading back
+    // are different jobs: the first wants one entry at a time, the second wants
+    // them side by side.
+    var invView = {};
+
+    function renderStepWork(step) {
+        var work = Store.workFor(step);
+        var holder = $('step-work');
+        var body = $('step-work-body');
+
+        // Only step four's tables are built. The other kinds are declared in the
+        // data and still have no renderer, so their steps show no work section
+        // rather than an empty one.
+        if (!work || work.kind !== 'inventory-tables') {
+            holder.hidden = true;
+            body.innerHTML = '';
+            return;
+        }
+
+        holder.hidden = false;
+        $('step-work-intro').textContent = work.intro || '';
+        body.innerHTML = '';
+
+        (work.tables || []).forEach(function (table) {
+            body.appendChild(renderInvTable(step, table));
+        });
+    }
+
+    function renderInvTable(step, table) {
+        var rows = Store.inventoryFor(step.id, table.id);
+        var view = invView[table.id] || 'fill';
+
+        var box = document.createElement('section');
+        box.className = 'inv-table';
+
+        var head = document.createElement('div');
+        head.className = 'inv-head';
+        head.innerHTML =
+            '<h3 class="inv-title">' + escapeHtml(table.title) +
+                '<span class="inv-count">' + rows.length + '</span></h3>' +
+            '<p class="inv-prompt">' + escapeHtml(table.prompt || '') + '</p>';
+        box.appendChild(head);
+
+        // Nothing to review until something has been written.
+        if (rows.length) {
+            var toggle = document.createElement('div');
+            toggle.className = 'inv-views';
+            [['fill', 'Fill in'], ['review', 'Read back']].forEach(function (pair) {
+                var b = document.createElement('button');
+                b.className = 'inv-view' + (view === pair[0] ? ' is-on' : '');
+                b.textContent = pair[1];
+                b.addEventListener('click', function () {
+                    invView[table.id] = pair[0];
+                    renderStepWork(step);
+                });
+                toggle.appendChild(b);
+            });
+            box.appendChild(toggle);
+        }
+
+        box.appendChild(view === 'review' && rows.length
+            ? invReview(step, table, rows)
+            : invCards(step, table, rows));
+
+        var actions = document.createElement('div');
+        actions.className = 'btn-row';
+        var add = document.createElement('button');
+        add.className = 'btn btn-quiet btn-small';
+        add.textContent = rows.length ? 'Add another' : 'Add the first';
+        add.addEventListener('click', function () { openInvSheet(step, table, null); });
+        actions.appendChild(add);
+
+        if (rows.length) {
+            var copy = document.createElement('button');
+            copy.className = 'btn btn-quiet btn-small';
+            copy.textContent = 'Copy this table';
+            copy.addEventListener('click', function () {
+                var text = Store.inventoryAsText(step, table.id);
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text)
+                        .then(function () { toast(table.title + ' copied'); })
+                        .catch(function () { toast('Could not copy'); });
+                } else { toast('Copying is not available here'); }
+            });
+            actions.appendChild(copy);
+        }
+        box.appendChild(actions);
+        return box;
+    }
+
+    // One entry at a time, its fields stacked. This is the view you dictate into.
+    function invCards(step, table, rows) {
+        var list = document.createElement('div');
+        list.className = 'inv-cards';
+
+        if (!rows.length) {
+            var empty = document.createElement('p');
+            empty.className = 'empty';
+            empty.textContent = 'Nothing here yet.';
+            list.appendChild(empty);
+            return list;
+        }
+
+        rows.forEach(function (row, index) {
+            var card = document.createElement('button');
+            card.className = 'inv-card';
+            var parts = ['<span class="inv-n">' + (index + 1) + '</span>'];
+            table.columns.forEach(function (col) {
+                var value = (row.values && row.values[col.id]) || '';
+                parts.push(
+                    '<span class="inv-field' + (value ? '' : ' is-blank') + '">' +
+                        '<span class="inv-label">' + escapeHtml(col.label) + '</span>' +
+                        '<span class="inv-value">' +
+                            (value ? escapeHtml(value) : 'Left blank') + '</span>' +
+                    '</span>');
+            });
+            card.innerHTML = parts.join('');
+            card.addEventListener('click', function () { openInvSheet(step, table, row); });
+            list.appendChild(card);
+        });
+        return list;
+    }
+
+    // The same rows side by side, the way the book prints its example. Scrolls
+    // sideways inside its own box so the page itself never does.
+    function invReview(step, table, rows) {
+        var wrap = document.createElement('div');
+        wrap.className = 'inv-gridwrap';
+
+        var grid = document.createElement('table');
+        grid.className = 'inv-grid';
+
+        var thead = document.createElement('thead');
+        var hrow = document.createElement('tr');
+        table.columns.forEach(function (col) {
+            var th = document.createElement('th');
+            th.textContent = col.label;
+            hrow.appendChild(th);
+        });
+        thead.appendChild(hrow);
+        grid.appendChild(thead);
+
+        var tbody = document.createElement('tbody');
+        rows.forEach(function (row) {
+            var tr = document.createElement('tr');
+            table.columns.forEach(function (col) {
+                var td = document.createElement('td');
+                td.textContent = (row.values && row.values[col.id]) || '—';
+                tr.appendChild(td);
+            });
+            tr.addEventListener('click', function () { openInvSheet(step, table, row); });
+            tbody.appendChild(tr);
+        });
+        grid.appendChild(tbody);
+        wrap.appendChild(grid);
+
+        // Say so only when a column is genuinely off-screen. Measured after
+        // layout for the same reason the notes fold is measured: the number of
+        // columns does not tell you whether they fit this phone.
+        var hint = document.createElement('p');
+        hint.className = 'hint inv-scrollhint';
+        hint.textContent = 'Scroll sideways for the rest of the columns.';
+        hint.hidden = true;
+        requestAnimationFrame(function () {
+            hint.hidden = wrap.scrollWidth - wrap.clientWidth <= 2;
+        });
+
+        var holder = document.createElement('div');
+        holder.appendChild(wrap);
+        holder.appendChild(hint);
+        return holder;
+    }
+
+    function openInvSheet(step, table, existing) {
+        $('inv-sheet-title').textContent =
+            (existing ? 'Edit' : 'New') + ' — ' + table.title;
+        $('inv-sheet-prompt').textContent = table.prompt || '';
+
+        var fields = $('inv-sheet-fields');
+        fields.innerHTML = '';
+        var inputs = {};
+
+        table.columns.forEach(function (col) {
+            var wrap = document.createElement('label');
+            wrap.className = 'inv-input';
+            var label = document.createElement('span');
+            label.className = 'sheet-label';
+            label.textContent = col.label;
+            wrap.appendChild(label);
+
+            if (col.hint) {
+                var hint = document.createElement('span');
+                hint.className = 'hint';
+                hint.textContent = col.hint;
+                wrap.appendChild(hint);
+            }
+
+            var input = document.createElement('textarea');
+            input.className = 'note-input';
+            input.rows = 2;
+            input.value = (existing && existing.values && existing.values[col.id]) || '';
+            wrap.appendChild(input);
+            inputs[col.id] = input;
+            fields.appendChild(wrap);
+        });
+
+        var del = $('inv-delete');
+        del.hidden = !existing;
+        del.onclick = function () {
+            if (!existing) return;
+            Store.deleteInventoryRow(existing.id).then(function () {
+                closeSheets();
+                renderStepWork(step);
+                toast('Entry deleted');
+            });
+        };
+
+        $('inv-save').onclick = function () {
+            var values = {};
+            Object.keys(inputs).forEach(function (key) { values[key] = inputs[key].value; });
+
+            if (Store.rowIsEmpty(values)) {
+                // Nothing was typed. Saving would leave a blank card in a list
+                // whose whole point is evidence.
+                if (existing) { closeSheets(); return; }
+                toast('Nothing to save yet');
+                return;
+            }
+
+            Store.saveInventoryRow({
+                id: existing ? existing.id : null,
+                createdAt: existing ? existing.createdAt : null,
+                stepId: step.id,
+                tableId: table.id,
+                values: values
+            }).then(function () {
+                closeSheets();
+                renderStepWork(step);
+                toast(existing ? 'Entry updated' : 'Entry added');
+            });
+        };
+
+        $('inv-cancel').onclick = closeSheets;
+        openSheet('inv-sheet');
+        setTimeout(function () {
+            var first = fields.querySelector('textarea');
+            if (first) first.focus();
+        }, 120);
     }
 
     function answerBlock(answer, isOlder) {
@@ -1075,7 +1328,7 @@
     }
 
     function closeSheets() {
-        ['para-sheet', 'note-sheet', 'type-sheet', 'paste-sheet'].forEach(function (id) {
+        ['para-sheet', 'note-sheet', 'type-sheet', 'paste-sheet', 'inv-sheet'].forEach(function (id) {
             $(id).hidden = true;
         });
         $('sheet-backdrop').hidden = true;

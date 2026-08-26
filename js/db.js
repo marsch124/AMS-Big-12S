@@ -8,12 +8,15 @@
     'use strict';
 
     var DB_NAME = 'ams-big-12s';
-    var DB_VERSION = 1;
+    var DB_VERSION = 2;
 
     var STORE_META = 'meta';
     var STORE_BOOK = 'book';
     var STORE_NOTES = 'notes';
     var STORE_BOOKMARKS = 'bookmarks';
+    // Step four's inventory rows. Structured records rather than prose, so they
+    // are kept apart from the note store instead of being bent into its shape.
+    var STORE_INVENTORY = 'inventory';
 
     var dbPromise = null;
 
@@ -39,6 +42,12 @@
                 if (!db.objectStoreNames.contains(STORE_BOOKMARKS)) {
                     var bookmarks = db.createObjectStore(STORE_BOOKMARKS, { keyPath: 'id' });
                     bookmarks.createIndex('sectionId', 'sectionId', { unique: false });
+                }
+                // Added in DB_VERSION 2. The guard means an install that already
+                // has it — and every store above — comes through untouched.
+                if (!db.objectStoreNames.contains(STORE_INVENTORY)) {
+                    var inventory = db.createObjectStore(STORE_INVENTORY, { keyPath: 'id' });
+                    inventory.createIndex('stepId', 'stepId', { unique: false });
                 }
             };
 
@@ -128,6 +137,7 @@
         STORE_BOOK: STORE_BOOK,
         STORE_NOTES: STORE_NOTES,
         STORE_BOOKMARKS: STORE_BOOKMARKS,
+        STORE_INVENTORY: STORE_INVENTORY,
         open: open,
         get: get,
         getAll: getAll,

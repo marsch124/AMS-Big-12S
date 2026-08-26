@@ -24,7 +24,8 @@
         notes: [],
         bookmarks: [],
         steps: null,           // { title, edition, steps: [] } from data/steps.json
-        stepPrefs: { hidden: {}, custom: {} }   // questions hidden, questions added
+        stepPrefs: { hidden: {}, custom: {} },  // questions hidden, questions added
+        inventory: []            // step four's rows: { id, stepId, tableId, values, ... }
     };
 
     function uid(prefix) {
@@ -173,6 +174,99 @@
 
     function stepIsWritten(step) {
         return !!(step && step.explanation && step.explanation.length);
+    }
+
+    /* ------------------------------------------------------ the step's work */
+
+    // The shape a step's own work takes, declared in steps.source.json and
+    // built into steps.json. A step without one simply has no work section.
+    function workFor(step) {
+        return (step && step.work) || null;
+    }
+
+    function tableIn(work, tableId) {
+        if (!work || !work.tables) return null;
+        return work.tables.filter(function (t) { return t.id === tableId; })[0] || null;
+    }
+
+    function loadInventory() {
+        return DB.getAll(DB.STORE_INVENTORY).then(function (rows) {
+            state.inventory = (rows || []).sort(function (a, b) {
+                return (a.createdAt || '').localeCompare(b.createdAt || '');
+            });
+            return state.inventory;
+        }).catch(function (error) {
+            console.warn('Could not load the inventory', error);
+            state.inventory = [];
+            return state.inventory;
+        });
+    }
+
+    // Oldest first: an inventory is read as a list that grew, not as a feed.
+    function inventoryFor(stepId, tableId) {
+        return state.inventory.filter(function (row) {
+            return row.stepId === stepId && (!tableId || row.tableId === tableId);
+        });
+    }
+
+    function inventoryCount(stepId, tableId) {
+        return inventoryFor(stepId, tableId).length;
+    }
+
+    // A row is empty when every column of it is. Saving one would put a blank
+    // card in a list whose whole purpose is evidence.
+    function rowIsEmpty(values) {
+        return !Object.keys(values || {}).some(function (key) {
+            return String(values[key] || '').trim().length > 0;
+        });
+    }
+
+    function saveInventoryRow(row) {
+        var now = new Date().toISOString();
+        var values = {};
+        Object.keys(row.values || {}).forEach(function (key) {
+            values[key] = String(row.values[key] || '').trim();
+        });
+
+        var record = {
+            id: row.id || uid('inv'),
+            stepId: row.stepId,
+            tableId: row.tableId,
+            values: values,
+            createdAt: row.createdAt || now,
+            updatedAt: now
+        };
+
+        return DB.put(DB.STORE_INVENTORY, record).then(function () {
+            var existing = state.inventory.filter(function (r) { return r.id === record.id; })[0];
+            if (existing) Object.assign(existing, record);
+            else state.inventory.push(record);
+            return record;
+        });
+    }
+
+    function deleteInventoryRow(id) {
+        return DB.remove(DB.STORE_INVENTORY, id).then(function () {
+            state.inventory = state.inventory.filter(function (row) { return row.id !== id; });
+        });
+    }
+
+    // Plain text of a whole table, for taking to the person who will hear it.
+    function inventoryAsText(step, tableId) {
+        var work = workFor(step);
+        var table = tableIn(work, tableId);
+        if (!table) return '';
+        var rows = inventoryFor(step.id, tableId);
+        var out = [table.title, ''];
+        rows.forEach(function (row, i) {
+            out.push(String(i + 1) + '.');
+            table.columns.forEach(function (col) {
+                var value = (row.values && row.values[col.id]) || '';
+                if (value) out.push('   ' + col.label + ': ' + value);
+            });
+            out.push('');
+        });
+        return out.join('\n').trim();
     }
 
     /*
@@ -566,6 +660,7 @@
             .then(loadBook)
             .then(loadSteps)
             .then(loadStepPrefs)
+            .then(loadInventory)
             .then(loadNotes)
             .then(loadBookmarks)
             .then(loadPosition)
@@ -610,6 +705,15 @@
         answeredCount: answeredCount,
         loadStepPrefs: loadStepPrefs,
         saveStepPrefs: saveStepPrefs,
+        workFor: workFor,
+        tableIn: tableIn,
+        loadInventory: loadInventory,
+        inventoryFor: inventoryFor,
+        inventoryCount: inventoryCount,
+        rowIsEmpty: rowIsEmpty,
+        saveInventoryRow: saveInventoryRow,
+        deleteInventoryRow: deleteInventoryRow,
+        inventoryAsText: inventoryAsText,
         questionsFor: questionsFor,
         questionText: questionText,
         hiddenQuestionsFor: hiddenQuestionsFor,

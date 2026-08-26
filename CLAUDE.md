@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.10 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.11 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -23,19 +23,25 @@ https://claude.ai/code/artifact/b467fb04-03e9-4f26-aa77-7f8f18b8c433
 | Phase 3 | done | Dated notes per step, folded when long |
 | Phase 4 | done | Answerable questions keeping every earlier answer; hide, add your own |
 | Phase 5 | **in progress** | Writing the twelve. **Steps 1 to 5 are written; 6–12 are stubs.** |
-| Phase 6 | to do | Each step's own work — block 5 below |
+| Phase 6 | **in progress** | Each step's own work — block 5 below. **Step 4's three tables are built and usable; every other kind is still declared-only.** |
 | Phase 7 | to do | Progress on the list, copy a step out for a sponsor, docs, v2.0 |
 
-**Next: steps 6 and 7, written together** — the book runs them into one another
-in two short paragraphs at the top of *Into Action*, and step 7's prayer is
-printed there. Step 7 takes the same `prayer` work module as step 3. Send steps
-two or three at a time for review, not seven at once.
+**Next: steps 6 and 7, written together, and deliberately sparse** — Martin
+asked for this explicitly. The book runs them into one another in two short
+paragraphs at the top of *Into Action* (¶11 is step six; ¶12 carries the prayer
+and ends "We have then completed step seven"), and that is very nearly all it
+gives them: 134 words between the two. "Entirely ready" appears once in the whole
+book, in the step list itself; "defects of character" twice. So these two get
+three or four references each rather than the usual five to seven, and the
+shortness is allowed to be the point. Step 7 takes the same `prayer` work module
+as step 3.
 
-**Phase 6, per step.** `work` is already declared in `steps.source.json` for the
-steps written so far (`two-lists` on 1 and 2, `prayer` on 3, `inventory-tables`
-on 4, `sittings` on 5) but **nothing renders it yet**. The declarations on 4 and
-5 name their columns and fields, so phase 6 builds to those rather than
-inventing a shape. What each needs: 1 two lists of evidence; 2 what cannot be accepted yet
+**Phase 6, per step.** `work` is declared in `steps.source.json` for every step
+written so far (`two-lists` on 1 and 2, `prayer` on 3, `inventory-tables` on 4,
+`sittings` on 5). **Only `inventory-tables` has a renderer.** `renderStepWork()`
+in `ui.js` hides the whole work section for a kind it cannot draw, so steps 1, 2,
+3 and 5 show no work section at all rather than an empty one — build the next
+kind by adding a branch there. What each needs: 1 two lists of evidence; 2 what cannot be accepted yet
 and what has shifted; 3 and 7 a prayer with a date kept each time; **4 three
 inventory tables — resentments, fears, conduct — the largest build here**; 5 who
 you sat with and what was held back; 6 the defects from step 4 carried through;
@@ -48,6 +54,16 @@ morning and evening prompts plus a practice log; 12 who you have worked with.
 "defects" when it takes the step up again. Both are in the 1939 text as Dover
 sets it — checked, not a transcription slip. Step 5's explanation says so rather
 than quietly picking one.
+
+**Step four's inventory is built (1.11).** Three tables, the columns taken from
+the grudge list the book prints plus the "where were we to blame" turn. Two views
+of the same rows: cards to fill in (stacked fields, the view you dictate into)
+and a grid to read back (side by side, scrolling inside its own box). Rows live
+in their own IndexedDB store, not in the note store — they are structured
+records, not prose, and bending them into a note would have disturbed
+`isStandalone()`, `isLooseNote()` and the counted lists that depend on them.
+`DB_VERSION` is 2; the upgrade is guarded by `objectStoreNames.contains`, so an
+existing install gains the store and keeps everything else.
 
 **Settled already — do not re-ask.** Sponsor (not "spindrift", a transcription
 slip). Chapter-and-passage references, no page numbers: the Dover pagination does
@@ -85,7 +101,7 @@ manifest.json       PWA metadata — paths are RELATIVE ("./"), see below
 sw.js               Service worker: offline shell + book cache
 css/style.css       Themes (sepia/light/dark/auto), reader typography
 js/parser.js        Plain text → sections. Shared with tools/build-book.js
-js/db.js            IndexedDB wrapper
+js/db.js            IndexedDB wrapper (meta, book, notes, bookmarks, inventory)
 js/store.js         Book, settings, position, notes, bookmarks, search
 js/backup.js        Export / restore
 js/ui.js            Screens, rendering, all event wiring
@@ -109,7 +125,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 81 checks, expect 81/81
+node tools/smoke-test.js                  # 97 checks, expect 97/97
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

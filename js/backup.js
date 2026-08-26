@@ -34,7 +34,11 @@
             // themselves are notes and travel above; without this a restore
             // would bring back questions they had hidden and lose the ones they
             // wrote.
-            stepPrefs: state.stepPrefs
+            stepPrefs: state.stepPrefs,
+            // Step four's rows. Years of work can sit in here, so it travels
+            // with everything else rather than being something you export
+            // separately and forget.
+            inventory: state.inventory
         };
 
         if (options.includeBookText && state.book && state.book.textIncluded) {
@@ -146,10 +150,14 @@
      */
     function restoreBackup(payload, mode) {
         mode = mode || 'merge';
-        var summary = { notes: 0, bookmarks: 0, bookText: false, mode: mode };
+        var summary = { notes: 0, bookmarks: 0, inventory: 0, bookText: false, mode: mode };
 
         var prepare = mode === 'replace'
-            ? Promise.all([DB.clear(DB.STORE_NOTES), DB.clear(DB.STORE_BOOKMARKS)])
+            ? Promise.all([
+                DB.clear(DB.STORE_NOTES),
+                DB.clear(DB.STORE_BOOKMARKS),
+                DB.clear(DB.STORE_INVENTORY)
+            ])
             : Promise.resolve();
 
         return prepare.then(function () {
@@ -169,9 +177,21 @@
             summary.notes = notes.length;
             summary.bookmarks = bookmarks.length;
 
+            // Absent from backups written before step four had tables, which
+            // must restore cleanly rather than emptying what is on this device.
+            var existingRows = {};
+            if (mode === 'merge') {
+                Store.state.inventory.forEach(function (row) { existingRows[row.id] = row; });
+            }
+            var inventory = (payload.inventory || []).map(function (row) {
+                return newerOf(row, existingRows[row.id]);
+            });
+            summary.inventory = inventory.length;
+
             return Promise.all([
                 DB.putMany(DB.STORE_NOTES, notes),
-                DB.putMany(DB.STORE_BOOKMARKS, bookmarks)
+                DB.putMany(DB.STORE_BOOKMARKS, bookmarks),
+                DB.putMany(DB.STORE_INVENTORY, inventory)
             ]);
         }).then(function () {
             if (payload.book && payload.book.sections && payload.book.sections.length) {

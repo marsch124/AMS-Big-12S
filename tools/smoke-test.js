@@ -249,6 +249,119 @@ async function shot(page, name) {
     });
     check('a foreign backup is rejected clearly', !!rejected, rejected);
 
+    // ── step four's inventory ─────────────────────────────────────────────
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=3');
+    await page.waitForSelector('#screen-step.is-active');
+    check('step four carries its three tables',
+        (await page.isVisible('#step-work')) &&
+        (await page.$$eval('.inv-table', (e) => e.length)) === 3,
+        (await page.$$eval('.inv-title', (e) =>
+            e.map((x) => x.textContent.replace(/\d+$/, '').trim()))).join(' / '));
+
+    // a step whose work module has no renderer yet shows no work section at all,
+    // rather than an empty one
+    await page.click('#step-back');
+    await page.click('.step-item >> nth=0');
+    await page.waitForSelector('#screen-step.is-active');
+    check('a step whose work is not built yet shows no work section',
+        !(await page.isVisible('#step-work')));
+    await page.click('#step-back');
+    await page.click('.step-item >> nth=3');
+    await page.waitForSelector('#screen-step.is-active');
+
+    await page.click('.inv-table >> nth=0 >> .btn:has-text("Add the first")');
+    await page.waitForSelector('#inv-sheet:not([hidden])');
+    check('the editor offers the columns the book names',
+        (await page.$$eval('#inv-sheet-fields .sheet-label', (e) =>
+            e.map((x) => x.textContent))).join('|') ===
+        "I'm resentful at|The cause|Affects my|Where I was to blame");
+
+    // an entry with nothing in it is refused: a blank card in a list whose
+    // point is evidence is worse than no card
+    await page.click('#inv-save');
+    check('an empty entry is refused', await page.isVisible('#inv-sheet'));
+
+    const cells = await page.$$('#inv-sheet-fields textarea');
+    await cells[0].fill('My employer');
+    await cells[1].fill('Threatens to fire me for drinking and padding my expense account.');
+    await cells[2].fill('Self-esteem, security.');
+    await cells[3].fill('I was dishonest about the expenses, and frightened of being found out.');
+    await page.click('#inv-save');
+    await page.waitForSelector('#inv-sheet', { state: 'hidden' });
+
+    check('the entry is kept, and counted on its table',
+        (await page.$$eval('.inv-card', (e) => e.length)) === 1 &&
+        (await page.$eval('.inv-count', (e) => e.textContent)) === '1');
+
+    await page.click('.inv-table >> nth=0 >> .inv-view:has-text("Read back")');
+    await page.waitForSelector('.inv-grid');
+    check('reading back lays the same row out in columns',
+        (await page.$$eval('.inv-grid th', (e) => e.length)) === 4 &&
+        (await page.$$eval('.inv-grid tbody tr', (e) => e.length)) === 1);
+
+    // four columns cannot fit a phone: the grid scrolls, the page must not
+    const box = await page.$eval('.inv-gridwrap', (e) =>
+        ({ scroll: e.scrollWidth, client: e.clientWidth }));
+    check('the grid scrolls inside its own box', box.scroll > box.client,
+        box.scroll + ' > ' + box.client);
+    check('and the page itself never scrolls sideways',
+        await page.evaluate(() =>
+            document.documentElement.scrollWidth <= document.documentElement.clientWidth));
+    check('with the off-screen columns admitted to',
+        await page.isVisible('.inv-scrollhint'));
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=3');
+    await page.waitForSelector('#screen-step.is-active');
+    check('the inventory survives a reload',
+        (await page.$$eval('.inv-card', (e) => e.length)) === 1);
+
+    const withRows = JSON.parse(await page.evaluate(() =>
+        Backup.serialize({ includeBookText: false })));
+    check('a backup carries the inventory',
+        withRows.inventory.length === 1 &&
+        withRows.inventory[0].values.who === 'My employer',
+        JSON.stringify(withRows.inventory[0].values.cause).slice(0, 40));
+
+    // the new-phone path again, this time for the tables
+    await page.evaluate(async () => { await DB.clear(DB.STORE_INVENTORY); });
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=3');
+    check('wiping clears the inventory',
+        (await page.$$eval('.inv-card', (e) => e.length)) === 0);
+
+    const invSummary = await page.evaluate(async (json) =>
+        Backup.restoreBackup(Backup.parseBackup(json), 'replace'),
+        JSON.stringify(withRows));
+    check('restore reports the rows it brought back', invSummary.inventory === 1,
+        JSON.stringify(invSummary));
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=3');
+    await page.waitForSelector('#screen-step.is-active');
+    check('and the row is back, with every column intact',
+        (await page.$$eval('.inv-card .inv-value', (e) =>
+            e.map((x) => x.textContent))).length === 4);
+
+    // a backup written before the tables existed must not empty them
+    const legacy = Object.assign({}, withRows);
+    delete legacy.inventory;
+    const legacySummary = await page.evaluate(async (json) =>
+        Backup.restoreBackup(Backup.parseBackup(json), 'merge'), JSON.stringify(legacy));
+    check('an older backup with no inventory restores without wiping one',
+        legacySummary.inventory === 0);
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=3');
+    await page.waitForSelector('#screen-step.is-active');
+    check('the rows already on the device survived that',
+        (await page.$$eval('.inv-card', (e) => e.length)) === 1);
+    await page.click('#step-back');
+    await page.waitForSelector('#screen-steps.is-active');
+
     // ── things to talk about ──────────────────────────────────────────────
     // A point for the sponsor that came from nowhere in particular: written
     // straight onto the Notes tab, with no passage behind it.
