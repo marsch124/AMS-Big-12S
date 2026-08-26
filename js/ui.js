@@ -362,17 +362,25 @@
 
         var stepId = options.stepId || (existing && existing.stepId) || null;
         var step = stepId ? Store.getStep(stepId) : null;
+        var questionId = options.questionId || (existing && existing.questionId) || null;
+        var questionText = options.questionText || '';
 
         $('note-sheet-title').textContent = section
             ? 'Note on this passage'
-            : step
-                ? 'Step ' + step.number + ' — ' + (existing ? 'your note' : 'a new note')
-                : (existing ? 'Your note' : 'Something on your mind');
-        $('note-sheet-quote').textContent = quote;
-        $('note-sheet-quote').hidden = !quote;
+            : questionId
+                ? 'Step ' + step.number + ' — ' + (existing ? 'your answer' : 'answering')
+                : step
+                    ? 'Step ' + step.number + ' — ' + (existing ? 'your note' : 'a new note')
+                    : (existing ? 'Your note' : 'Something on your mind');
+        // The question stands where the passage would: what is being answered.
+        var shown = quote || questionText;
+        $('note-sheet-quote').textContent = shown;
+        $('note-sheet-quote').hidden = !shown;
         $('note-sheet-body').placeholder = section
             ? 'Write your note…'
-            : step
+            : questionId
+                ? 'Your answer today. Answering again later keeps this one — it does not replace it.'
+                : step
                 ? 'Where you are with this step today. Dated, and kept — a later note sits above this one rather than replacing it.'
                 : 'A question for your sponsor, something to raise with your sponsee, or a thought of your own.';
         $('note-sheet-body').value = existing ? existing.body : '';
@@ -387,6 +395,7 @@
                 sectionId: sectionId || null,
                 paraIndex: section ? paraIndex : null,
                 stepId: stepId,
+                questionId: questionId,
                 body: body,
                 tag: noteTag,
                 anchor: section ? Store.anchorFor(section.paragraphs[paraIndex]) : ''
@@ -515,13 +524,181 @@
             refs.appendChild(row);
         });
 
-        var questions = $('step-questions');
-        questions.innerHTML = '';
-        (step.questions || []).forEach(function (q) {
-            var li = document.createElement('li');
-            li.className = 'question';
-            li.textContent = q.text;
-            questions.appendChild(li);
+        renderStepQuestions(step);
+    }
+
+    function answerBlock(answer, isOlder) {
+        var box = document.createElement('div');
+        box.className = 'answer' + (isOlder ? ' is-older' : '');
+        box.innerHTML =
+            '<span class="answer-when">' + escapeHtml(formatDate(answer.createdAt)) +
+                (isOlder ? ' · earlier' : '') + '</span>' +
+            '<p class="answer-body">' + escapeHtml(answer.body) + '</p>';
+        return box;
+    }
+
+    // Same measured fold as the step notes: only what genuinely overflows gets
+    // a control.
+    function clampAnswer(box) {
+        var body = box.querySelector('.answer-body');
+        box.classList.add('is-clamped');
+        if (body.scrollHeight - body.clientHeight <= 2) {
+            box.classList.remove('is-clamped');
+            return;
+        }
+        var toggle = document.createElement('span');
+        toggle.className = 'answer-toggle';
+        toggle.textContent = 'Show all';
+        box.appendChild(toggle);
+        box.addEventListener('click', function () {
+            var folded = box.classList.toggle('is-clamped');
+            toggle.textContent = folded ? 'Show all' : 'Show less';
+        });
+    }
+
+    function renderStepQuestions(step) {
+        var holder = $('step-questions');
+        holder.innerHTML = '';
+
+        Store.questionsFor(step).forEach(function (q, index) {
+            var answers = Store.answersFor(step.id, q.id);
+            var block = document.createElement('div');
+            block.className = 'question';
+
+            var head = document.createElement('div');
+            head.className = 'question-head';
+            head.innerHTML =
+                '<span class="question-n">' + (index + 1) + '</span>' +
+                '<span class="question-text">' + escapeHtml(q.text) +
+                (q.own ? '<span class="question-own">yours</span>' : '') + '</span>';
+            block.appendChild(head);
+
+            var pending = [];
+            if (answers.length) {
+                var latest = answerBlock(answers[0], false);
+                block.appendChild(latest);
+                pending.push(latest);
+            }
+
+            var older = answers.slice(1);
+            var olderHolder = document.createElement('div');
+            olderHolder.hidden = true;
+            older.forEach(function (a) {
+                var box = answerBlock(a, true);
+                olderHolder.appendChild(box);
+                pending.push(box);
+            });
+            block.appendChild(olderHolder);
+
+            var actions = document.createElement('div');
+            actions.className = 'question-actions';
+
+            var answer = document.createElement('button');
+            answer.className = 'chip';
+            answer.textContent = answers.length ? 'Answer again' : 'Answer';
+            answer.addEventListener('click', function () {
+                openNoteSheet(null, null, null,
+                    { stepId: step.id, questionId: q.id, questionText: q.text });
+            });
+            actions.appendChild(answer);
+
+            if (answers.length) {
+                var edit = document.createElement('button');
+                edit.className = 'chip';
+                edit.textContent = 'Edit latest';
+                edit.addEventListener('click', function () {
+                    openNoteSheet(null, null, answers[0],
+                        { stepId: step.id, questionId: q.id, questionText: q.text });
+                });
+                actions.appendChild(edit);
+            }
+
+            if (older.length) {
+                var history = document.createElement('button');
+                history.className = 'chip';
+                history.textContent = older.length + ' earlier';
+                history.addEventListener('click', function () {
+                    olderHolder.hidden = !olderHolder.hidden;
+                    history.classList.toggle('is-active', !olderHolder.hidden);
+                    history.textContent = olderHolder.hidden
+                        ? older.length + ' earlier' : 'Hide earlier';
+                });
+                actions.appendChild(history);
+            }
+
+            var put = document.createElement('button');
+            put.className = 'chip';
+            put.textContent = q.own ? 'Delete' : 'Put away';
+            put.addEventListener('click', function () {
+                if (q.own) {
+                    if (!confirm('Delete this question? Answers written against it are kept.')) return;
+                    Store.deleteQuestion(step.id, q.id).then(function () {
+                        toast('Question deleted');
+                        renderStep(Store.getStep(step.id));
+                    });
+                } else {
+                    Store.setQuestionHidden(q.id, true).then(function () {
+                        toast('Put away — answers kept');
+                        renderStep(Store.getStep(step.id));
+                    });
+                }
+            });
+            actions.appendChild(put);
+
+            block.appendChild(actions);
+            holder.appendChild(block);
+            pending.forEach(clampAnswer);
+        });
+
+        renderHiddenQuestions(step);
+
+        $('step-add-question').onclick = function () {
+            openPaste({
+                title: 'A question of your own',
+                hint: 'However your sponsor puts it, or whatever you want to come back to on this step.',
+                placeholder: 'What am I still not willing to look at?',
+                onConfirm: function (value) {
+                    if (!value.trim()) return;
+                    Store.addQuestion(step.id, value).then(function () {
+                        toast('Question added');
+                        renderStep(Store.getStep(step.id));
+                    });
+                }
+            });
+        };
+    }
+
+    function renderHiddenQuestions(step) {
+        var hidden = Store.hiddenQuestionsFor(step);
+        var button = $('step-show-hidden');
+        var list = $('step-hidden-questions');
+
+        button.hidden = !hidden.length;
+        if (!hidden.length) { list.hidden = true; list.innerHTML = ''; return; }
+
+        button.textContent = list.hidden
+            ? hidden.length + ' put away' : 'Hide those';
+        button.onclick = function () {
+            list.hidden = !list.hidden;
+            button.textContent = list.hidden ? hidden.length + ' put away' : 'Hide those';
+        };
+
+        list.innerHTML = '';
+        hidden.forEach(function (q) {
+            var row = document.createElement('div');
+            row.className = 'hidden-q';
+            row.innerHTML = '<span>' + escapeHtml(q.text) + '</span>';
+            var back = document.createElement('button');
+            back.className = 'chip';
+            back.textContent = 'Bring back';
+            back.addEventListener('click', function () {
+                Store.setQuestionHidden(q.id, false).then(function () {
+                    toast('Back on the list');
+                    renderStep(Store.getStep(step.id));
+                });
+            });
+            row.appendChild(back);
+            list.appendChild(row);
         });
     }
 
@@ -706,8 +883,13 @@
         var section = Store.getSection(note.sectionId);
         var standalone = Store.isStandalone(note);
         var step = Store.isStepNote(note) ? Store.getStep(note.stepId) : null;
+        // An answer quotes the question it answers, where a passage note quotes
+        // its passage — both say what the note is a response to.
         var quote = section && section.paragraphs[note.paraIndex]
-            ? firstWords(section.paragraphs[note.paraIndex], 26) : '';
+            ? firstWords(section.paragraphs[note.paraIndex], 26)
+            : Store.isAnswer(note)
+                ? firstWords(Store.questionText(note.stepId, note.questionId), 26)
+                : '';
         var where = step ? 'Step ' + step.number + ' · ' + step.shortTitle
                          : standalone ? '' : (section ? section.title : 'Unknown section');
         var head = where || note.tag;   // nothing to head a plain thought with

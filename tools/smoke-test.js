@@ -433,13 +433,93 @@ async function shot(page, name) {
     await page.click('.chip[data-filter="all"]');
     await page.waitForTimeout(120);
 
+    // ── questions and their answers ───────────────────────────────────────
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=0');
+    await page.waitForSelector('#screen-step.is-active');
+    const q0 = page.locator('.question').nth(0);
+    check('the step carries its questions',
+        (await page.$$eval('.question', (e) => e.length)) === 8);
+
+    await q0.locator('.chip').nth(0).click();
+    await page.waitForSelector('#note-sheet:not([hidden])');
+    check('answering quotes the question, as a passage note quotes its passage',
+        (await page.textContent('#note-sheet-title')).indexOf('answering') > 0 &&
+        (await page.textContent('#note-sheet-quote')).indexOf('once you take the first drink') > 0);
+    await page.fill('#note-sheet-body', 'It goes further than I plan, every time.');
+    await page.click('#note-save');
+    await page.waitForSelector('#note-sheet', { state: 'hidden' });
+    check('the answer is kept against its question',
+        (await q0.locator('.answer').count()) === 1);
+
+    await q0.locator('.chip', { hasText: 'Answer again' }).click();
+    await page.waitForSelector('#note-sheet:not([hidden])');
+    await page.fill('#note-sheet-body', 'Second time round: still true, less argument about it.');
+    await page.click('#note-save');
+    await page.waitForSelector('#note-sheet', { state: 'hidden' });
+
+    const answerBoxes = await q0.locator('.answer').all();
+    const answerVisible = [];
+    for (const box of answerBoxes) answerVisible.push(await box.isVisible());
+    check('answering again keeps the old one, showing only the latest',
+        answerBoxes.length === 2 && answerVisible[0] === true && answerVisible[1] === false,
+        answerBoxes.length + ' answers, visible: ' + answerVisible.join(', '));
+
+    await q0.locator('.chip', { hasText: '1 earlier' }).click();
+    await page.waitForTimeout(150);
+    const answerOrder = await q0.locator('.answer .answer-body').allTextContents();
+    check('earlier answers open, newest first',
+        answerOrder.length === 2 && answerOrder[0].indexOf('Second time') === 0);
+
+    // putting a question away must not touch what was written against it
+    await page.locator('.question').nth(1).locator('.chip', { hasText: 'Put away' }).click();
+    await page.waitForTimeout(200);
+    check('a question can be put away',
+        (await page.$$eval('.question', (e) => e.length)) === 7 &&
+        (await page.textContent('#step-show-hidden')) === '1 put away');
+    await page.click('#step-show-hidden');
+    await page.waitForTimeout(150);
+    await page.click('.hidden-q .chip');
+    await page.waitForTimeout(200);
+    check('and brought back again',
+        (await page.$$eval('.question', (e) => e.length)) === 8);
+
+    await page.click('#step-add-question');
+    await page.waitForSelector('#paste-sheet:not([hidden])');
+    await page.fill('#paste-body', 'What would my sponsor say I am still dodging?');
+    await page.click('#paste-confirm');
+    await page.waitForTimeout(250);
+    check('a question of your own can be added',
+        (await page.$$eval('.question', (e) => e.length)) === 9 &&
+        (await page.$$eval('.question-own', (e) => e.length)) === 1);
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=0');
+    await page.waitForSelector('#screen-step.is-active');
+    check('questions and answers survive a reload',
+        (await page.$$eval('.question', (e) => e.length)) === 9 &&
+        (await page.locator('.question').nth(0).locator('.answer').count()) === 2);
+
+    const prefsBackup = JSON.parse(await page.evaluate(
+        () => Backup.serialize({ includeBookText: false })));
+    check('a backup carries answers and the questions you changed',
+        prefsBackup.notes.filter((n) => n.questionId).length === 2 &&
+        !!prefsBackup.stepPrefs &&
+        Object.keys(prefsBackup.stepPrefs.custom.step01 || {}).length === 1,
+        prefsBackup.notes.filter((n) => n.questionId).length + ' answers');
+
     // step entries are notes, so they must ride the backup like any other
     const stepBackup = JSON.parse(await page.evaluate(
         () => Backup.serialize({ includeBookText: false })));
-    const carried = stepBackup.notes.filter((n) => n.stepId === 'step01');
-    check('a backup carries step entries, tied to their step',
-        carried.length === 3 && carried.every((n) => !n.sectionId),
-        carried.length + ' entries for step 1');
+    // A step's notes and its answers both carry stepId; only an answer carries a
+    // questionId, and the two must not be counted as each other.
+    const carried = stepBackup.notes.filter((n) => n.stepId === 'step01' && !n.questionId);
+    const carriedAnswers = stepBackup.notes.filter((n) => n.stepId === 'step01' && n.questionId);
+    check('a backup carries step notes and answers, told apart',
+        carried.length === 3 && carriedAnswers.length === 2 &&
+        carried.every((n) => !n.sectionId),
+        carried.length + ' notes, ' + carriedAnswers.length + ' answers');
 
     // ── appearance ────────────────────────────────────────────────────────
     await page.click('.tab[data-screen="settings"]');

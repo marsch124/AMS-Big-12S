@@ -17,8 +17,8 @@ without a signal.
   what is still waiting, tick it off after the conversation, and copy the list out before a call
 - 💭 **Notes of your own** — write down what did not come from a page at all
 - 🪜 **The twelve steps** — a page each, with the passages of the book that describe them,
-  questions to take to a sponsor, and a dated journal that keeps every pass rather than
-  overwriting the last
+  questions to take to a sponsor — answerable, and keeping every earlier answer dated —
+  and notes that keep every pass rather than overwriting the last
 - 🔍 **Full-text search** — jump straight from a phrase to the passage it lives in
 - 💾 **One-file backup** — notes, bookmarks, position, settings and (optionally) the text
 - 📡 **Fully offline** — everything lives on your device; no account, no server, no tracking

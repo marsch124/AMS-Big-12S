@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.7 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.8 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Non-negotiables
 
@@ -51,7 +51,7 @@ data/steps.json                     Built steps with references resolved
 tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
-tools/smoke-test.js    70 end-to-end browser checks
+tools/smoke-test.js    80 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -63,7 +63,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 70 checks, expect 70/70
+node tools/smoke-test.js                  # 80 checks, expect 80/80
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.
@@ -112,6 +112,21 @@ clamps, measures `scrollHeight` against `clientHeight`, and unclamps again if th
 note fits — so the "Show all" control only ever appears on a note that actually
 has more to show. Dictated notes run to hundreds of words; guessing from string
 length gets it wrong at both ends.
+
+**A step's notes and its answers are both notes, told apart by `questionId`.**
+Both carry `stepId`; only an answer carries `questionId`. `notesForStep()`
+excludes answers deliberately — they belong under the question that prompted
+them, not in the step's journal — and anything counting one must not count the
+other. Answering again writes a *new* note rather than editing the old one, so
+the history is the record.
+
+**Question preferences are not notes.** Hidden and custom questions live in
+`meta.stepPrefs` (`{hidden: {qid: true}, custom: {stepId: [{id, text}]}}`), and
+`backup.js` carries them explicitly — without that, a restore would resurrect
+questions the reader had put away and drop the ones they wrote. Putting a
+question away never deletes its answers; `Store.questionText()` resolves a
+hidden question's text so an answer on the Notes tab still shows what it
+answered.
 
 **One note store, four kinds of note.** A step journal entry is a note with a
 `stepId` and no `sectionId`. That makes it *standalone* by `isStandalone()`,

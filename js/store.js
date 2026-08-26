@@ -23,7 +23,8 @@
         position: null,          // { sectionId, paraIndex, ratio, updatedAt }
         notes: [],
         bookmarks: [],
-        steps: null            // { title, edition, steps: [] } from data/steps.json
+        steps: null,           // { title, edition, steps: [] } from data/steps.json
+        stepPrefs: { hidden: {}, custom: {} }   // questions hidden, questions added
     };
 
     function uid(prefix) {
@@ -213,6 +214,82 @@
         return text.replace(/^\s*\d{1,2}\s*\.\s*/, '');
     }
 
+    /* --------------------------------------------------- step questions */
+
+    function loadStepPrefs() {
+        return DB.get(DB.STORE_META, 'stepPrefs').then(function (saved) {
+            state.stepPrefs = Object.assign({ hidden: {}, custom: {} }, saved || {});
+            state.stepPrefs.hidden = state.stepPrefs.hidden || {};
+            state.stepPrefs.custom = state.stepPrefs.custom || {};
+            return state.stepPrefs;
+        }).catch(function () {
+            state.stepPrefs = { hidden: {}, custom: {} };
+            return state.stepPrefs;
+        });
+    }
+
+    function saveStepPrefs() {
+        return DB.put(DB.STORE_META, state.stepPrefs, 'stepPrefs');
+    }
+
+    // The questions that came with the step, plus any of the reader's own,
+    // minus anything they have put away.
+    function questionsFor(step) {
+        if (!step) return [];
+        var prefs = state.stepPrefs;
+        var own = (prefs.custom[step.id] || []).map(function (q) {
+            return { id: q.id, text: q.text, own: true };
+        });
+        return (step.questions || []).concat(own).filter(function (q) {
+            return !prefs.hidden[q.id];
+        });
+    }
+
+    // Works for a question that has since been put away, so an answer on the
+    // Notes tab never loses the question it was answering.
+    function questionText(stepId, questionId) {
+        var step = getStep(stepId);
+        if (!step) return '';
+        var own = (state.stepPrefs.custom[stepId] || []);
+        var all = (step.questions || []).concat(own);
+        var found = all.filter(function (q) { return q.id === questionId; })[0];
+        return found ? found.text : '';
+    }
+
+    function hiddenQuestionsFor(step) {
+        if (!step) return [];
+        var prefs = state.stepPrefs;
+        var own = (prefs.custom[step.id] || []).map(function (q) {
+            return { id: q.id, text: q.text, own: true };
+        });
+        return (step.questions || []).concat(own).filter(function (q) {
+            return prefs.hidden[q.id];
+        });
+    }
+
+    // Putting a question away never touches what was written against it; bring
+    // it back and the answers are still there.
+    function setQuestionHidden(questionId, hidden) {
+        if (hidden) state.stepPrefs.hidden[questionId] = true;
+        else delete state.stepPrefs.hidden[questionId];
+        return saveStepPrefs();
+    }
+
+    function addQuestion(stepId, text) {
+        var question = { id: uid('q'), text: String(text || '').trim() };
+        if (!question.text) return Promise.resolve(null);
+        if (!state.stepPrefs.custom[stepId]) state.stepPrefs.custom[stepId] = [];
+        state.stepPrefs.custom[stepId].push(question);
+        return saveStepPrefs().then(function () { return question; });
+    }
+
+    function deleteQuestion(stepId, questionId) {
+        var own = state.stepPrefs.custom[stepId] || [];
+        state.stepPrefs.custom[stepId] = own.filter(function (q) { return q.id !== questionId; });
+        delete state.stepPrefs.hidden[questionId];
+        return saveStepPrefs();
+    }
+
     /* ------------------------------------------------------------ settings */
 
     function loadSettings() {
@@ -303,8 +380,34 @@
         return isStandalone(note) && !isStepNote(note);
     }
 
+    // An answer to one of the step's questions, rather than a note about the
+    // step at large. Both carry a stepId; only an answer carries a questionId.
+    function isAnswer(note) {
+        return !!(note.stepId && note.questionId);
+    }
+
+    // The step's own notes — deliberately not its answers, which belong under
+    // the questions that prompted them.
     function notesForStep(stepId) {
-        return state.notes.filter(function (note) { return note.stepId === stepId; });
+        return state.notes.filter(function (note) {
+            return note.stepId === stepId && !note.questionId;
+        });
+    }
+
+    // Newest first: the latest answer is the one shown, the rest are history.
+    function answersFor(stepId, questionId) {
+        return state.notes.filter(function (note) {
+            return note.stepId === stepId && note.questionId === questionId;
+        }).sort(function (a, b) {
+            return (b.createdAt || '').localeCompare(a.createdAt || '');
+        });
+    }
+
+    function answeredCount(step) {
+        var prefs = state.stepPrefs;
+        return questionsFor(step).filter(function (q) {
+            return answersFor(step.id, q.id).length > 0;
+        }).length;
     }
 
     function lastWorkedOn(stepId) {
@@ -347,6 +450,7 @@
             paraIndex: null,
             anchor: '',
             stepId: null,        // set when written against a step
+            questionId: null,    // set when it answers one of that step's questions
             tag: '',             // '' | 'sponsor' | 'sponsee'
             discussedAt: null
         }, note, { updatedAt: now });
@@ -461,6 +565,7 @@
         return loadSettings()
             .then(loadBook)
             .then(loadSteps)
+            .then(loadStepPrefs)
             .then(loadNotes)
             .then(loadBookmarks)
             .then(loadPosition)
@@ -500,6 +605,17 @@
         notesForSection: notesForSection,
         isStandalone: isStandalone,
         isStepNote: isStepNote,
+        isAnswer: isAnswer,
+        answersFor: answersFor,
+        answeredCount: answeredCount,
+        loadStepPrefs: loadStepPrefs,
+        saveStepPrefs: saveStepPrefs,
+        questionsFor: questionsFor,
+        questionText: questionText,
+        hiddenQuestionsFor: hiddenQuestionsFor,
+        setQuestionHidden: setQuestionHidden,
+        addQuestion: addQuestion,
+        deleteQuestion: deleteQuestion,
         isLooseNote: isLooseNote,
         notesForStep: notesForStep,
         lastWorkedOn: lastWorkedOn,

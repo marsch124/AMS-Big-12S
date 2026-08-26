@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=8">
+<link rel="stylesheet" href="css/style.css?v=9">
 </head>
 <body>
 
@@ -157,7 +157,12 @@
         <h2 class="section-heading">Questions to work through</h2>
         <p class="hint">Prompts to take to your sponsor — not official A.A. material, and yours
            to disagree with.</p>
-        <ol class="questionlist" id="step-questions"></ol>
+        <div class="questionlist" id="step-questions"></div>
+        <div class="btn-row">
+          <button class="btn btn-quiet btn-small" id="step-add-question">Add a question of your own</button>
+          <button class="btn btn-quiet btn-small" id="step-show-hidden" hidden></button>
+        </div>
+        <div class="hiddenlist" id="step-hidden-questions" hidden></div>
       </div>
     </div>
   </section>
@@ -379,6 +384,26 @@
 
       <h2 class="section-heading">Version history</h2>
       <div class="panel panel-flush">
+
+        <details class="disclosure">
+          <summary><span>Answering the questions</span><span class="ver-tag">1.8</span></summary>
+          <div class="disclosure-body">
+            <p>The questions on a step can be answered now, and answering one again does not
+               lose what you said the first time.</p>
+            <ul>
+              <li>The <strong>latest answer</strong> is shown under its question; earlier ones
+                  are kept, dated, and open on request. Working a step a second time is not a
+                  correction of the first.</li>
+              <li>A question that does not match how you were taught can be
+                  <strong>put away</strong> — and anything already written against it is kept, so
+                  bringing it back brings the answers with it.</li>
+              <li>You can <strong>add questions of your own</strong>, however your sponsor puts
+                  them.</li>
+              <li>Answers are notes like any other: searchable, markable for your sponsor, and
+                  carried in the same backup — along with the questions you added or put away.</li>
+            </ul>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Notes that fold</span><span class="ver-tag">1.7</span></summary>
@@ -692,9 +717,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=1"></script>
-<script src="js/store.js?v=5"></script>
-<script src="js/backup.js?v=1"></script>
-<script src="js/ui.js?v=6"></script>
+<script src="js/store.js?v=6"></script>
+<script src="js/backup.js?v=2"></script>
+<script src="js/ui.js?v=7"></script>
 <script src="js/app.js?v=5"></script>
 </body>
 </html>

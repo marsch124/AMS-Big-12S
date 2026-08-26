@@ -29,7 +29,12 @@
             settings: state.settings,
             position: state.position,
             notes: state.notes,
-            bookmarks: state.bookmarks
+            bookmarks: state.bookmarks,
+            // Questions put away, and questions of the reader's own. Answers
+            // themselves are notes and travel above; without this a restore
+            // would bring back questions they had hidden and lose the ones they
+            // wrote.
+            stepPrefs: state.stepPrefs
         };
 
         if (options.includeBookText && state.book && state.book.textIncluded) {
@@ -184,6 +189,29 @@
             if (payload.settings) {
                 return Store.saveSettings(payload.settings);
             }
+        }).then(function () {
+            // Absent from backups written before step work existed, which must
+            // restore cleanly rather than wiping what is on this device.
+            if (!payload.stepPrefs) return;
+            var incoming = payload.stepPrefs;
+            if (mode === 'replace') {
+                Store.state.stepPrefs = {
+                    hidden: incoming.hidden || {},
+                    custom: incoming.custom || {}
+                };
+            } else {
+                var current = Store.state.stepPrefs;
+                current.hidden = Object.assign({}, current.hidden, incoming.hidden || {});
+                Object.keys(incoming.custom || {}).forEach(function (stepId) {
+                    var mine = current.custom[stepId] || [];
+                    var seen = {};
+                    mine.forEach(function (q) { seen[q.id] = true; });
+                    current.custom[stepId] = mine.concat(
+                        (incoming.custom[stepId] || []).filter(function (q) { return !seen[q.id]; }));
+                });
+            }
+            summary.stepPrefs = true;
+            return Store.saveStepPrefs();
         }).then(function () {
             // Only adopt the backup's position if it is newer than what is here.
             var incoming = payload.position;
