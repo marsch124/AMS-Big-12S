@@ -13,6 +13,9 @@ without a signal.
 - 📖 **Distraction-free reader** — serif or sans, four themes, adjustable size and spacing
 - 🔖 **Remembers where you stopped** — down to the paragraph, restored on every launch
 - ✎ **Notes on any passage** — tap a paragraph, write a note; it stays attached to those words
+- 🗣 **Things to bring up** — mark anything for your sponsor or a sponsee, keep a running count of
+  what is still waiting, tick it off after the conversation, and copy the list out before a call
+- 💭 **Notes of your own** — write down what did not come from a page at all
 - 🔍 **Full-text search** — jump straight from a phrase to the passage it lives in
 - 💾 **One-file backup** — notes, bookmarks, position, settings and (optionally) the text
 - 📡 **Fully offline** — everything lives on your device; no account, no server, no tracking
@@ -22,6 +25,33 @@ without a signal.
 1. Open the live link above in **Safari** (iOS) or **Chrome** (Android).
 2. iOS: **Share → Add to Home Screen**. Android: **Menu → Install app**.
 3. Launch it from the home screen. It runs full-screen and works with no signal.
+
+## Notes, and things to talk about
+
+Tap any paragraph while reading and choose **Add note**. The note stays attached
+to the words it was written against, not to a paragraph number, so it survives a
+re-import of the text.
+
+Not everything worth keeping comes off a page, though. **+** at the top of the
+Notes tab writes a note with no passage behind it — a question that surfaced on
+the drive home, something to raise with a sponsee, a reflection that is nobody
+else's business.
+
+Any note, from a page or not, can be marked **Bring this up with — my sponsor**
+or **my sponsee**:
+
+- the filters at the top of the Notes tab carry a count of what is **still
+  waiting** for each conversation;
+- a marked note also says so **in the margin while you read**, so it turns up on
+  the page as well as in a list;
+- **Mark as talked about** stands a point down after the conversation. It keeps
+  its place at the bottom of the list with the date on it — nothing is deleted —
+  and goes back on the list if there turns out to be more to say;
+- **Copy this list** puts everything still waiting on the clipboard, ready to
+  paste into a message before a call.
+
+**Reflections** gathers everything written that did not come from a page,
+whoever it was for.
 
 ## The text
 
@@ -124,7 +154,11 @@ The backup is plain JSON, readable without this app:
   "position": { "sectionId": "ch05", "paraIndex": 12, "ratio": 0.41 },
   "notes": [ { "id": "note-…", "sectionId": "ch05", "paraIndex": 12,
                "anchor": "Rarely have we seen a person fail…",
-               "body": "Read this again on a hard day." } ],
+               "body": "Read this again on a hard day.",
+               "tag": "sponsor", "discussedAt": null },
+             { "id": "note-…", "sectionId": null, "paraIndex": null, "anchor": "",
+               "body": "Ask how much detail step four really needs.",
+               "tag": "sponsor", "discussedAt": "2026-08-24T18:30:00.000Z" } ],
   "bookmarks": [ … ],
   "settings": { … }
 }

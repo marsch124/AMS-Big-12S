@@ -120,6 +120,19 @@ button { cursor: pointer; }
 .icon-btn:active { background: var(--bg-sunken); }
 #reader-back { font-size: 30px; }
 
+/* Line art inside a topbar button, drawn like the tab bar icons so the plus
+   on the Notes tab is the same weight as everything else. */
+.icon-line {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  vertical-align: middle;
+  pointer-events: none;
+}
+
 /* ═══════════════════════════════════════════════════════════════ tab bar ══ */
 
 .tabbar {
@@ -370,6 +383,92 @@ button { cursor: pointer; }
 .card-date { margin: 8px 0 0; font-size: 11px; color: var(--text-dim); }
 .card-warn { margin: 6px 0 0; font-size: 11px; color: var(--danger); }
 .card mark { background: var(--mark); color: inherit; }
+
+/* ── Notes: whose conversation a note belongs to ───────────────────────── */
+
+/* A note card holds a button (tap to open the passage, or the note itself)
+   plus its own small controls underneath, so the card cannot be one big
+   button any more — a button inside a button is not valid HTML. */
+.note-card { padding: 0; overflow: hidden; }
+.note-card .card-main {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 13px 14px 12px;
+  font: inherit;
+}
+.note-card .card-main:active { background: var(--bg-sunken); }
+
+.card-head { display: flex; align-items: center; gap: 8px; }
+.card-head .card-where { flex: 1; min-width: 0; }
+
+.tag-pill {
+  flex: none;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+.tag-pill.is-done { border-color: var(--rule); color: var(--text-dim); }
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  padding: 0 10px 10px;
+}
+.card-actions .chip { flex: 1 1 auto; }
+
+/* A point already talked about stays in the list — the record of having had
+   the conversation is worth as much as the reminder was — but it steps back. */
+.note-card.is-done .card-main { opacity: 0.55; }
+.card-done { margin: 8px 0 0; font-size: 11px; color: var(--accent); font-weight: 600; }
+
+/* ── Chip rows (notes filters, and the sheet's "bring this up with") ────── */
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.chip {
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--bg-raised);
+  color: var(--text-dim);
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* The four filters have to sit on one line on a phone, counts and all, or
+   they push the list itself off the screen. */
+#notes-filters { gap: 6px; }
+#notes-filters .chip { padding: 7px 10px; font-size: 12.5px; }
+.chip:active { background: var(--bg-sunken); }
+.chip.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-on);
+}
+.chip-count { opacity: 0.75; font-weight: 500; }
+
+.sheet-label {
+  margin: 16px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 700;
+}
 
 .field {
   width: 100%;

@@ -197,6 +197,85 @@ async function shot(page, name) {
     });
     check('a foreign backup is rejected clearly', !!rejected, rejected);
 
+    // ── things to talk about ──────────────────────────────────────────────
+    // A point for the sponsor that came from nowhere in particular: written
+    // straight onto the Notes tab, with no passage behind it.
+    await page.click('.tab[data-screen="notes"]');
+    await page.waitForSelector('#screen-notes.is-active');
+    await page.click('#notes-add-btn');
+    await page.waitForSelector('#note-sheet:not([hidden])');
+    check('a note of your own opens with no passage quoted',
+        !(await page.isVisible('#note-sheet-quote')));
+    await page.fill('#note-sheet-body', 'Ask about step four — how much detail is enough.');
+    await page.click('#note-tags .chip[data-tag="sponsor"]');
+    await page.click('#note-save');
+    await page.waitForSelector('#note-sheet', { state: 'hidden' });
+    check('a note with no passage saves',
+        (await page.$$eval('#notes-list .card', (e) => e.length)) === 2);
+
+    // The same thing again, but starting from a passage — a note can be both a
+    // note on the text and a point for a conversation.
+    await page.click('.tab[data-screen="home"]');
+    await page.click('.toc-item:not([disabled]) >> nth=6');
+    await page.waitForSelector('#screen-reader.is-active');
+    await page.click('#reader-content .para[data-index="3"]');
+    await page.waitForSelector('#para-sheet:not([hidden])');
+    await page.click('#para-sheet [data-action="note"]');
+    await page.waitForSelector('#note-sheet:not([hidden])');
+    await page.fill('#note-sheet-body', 'How does he read this one?');
+    await page.click('#note-tags .chip[data-tag="sponsee"]');
+    await page.click('#note-save');
+    await page.waitForSelector('#note-sheet', { state: 'hidden' });
+    const flag = await page.textContent('#reader-content .para[data-index="3"] .para-flag');
+    check('the page says who a passage note is waiting for', flag.includes('Sponsee'), flag.trim());
+    await page.click('#reader-back');
+
+    await page.click('.tab[data-screen="notes"]');
+    await page.waitForSelector('#screen-notes.is-active');
+    const chips = await page.$$eval('#notes-filters .chip', (e) => e.map((c) => c.textContent.trim()));
+    check('the filters count what is still waiting',
+        chips.includes('Sponsor 1') && chips.includes('Sponsee 1'), chips.join(' / '));
+
+    await page.click('#notes-filters .chip[data-filter="sponsor"]');
+    await page.waitForTimeout(150);
+    check('the sponsor list holds only the sponsor point',
+        (await page.$$eval('#notes-list .card', (e) => e.length)) === 1);
+    check('a list can be copied out before a conversation',
+        await page.isVisible('#notes-copy'));
+
+    await page.click('#notes-list .note-card .card-actions .chip >> nth=0');
+    await page.waitForTimeout(250);
+    check('ticking a point off stands it down, without deleting it',
+        (await page.$$eval('#notes-list .note-card.is-done', (e) => e.length)) === 1 &&
+        (await page.$$eval('#notes-list .card', (e) => e.length)) === 1);
+    const afterTick = await page.$$eval('#notes-filters .chip[data-filter="sponsor"]',
+        (e) => e[0].textContent.trim());
+    check('a point talked about stops being counted as waiting', afterTick === 'Sponsor', afterTick);
+
+    await page.click('#notes-filters .chip[data-filter="own"]');
+    await page.waitForTimeout(150);
+    check('reflections are the notes that came from no page',
+        (await page.$$eval('#notes-list .card', (e) => e.length)) === 1);
+    await page.click('#notes-filters .chip[data-filter="all"]');
+    await page.waitForTimeout(150);
+
+    // They are notes like any other, so they travel in a backup and come back
+    // through a reload.
+    const talkBackup = JSON.parse(await page.evaluate(
+        () => Backup.serialize({ includeBookText: false })));
+    const tagged = talkBackup.notes.filter((n) => n.tag);
+    const loose = talkBackup.notes.filter((n) => !n.sectionId);
+    check('backups carry who a note is for, and notes with no passage',
+        tagged.length === 2 && loose.length === 1 && tagged.some((n) => n.discussedAt),
+        tagged.length + ' tagged, ' + loose.length + ' loose');
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('#screen-home.is-active');
+    await page.click('.tab[data-screen="notes"]');
+    await page.waitForTimeout(250);
+    check('everything written is still there after a reload',
+        (await page.$$eval('#notes-list .card', (e) => e.length)) === 3);
+
     // ── appearance ────────────────────────────────────────────────────────
     await page.click('.tab[data-screen="settings"]');
     await page.selectOption('#set-theme', 'dark');

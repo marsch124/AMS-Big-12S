@@ -1,13 +1,14 @@
 # AMS Big 12S
 
 An offline-first PWA for reading *Alcoholics Anonymous* (1939 first edition),
-taking notes, and resuming where the reader stopped. Built for Martin's iPhone;
-a sibling to his `AMS-Instructions` app.
+taking notes, keeping the points to raise with a sponsor or a sponsee, and
+resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
+`AMS-Instructions` app.
 
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.3 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.4 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Non-negotiables
 
@@ -47,7 +48,7 @@ data/book.json                      Parsed book the app reads (~577 KB)
 data/alcoholics-anonymous-1939.txt  Source text book.json was built from
 tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
-tools/smoke-test.js    34 end-to-end browser checks
+tools/smoke-test.js    45 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -59,7 +60,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 34 checks, expect 34/34
+node tools/smoke-test.js                  # 45 checks, expect 45/45
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.
@@ -102,6 +103,16 @@ chapter, on scroll (debounced 400 ms), on leaving the reader, and on
 `pagehide` / `visibilitychange`. The original only saved on scroll, so any
 chapter short enough to fit one screen was never remembered. iOS kills
 backgrounded PWAs without a `visibilitychange`, hence `pagehide`.
+
+**One note store, three kinds of note.** A note carries `sectionId` +
+`paraIndex` + `anchor` when it was written against a passage, and `sectionId:
+null` when it was written straight onto the Notes tab — the things that do not
+come out of a page. `tag` (`''`, `'sponsor'`, `'sponsee'`) is who it is waiting
+for; `discussedAt` is when it was ticked off, and is never cleared by deleting
+anything. `Store.isStandalone()` is the test; `Store.resolveNote()` returns a
+passage-less note untouched rather than calling it an orphan. Do not split these
+into a second store — one store is what makes a passage note and a talking point
+the same object, searchable together and carried by the same backup.
 
 **Notes are anchored by text, not index.** Each stores `anchor` — the first 80
 characters of its paragraph. `Store.resolveNote()` checks the stored index

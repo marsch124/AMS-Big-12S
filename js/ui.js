@@ -10,6 +10,9 @@
     var searchTimer = null;
     var wakeLock = null;
     var pasteHandler = null;
+    var notesFilter = 'all';   // all | sponsor | sponsee | own
+    var noteTag = '';          // the chip currently lit in the note sheet
+    var noteOnPassage = false; // whether that sheet has a passage behind it
 
     /* ------------------------------------------------------------ helpers */
 
@@ -185,7 +188,11 @@
             html += '<p class="' + classes.join(' ') + '" data-index="' + index + '">' +
                 escapeHtml(paragraph);
             if (notes[index]) {
-                html += '<span class="para-flag">✎ ' + escapeHtml(firstWords(notes[index].body, 12)) + '</span>';
+                // A note kept for a conversation says so on the page itself, so
+                // you meet it again while reading rather than only in a list.
+                var waiting = notes[index].tag ? TAG_SHORT[notes[index].tag] + ' · ' : '';
+                html += '<span class="para-flag">✎ ' +
+                    escapeHtml(waiting + firstWords(notes[index].body, 12)) + '</span>';
             }
             html += '</p>';
         });
@@ -325,22 +332,61 @@
         }
     }
 
-    function openNoteSheet(sectionId, paraIndex, existing) {
-        var section = Store.getSection(sectionId);
-        $('note-sheet-quote').textContent = section ? section.paragraphs[paraIndex] : '';
+    // Who a note is being kept for. Two people, named plainly: the labels are
+    // what a reader would say out loud, not a schema.
+    var TAG_SHORT = { sponsor: 'Sponsor', sponsee: 'Sponsee' };
+
+    function setNoteTag(tag) {
+        noteTag = tag || '';
+        Array.prototype.forEach.call(document.querySelectorAll('#note-tags .chip'), function (chip) {
+            chip.classList.toggle('is-active', chip.dataset.tag === noteTag);
+        });
+        $('note-tag-hint').textContent = noteTag
+            ? 'It will wait on your ' + (noteTag === 'sponsor' ? 'sponsor' : 'sponsee') +
+              ' list until you tick it off.'
+            : (noteOnPassage
+                ? 'Leave both off and it stays a note on this passage.'
+                : 'Leave both off and it stays a thought of your own.');
+    }
+
+    // sectionId null means a note that belongs to no passage — written straight
+    // onto the Notes tab, for the things that do not come out of a page.
+    function openNoteSheet(sectionId, paraIndex, existing, options) {
+        options = options || {};
+        var section = sectionId ? Store.getSection(sectionId) : null;
+        var quote = section && section.paragraphs[paraIndex] ? section.paragraphs[paraIndex] : '';
+
+        $('note-sheet-title').textContent = section
+            ? 'Note on this passage'
+            : (existing ? 'Your note' : 'Something on your mind');
+        $('note-sheet-quote').textContent = quote;
+        $('note-sheet-quote').hidden = !quote;
+        $('note-sheet-body').placeholder = section
+            ? 'Write your note…'
+            : 'A question for your sponsor, something to raise with your sponsee, or a thought of your own.';
         $('note-sheet-body').value = existing ? existing.body : '';
         $('note-delete').hidden = !existing;
+        noteOnPassage = !!section;
+        setNoteTag(existing ? existing.tag : options.tag);
 
         $('note-save').onclick = function () {
             var body = $('note-sheet-body').value.trim();
             if (!body) { toast('Write something first'); return; }
             var record = {
-                sectionId: sectionId,
-                paraIndex: paraIndex,
+                sectionId: sectionId || null,
+                paraIndex: section ? paraIndex : null,
                 body: body,
-                anchor: Store.anchorFor(section.paragraphs[paraIndex])
+                tag: noteTag,
+                anchor: section ? Store.anchorFor(section.paragraphs[paraIndex]) : ''
             };
-            if (existing) { record.id = existing.id; record.createdAt = existing.createdAt; }
+            if (existing) {
+                record.id = existing.id;
+                record.createdAt = existing.createdAt;
+                record.discussedAt = existing.discussedAt || null;
+                // Moving a point to somebody else's list makes it something not
+                // yet said to that person, whoever it was settled with before.
+                if (noteTag && noteTag !== (existing.tag || '')) record.discussedAt = null;
+            }
             Store.saveNote(record).then(function () {
                 closeSheets();
                 toast('Note saved');
@@ -366,45 +412,172 @@
 
     /* -------------------------------------------------------------- notes */
 
+    var FILTER_LABELS = { all: 'All', sponsor: 'Sponsor', sponsee: 'Sponsee', own: 'Reflections' };
+
+    var EMPTY_COPY = {
+        all: 'No notes yet. While reading, tap any paragraph and choose <strong>Add note</strong> — ' +
+             'or tap <strong>+</strong> above for something the book did not put there.',
+        sponsor: 'Nothing waiting for your sponsor. Tap <strong>+</strong> to put something on the list, ' +
+                 'or mark a note for them while you are reading.',
+        sponsee: 'Nothing waiting for your sponsee. Tap <strong>+</strong> to put something on the list, ' +
+                 'or mark a note for them while you are reading.',
+        own: 'Nothing here yet. Tap <strong>+</strong> and write what is on your mind — it does not have to ' +
+             'come from a page.'
+    };
+
+    function noteMatchesFilter(note) {
+        if (notesFilter === 'all') return true;
+        if (notesFilter === 'own') return Store.isStandalone(note);
+        return note.tag === notesFilter;
+    }
+
+    // The counts are of points still waiting, not of everything ever written:
+    // a list of forty settled matters is not forty things to raise.
+    function renderNoteFilters() {
+        var counts = {
+            sponsor: Store.waitingFor('sponsor'),
+            sponsee: Store.waitingFor('sponsee'),
+            own: Store.state.notes.filter(Store.isStandalone).length
+        };
+        Array.prototype.forEach.call(document.querySelectorAll('#notes-filters .chip'), function (chip) {
+            var key = chip.dataset.filter;
+            chip.classList.toggle('is-active', key === notesFilter);
+            chip.innerHTML = escapeHtml(FILTER_LABELS[key]) +
+                (counts[key] ? ' <span class="chip-count">' + counts[key] + '</span>' : '');
+        });
+    }
+
+    // Before a meeting or a phone call, the list is more use out of the app than
+    // in it. Only what is still waiting goes across.
+    function copyTalkList(notes) {
+        var heading = 'To talk about with my ' + (notesFilter === 'sponsor' ? 'sponsor' : 'sponsee');
+        var lines = [heading, ''];
+        notes.forEach(function (note) {
+            lines.push('• ' + note.body);
+            var section = Store.getSection(note.sectionId);
+            var paragraph = section && section.paragraphs[note.paraIndex];
+            if (paragraph) {
+                lines.push('  ' + section.title + ' — “' + firstWords(paragraph, 14) + '”');
+            }
+        });
+
+        var text = lines.join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text)
+                .then(function () { toast('List copied'); })
+                .catch(function () { toast('Could not copy'); });
+        } else { toast('Copying is not available here'); }
+    }
+
+    function renderNotesActions(notes) {
+        var holder = $('notes-actions');
+        holder.innerHTML = '';
+        if (notesFilter !== 'sponsor' && notesFilter !== 'sponsee') return;
+
+        var waiting = notes.filter(function (note) { return !note.discussedAt; });
+        if (!waiting.length) return;
+
+        var button = document.createElement('button');
+        button.className = 'btn btn-quiet btn-block';
+        button.id = 'notes-copy';
+        button.textContent = 'Copy this list';
+        button.addEventListener('click', function () { copyTalkList(waiting); });
+        holder.appendChild(button);
+    }
+
+    function noteCard(note) {
+        var section = Store.getSection(note.sectionId);
+        var standalone = Store.isStandalone(note);
+        var quote = section && section.paragraphs[note.paraIndex]
+            ? firstWords(section.paragraphs[note.paraIndex], 26) : '';
+        var where = standalone ? '' : (section ? section.title : 'Unknown section');
+        var head = where || note.tag;   // nothing to head a plain thought with
+
+        var card = document.createElement('div');
+        card.className = 'card note-card' + (note.discussedAt ? ' is-done' : '');
+
+        var main = document.createElement('button');
+        main.className = 'card-main';
+        main.innerHTML =
+            (head ? '<div class="card-head">' +
+                '<span class="card-where">' + escapeHtml(where) + '</span>' +
+                (note.tag ? '<span class="tag-pill' + (note.discussedAt ? ' is-done' : '') + '">' +
+                    escapeHtml(TAG_SHORT[note.tag]) + '</span>' : '') +
+            '</div>' : '') +
+            (quote ? '<p class="card-quote">' + escapeHtml(quote) + '</p>' : '') +
+            '<p class="card-body">' + escapeHtml(note.body) + '</p>' +
+            '<p class="card-date">' + formatDate(note.updatedAt) + '</p>' +
+            (note.discussedAt ? '<p class="card-done">Talked about ' + formatDate(note.discussedAt) + '</p>' : '') +
+            (note.orphan ? '<p class="card-warn">The passage this note pointed at is no longer in the text.</p>' : '');
+        // A note written against a passage still leads back to it; one that was
+        // never on a page has nowhere to go, so it opens for editing instead.
+        main.addEventListener('click', function () {
+            if (standalone || note.orphan) { openNoteSheet(note.sectionId, note.paraIndex, note); return; }
+            openReader(note.sectionId, { paraIndex: note.paraIndex, highlight: true });
+        });
+        card.appendChild(main);
+
+        var actions = document.createElement('div');
+        actions.className = 'card-actions';
+
+        if (note.tag) {
+            var done = document.createElement('button');
+            done.className = 'chip' + (note.discussedAt ? ' is-active' : '');
+            done.textContent = note.discussedAt ? 'Talked about ✓' : 'Mark as talked about';
+            done.addEventListener('click', function () {
+                var settled = !note.discussedAt;
+                Store.setNoteDiscussed(note.id, settled).then(function () {
+                    toast(settled ? 'Ticked off' : 'Back on the list');
+                    renderNotes();
+                });
+            });
+            actions.appendChild(done);
+        }
+
+        var edit = document.createElement('button');
+        edit.className = 'chip';
+        edit.textContent = 'Edit';
+        edit.addEventListener('click', function () {
+            openNoteSheet(note.sectionId, note.paraIndex, note);
+        });
+        actions.appendChild(edit);
+
+        card.appendChild(actions);
+        return card;
+    }
+
     function renderNotes() {
         var query = $('notes-search').value.trim().toLowerCase();
         var list = $('notes-list');
         list.innerHTML = '';
 
-        var notes = Store.state.notes.map(Store.resolveNote).filter(function (note) {
-            if (!query) return true;
-            var section = Store.getSection(note.sectionId);
-            return note.body.toLowerCase().indexOf(query) !== -1 ||
-                (section && section.title.toLowerCase().indexOf(query) !== -1);
+        renderNoteFilters();
+
+        var notes = Store.state.notes.map(Store.resolveNote)
+            .filter(noteMatchesFilter)
+            .filter(function (note) {
+                if (!query) return true;
+                var section = Store.getSection(note.sectionId);
+                return note.body.toLowerCase().indexOf(query) !== -1 ||
+                    (section && section.title.toLowerCase().indexOf(query) !== -1);
+            });
+
+        // Whatever has been talked about sinks below whatever has not. Within
+        // each half the newest is still first, as the store returns them.
+        notes.sort(function (a, b) {
+            return (a.discussedAt ? 1 : 0) - (b.discussedAt ? 1 : 0);
         });
+
+        renderNotesActions(notes);
 
         $('notes-empty').hidden = notes.length > 0;
         if (query && !notes.length) {
-            $('notes-empty').hidden = false;
             $('notes-empty').textContent = 'No notes match “' + query + '”.';
         } else if (!query) {
-            $('notes-empty').innerHTML = 'No notes yet. While reading, tap any paragraph and choose <strong>Add note</strong>.';
+            $('notes-empty').innerHTML = EMPTY_COPY[notesFilter];
         }
 
-        notes.forEach(function (note) {
-            var section = Store.getSection(note.sectionId);
-            var quote = section && section.paragraphs[note.paraIndex]
-                ? firstWords(section.paragraphs[note.paraIndex], 26) : '';
-
-            var card = document.createElement('button');
-            card.className = 'card';
-            card.innerHTML =
-                '<div class="card-where">' + escapeHtml(section ? section.title : 'Unknown section') + '</div>' +
-                (quote ? '<p class="card-quote">' + escapeHtml(quote) + '</p>' : '') +
-                '<p class="card-body">' + escapeHtml(note.body) + '</p>' +
-                '<p class="card-date">' + formatDate(note.updatedAt) + '</p>' +
-                (note.orphan ? '<p class="card-warn">The passage this note pointed at is no longer in the text.</p>' : '');
-            card.addEventListener('click', function () {
-                if (note.orphan) { openNoteSheet(note.sectionId, note.paraIndex, note); return; }
-                openReader(note.sectionId, { paraIndex: note.paraIndex, highlight: true });
-            });
-            list.appendChild(card);
-        });
+        notes.forEach(function (note) { list.appendChild(noteCard(note)); });
     }
 
     /* ------------------------------------------------------------- search */
@@ -748,6 +921,27 @@
                 renderSettings();
                 renderHome();
                 toast('Book text removed');
+            });
+        });
+
+        // Notes tab — writing one from scratch, and the filters over the list
+        $('notes-add-btn').addEventListener('click', function () {
+            // Standing in front of the sponsor list, a new point is almost
+            // always for the sponsor, so the chip comes up already lit.
+            var preset = (notesFilter === 'sponsor' || notesFilter === 'sponsee') ? notesFilter : '';
+            openNoteSheet(null, null, null, { tag: preset });
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('#notes-filters .chip'), function (chip) {
+            chip.addEventListener('click', function () {
+                notesFilter = chip.dataset.filter;
+                renderNotes();
+            });
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('#note-tags .chip'), function (chip) {
+            // Tapping the lit chip clears it — a point can stop being someone
+            // else's business without being deleted.
+            chip.addEventListener('click', function () {
+                setNoteTag(noteTag === chip.dataset.tag ? '' : chip.dataset.tag);
             });
         });
 

@@ -203,10 +203,19 @@
         return state.notes.filter(function (note) { return note.sectionId === sectionId; });
     }
 
+    // A note written on the Notes tab rather than against a paragraph. It has
+    // no section, no anchor and nothing to re-find, so the resolver leaves it
+    // alone rather than declaring it an orphan.
+    function isStandalone(note) {
+        return !note.sectionId;
+    }
+
     // Paragraph numbering can shift if the reader re-imports a differently
     // formatted copy of the text. Each note keeps the opening of the paragraph
     // it was written against, so it can find its way home again.
     function resolveNote(note) {
+        if (isStandalone(note)) return note;
+
         var section = getSection(note.sectionId);
         if (!section) return Object.assign({}, note, { orphan: true });
 
@@ -227,15 +236,42 @@
         var now = new Date().toISOString();
         var record = Object.assign({
             id: uid('note'),
-            createdAt: now
+            createdAt: now,
+            sectionId: null,     // a note of one's own, until a passage says otherwise
+            paraIndex: null,
+            anchor: '',
+            tag: '',             // '' | 'sponsor' | 'sponsee'
+            discussedAt: null
         }, note, { updatedAt: now });
 
-        if (!record.anchor) {
+        if (!record.anchor && record.sectionId) {
             var section = getSection(record.sectionId);
             if (section) record.anchor = anchorFor(section.paragraphs[record.paraIndex]);
         }
 
         return DB.put(DB.STORE_NOTES, record).then(loadNotes).then(function () { return record; });
+    }
+
+    // Ticking something off after a conversation, and putting it back if it
+    // turns out there is more to say. The note itself is left untouched.
+    function setNoteDiscussed(id, discussed) {
+        var existing = state.notes.filter(function (note) { return note.id === id; })[0];
+        if (!existing) return Promise.resolve(null);
+
+        var record = Object.assign({}, existing, {
+            discussedAt: discussed ? new Date().toISOString() : null,
+            updatedAt: new Date().toISOString()
+        });
+        return DB.put(DB.STORE_NOTES, record).then(loadNotes).then(function () { return record; });
+    }
+
+    // How many points are still waiting for each conversation. Drives the
+    // counts on the Notes tab filters, so the number is of things not yet
+    // talked about — a list of forty settled matters is not four unread ones.
+    function waitingFor(tag) {
+        return state.notes.filter(function (note) {
+            return note.tag === tag && !note.discussedAt;
+        }).length;
     }
 
     function deleteNote(id) {
@@ -347,8 +383,11 @@
 
         loadNotes: loadNotes,
         notesForSection: notesForSection,
+        isStandalone: isStandalone,
         resolveNote: resolveNote,
         saveNote: saveNote,
+        setNoteDiscussed: setNoteDiscussed,
+        waitingFor: waitingFor,
         deleteNote: deleteNote,
 
         loadBookmarks: loadBookmarks,

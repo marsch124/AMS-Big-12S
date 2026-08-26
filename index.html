@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=4">
+<link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
 
@@ -72,10 +72,21 @@
   <section class="screen" id="screen-notes">
     <header class="topbar">
       <div class="topbar-titles"><h1 class="topbar-title">My notes</h1></div>
-      <button class="icon-btn" id="notes-filter-btn" aria-label="Filter notes">☰</button>
+      <button class="icon-btn" id="notes-add-btn" aria-label="Write a note of your own">
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-line">
+          <path d="M12 5.2v13.6M5.2 12h13.6"/>
+        </svg>
+      </button>
     </header>
     <div class="screen-body">
       <input class="field" type="search" id="notes-search" placeholder="Search your notes" autocomplete="off">
+      <div class="chip-row" id="notes-filters">
+        <button class="chip is-active" data-filter="all">All</button>
+        <button class="chip" data-filter="sponsor">Sponsor</button>
+        <button class="chip" data-filter="sponsee">Sponsee</button>
+        <button class="chip" data-filter="own">Reflections</button>
+      </div>
+      <div id="notes-actions"></div>
       <div id="notes-list" class="card-list"></div>
       <p class="empty" id="notes-empty" hidden>
         No notes yet. While reading, tap any paragraph and choose <strong>Add note</strong>.
@@ -224,6 +235,29 @@
         </details>
 
         <details class="disclosure">
+          <summary>Things to bring up with your sponsor</summary>
+          <div class="disclosure-body">
+            <p>Some things you want to remember are not about a passage at all. Tap
+               <strong>+</strong> at the top of the Notes tab and write one down — a question
+               that came up on the drive home, something to raise with a sponsee, or a
+               reflection that belongs to nobody but you.</p>
+            <p>Anything you write, whether it came off a page or not, can be marked
+               <strong>Bring this up with — my sponsor</strong> or <strong>my sponsee</strong>.
+               It then waits on that list, and the count on the filter tells you how many
+               points are still waiting. Notes marked this way also say so in the margin
+               while you are reading, so you meet them again on the page.</p>
+            <p>After the conversation, tap <strong>Mark as talked about</strong>. The point
+               drops to the bottom of the list with the date on it rather than disappearing
+               — what you have already been through is worth keeping. Tap again if there
+               turns out to be more to say.</p>
+            <p><strong>Copy this list</strong> puts everything still waiting on the clipboard,
+               ready to paste into a message before a call.</p>
+            <p><strong>Reflections</strong> gathers everything you wrote that did not come
+               from a page, whoever it is for.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
           <summary>Bookmarks and search</summary>
           <div class="disclosure-body">
             <p>Tap a paragraph and choose <strong>Bookmark this passage</strong> to mark it
@@ -289,6 +323,26 @@
 
       <h2 class="section-heading">Version history</h2>
       <div class="panel panel-flush">
+
+        <details class="disclosure">
+          <summary><span>Things to talk about</span><span class="ver-tag">1.4</span></summary>
+          <div class="disclosure-body">
+            <p>The Notes tab now holds more than notes on passages.</p>
+            <ul>
+              <li><strong>Write a note of your own</strong> with the <strong>+</strong> button
+                  — for the things that do not come out of a page.</li>
+              <li><strong>Bring this up with my sponsor / my sponsee.</strong> Any note can be
+                  marked for a conversation, whether it started on a page or not, and the
+                  filters at the top of the tab keep a count of what is still waiting.</li>
+              <li><strong>Mark as talked about</strong> after the conversation. The point stays,
+                  dated, at the bottom of the list rather than vanishing.</li>
+              <li><strong>Copy this list</strong> hands you everything still waiting, ready to
+                  paste into a message before a call.</li>
+              <li>A note kept for someone says so in the margin while you read, so you come
+                  across it again on the page and not only in a list.</li>
+            </ul>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Explaining itself</span><span class="ver-tag">1.3</span></summary>
@@ -477,9 +531,15 @@
 
 <div class="sheet" id="note-sheet" hidden>
   <div class="sheet-handle"></div>
-  <h2 class="sheet-title">Note</h2>
+  <h2 class="sheet-title" id="note-sheet-title">Note</h2>
   <p class="sheet-quote" id="note-sheet-quote"></p>
   <textarea id="note-sheet-body" class="note-input" rows="6" placeholder="Write your note…"></textarea>
+  <p class="sheet-label">Bring this up with</p>
+  <div class="chip-row" id="note-tags">
+    <button class="chip" data-tag="sponsor">My sponsor</button>
+    <button class="chip" data-tag="sponsee">My sponsee</button>
+  </div>
+  <p class="hint" id="note-tag-hint">Leave both off and it stays a thought of your own.</p>
   <div class="btn-row">
     <button class="btn btn-primary" id="note-save">Save note</button>
     <button class="btn btn-danger" id="note-delete" hidden>Delete</button>
@@ -515,9 +575,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=1"></script>
-<script src="js/store.js?v=2"></script>
+<script src="js/store.js?v=3"></script>
 <script src="js/backup.js?v=1"></script>
-<script src="js/ui.js?v=2"></script>
-<script src="js/app.js?v=2"></script>
+<script src="js/ui.js?v=3"></script>
+<script src="js/app.js?v=3"></script>
 </body>
 </html>
