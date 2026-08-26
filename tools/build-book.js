@@ -61,9 +61,22 @@ function main(argv) {
     fs.writeFileSync(out, JSON.stringify(book, null, 1) + '\n', 'utf8');
 
     const words = BookParser.wordCount(parsed.sections);
+
+    // Guard against silently losing prose. Every word of the source should end
+    // up in a paragraph or a heading; page numbers and running heads are dropped
+    // on purpose, so a small shortfall is expected, but a large one means a line
+    // of real text was swallowed — usually by a bad heading guess.
+    const bodyWords = raw.split('\n')
+        .filter((line) => !/^\s*#/.test(line))        // heading markers are not body
+        .join(' ').split(/\s+/).filter(Boolean).length;
+    const lost = bodyWords - words;
+
     console.log('Wrote ' + path.relative(process.cwd(), out));
     console.log('  sections:  ' + parsed.sections.length);
-    console.log('  words:     ' + words.toLocaleString());
+    console.log('  words:     ' + words.toLocaleString() + ' of ' +
+        bodyWords.toLocaleString() + ' body words in the source  (' +
+        (lost === 0 ? 'exact — nothing dropped'
+                    : (lost > 0 ? lost + ' dropped' : Math.abs(lost) + ' extra')) + ')');
     console.log('  size:      ' + Math.round(fs.statSync(out).size / 1024) + ' KB');
     parsed.sections.forEach((section) => {
         console.log('   - ' + section.id.padEnd(14) + section.paragraphs.length.toString().padStart(4) +

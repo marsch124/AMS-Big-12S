@@ -5,13 +5,16 @@ offline, taking notes as you go, and picking up exactly where you stopped.
 
 **Live:** https://marsch124.github.io/AMS-Big-12S/
 
+The complete text ships with the app — install it and start reading, with or
+without a signal.
+
 ## Features
 
 - 📖 **Distraction-free reader** — serif or sans, four themes, adjustable size and spacing
 - 🔖 **Remembers where you stopped** — down to the paragraph, restored on every launch
 - ✎ **Notes on any passage** — tap a paragraph, write a note; it stays attached to those words
 - 🔍 **Full-text search** — jump straight from a phrase to the passage it lives in
-- 💾 **One-file backup** — notes, bookmarks, position, settings and (optionally) the book text
+- 💾 **One-file backup** — notes, bookmarks, position, settings and (optionally) the text
 - 📡 **Fully offline** — everything lives on your device; no account, no server, no tracking
 
 ## Installing it on your phone
@@ -20,66 +23,86 @@ offline, taking notes as you go, and picking up exactly where you stopped.
 2. iOS: **Share → Add to Home Screen**. Android: **Menu → Install app**.
 3. Launch it from the home screen. It runs full-screen and works with no signal.
 
-## Loading the book text
+## The text
 
-The app ships with the table of contents but **no book text**, so you choose
-which copy to load.
+*Alcoholics Anonymous*, first edition, published April 1939 by Works Publishing
+Company. **Public domain in the United States.**
 
-1. Get a plain-text (`.txt`) copy of the **first edition (1939)**.
-2. In the app: **Settings → Book text → Choose text file** (or *Paste text*).
-3. The importer splits the text on chapter headings and reports what it found.
+43 sections, 1,453 paragraphs, 106,067 words:
 
-### Which edition, and why it matters
+| | |
+|---|---|
+| Front matter | Foreword, The Doctor's Opinion |
+| Chapters 1–11 | Bill's Story → A Vision For You |
+| Personal Stories | all 29, from The Doctor's Nightmare to Lone Endeavor |
 
-The **1939 first edition** is in the public domain in the United States, which
-is why it is the edition this app is built around. The **2nd, 3rd and 4th
-editions are still under copyright** to A.A. World Services, Inc. — please do
-not import or redistribute those without permission.
+### Provenance, and what is deliberately missing
+
+The text was extracted from the **2011 Dover republication** (ISBN
+0-486-48059-3), which reprints the 1939 edition. Two things follow from that,
+both worth knowing:
+
+- Dover's edition omits the **two-page Appendix** at the end of the original
+  1939 book. A footnote closing *A Vision For You* still points to it. That
+  omission is Dover's, not this app's.
+- Dover's own **2011 introduction** (© Dick B.) and its biographical notes are
+  **still under copyright** and are deliberately excluded. `tools/epub-to-text.py`
+  skips them by name; only the 1939 text is here.
+
+Later editions of the book — 2nd, 3rd and 4th — remain under copyright to
+A.A. World Services, Inc. Do not import those.
 
 Copyright status varies by country. Check your own jurisdiction before
 redistributing any copy.
 
-### What the importer expects
+### Replacing the text
 
-Plain text with headings on their own line. Both of these work:
+If you would rather use a different copy — a cleaner transcription, or one that
+restores the Appendix — **Settings → Book text → Choose text file**. Your notes
+survive: each one stores the opening words of the paragraph it was written
+against and re-attaches itself to the right passage. Anything that can no longer
+be found is flagged rather than silently moved.
+
+To rebuild the bundled copy instead:
+
+```bash
+python3 tools/epub-to-text.py yourbook.epub -o data/alcoholics-anonymous-1939.txt
+node tools/build-book.js data/alcoholics-anonymous-1939.txt
+```
+
+`build-book.js` reports whether every word of the source survived the parse:
 
 ```
-CHAPTER 5
+sections:  43
+words:     106,067 of 106,067 body words in the source  (exact — nothing dropped)
+```
 
-HOW IT WORKS
+### What the importer expects
+
+Plain text with headings on their own line. A `#` prefix marks a heading
+unambiguously, which is what `epub-to-text.py` emits:
+
+```
+# CHAPTER 5
+
+# HOW IT WORKS
 
 Rarely have we seen a person fail...
 ```
 
-```
-THE DOCTOR'S OPINION
-
-We of Alcoholics Anonymous believe...
-```
+Without `#` markers the parser falls back to guessing from capitalisation. That
+works for most public-domain transcriptions but is imperfect — this book sets
+whole lines of prose in capitals, and those must stay prose.
 
 The parser rejoins hard-wrapped lines into paragraphs, drops bare page numbers
-and running heads, and recognises the eleven chapters, the foreword and the
-doctor's opinion by name so their internal ids stay stable. Anything else it
-finds — the personal stories, appendices — becomes its own section
-automatically.
-
-### Baking the text into the app instead
-
-If you would rather a fresh install come with the text already loaded, and you
-have the right to redistribute your copy:
-
-```bash
-node tools/build-book.js path/to/alcoholics-anonymous-1939.txt
-```
-
-That rewrites `data/book.json` using the same parser the in-app importer uses.
-Commit and push, and every install picks it up.
+and running heads (only in unmarked text, where such furniture actually occurs),
+and recognises the eleven chapters, the Foreword and the Doctor's Opinion by
+name so their internal ids stay stable across re-imports.
 
 ## Backing up and moving to a new phone
 
 **On the old phone:** Settings → Backup → **Create backup**. On iOS this opens
-the share sheet — save it to Files, iCloud Drive, or mail it to yourself. Leave
-*Include the book text* ticked and the backup is fully self-contained.
+the share sheet — save it to Files, iCloud Drive, or mail it to yourself.
 
 **On the new phone:** install the app, then Settings → Restore → **Choose backup
 file**.
@@ -87,14 +110,17 @@ file**.
 - *Keep both, newest wins* — merges with whatever is already there, per note.
 - *Replace everything on this device* — wipes first. Use this on a fresh install.
 
-The backup is plain JSON, so it stays readable even without this app:
+Leave *Include the book text* unticked for a small file (the app already ships
+with the text); tick it if you are carrying a copy you imported yourself.
+
+The backup is plain JSON, readable without this app:
 
 ```json
 {
   "app": "AMS Big 12S",
   "schema": 1,
   "exportedAt": "2026-08-26T09:14:00.000Z",
-  "includesBookText": true,
+  "includesBookText": false,
   "position": { "sectionId": "ch05", "paraIndex": 12, "ratio": 0.41 },
   "notes": [ { "id": "note-…", "sectionId": "ch05", "paraIndex": 12,
                "anchor": "Rarely have we seen a person fail…",
@@ -104,13 +130,9 @@ The backup is plain JSON, so it stays readable even without this app:
 }
 ```
 
-Notes store the opening of the paragraph they were written against, so if you
-later import a differently formatted copy of the text they re-attach to the
-right passage instead of drifting.
-
 ## Development
 
-No build step and no dependencies — it is plain HTML, CSS and JavaScript.
+No build step and no dependencies — plain HTML, CSS and JavaScript.
 
 ```bash
 python3 -m http.server 7801
@@ -119,7 +141,7 @@ python3 -m http.server 7801
 
 ```
 ├── index.html          App shell: every screen and sheet
-├── manifest.json       PWA metadata
+├── manifest.json       PWA metadata (relative scope, so any path works)
 ├── sw.js               Service worker (offline shell cache)
 ├── css/style.css       Themes, layout, reader typography
 ├── js/
@@ -129,9 +151,12 @@ python3 -m http.server 7801
 │   ├── backup.js       Export / restore
 │   ├── ui.js           Screens, rendering, event wiring
 │   └── app.js          Bootstrap
-├── data/book.json      Table of contents (and the text, if you bake it in)
+├── data/
+│   ├── book.json                      The parsed book the app reads
+│   └── alcoholics-anonymous-1939.txt  The source text it was built from
 └── tools/
-    ├── build-book.js   Bake a text file into data/book.json
+    ├── epub-to-text.py EPUB → plain text, skipping publisher matter
+    ├── build-book.js   Plain text → data/book.json
     └── make-icons.py   Regenerate the icon set
 ```
 
@@ -139,9 +164,9 @@ python3 -m http.server 7801
 
 | What | Where |
 |---|---|
-| Notes, bookmarks, imported book text | IndexedDB (`ams-big-12s`) |
+| Notes, bookmarks, any text you import | IndexedDB (`ams-big-12s`) |
 | Settings, reading position | IndexedDB, mirrored to `localStorage` for a fast first paint |
-| App shell | Cache Storage, via the service worker |
+| App shell and bundled text | Cache Storage, via the service worker |
 
 Nothing leaves the device. Clearing the browser's site data for this app erases
 it all — which is what backups are for.
@@ -160,6 +185,6 @@ This app is called AMS Big 12S and uses no A.A.W.S. mark in its own name.
 
 ## License
 
-The app code is available for personal and non-commercial use. Whatever book
-text you import keeps its own copyright status — this repository does not grant
-you any rights to it.
+The app code is available for personal and non-commercial use. The 1939 text it
+ships with is in the public domain in the United States; its status elsewhere is
+yours to check.

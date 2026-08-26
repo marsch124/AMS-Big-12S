@@ -68,13 +68,21 @@
             .replace(/[ \t]+$/gm, '');
     }
 
-    // A line is dropped outright when it is page furniture rather than text:
-    // a bare page number, or the "Alcoholics Anonymous" running head.
-    function isNoise(line) {
+    /*
+     * A line is dropped when it is page furniture rather than text.
+     *
+     * `aggressive` is on only for unstructured text — a scan or a transcription
+     * where page numbers and running heads are mixed into the prose. Structured
+     * text (explicit "# " headings) has no such furniture, and these rules would
+     * eat real content there: the Foreword ends with the signature "ALCOHOLICS
+     * ANONYMOUS.", which is exactly what the running-head rule matches.
+     */
+    function isNoise(line, aggressive) {
         if (!line) return false;
+        if (/^[-–—=_*\s]+$/.test(line)) return true;
+        if (!aggressive) return false;
         if (/^\d{1,4}$/.test(line)) return true;
         if (/^page\s+\d{1,4}$/i.test(line)) return true;
-        if (/^[-–—=_*\s]+$/.test(line)) return true;
         if (normalizeKey(line) === 'alcoholics anonymous') return true;
         return false;
     }
@@ -109,12 +117,24 @@
         return null;
     }
 
+    // An explicit "# TITLE" line is a heading with no guessing involved. Text
+    // from tools/epub-to-text.py marks headings this way, which is what stops an
+    // all-caps line *inside* the prose from being mistaken for one.
+    function explicitHeading(line) {
+        var match = /^#{1,3}\s+(.+?)\s*#*$/.exec(line.trim());
+        return match ? match[1].trim() : null;
+    }
+
     function looksLikeHeading(line, previousWasBlank) {
         var trimmed = line.trim();
         if (!trimmed || trimmed.length > 70) return false;
         if (!previousWasBlank) return false;
         if (!/[A-Za-z]/.test(trimmed)) return false;
-        if (/[.,;:?!]$/.test(trimmed) && !/[?!]$/.test(trimmed)) return false;
+        if (/[.,;:]$/.test(trimmed)) return false;
+        // An attribution under a quotation — "—HERBERT SPENCER" — is not a heading.
+        if (/^[-–—]/.test(trimmed)) return false;
+        // Nor is a sentence the author set in capitals and wrapped in quotes.
+        if (/^["'“‘]/.test(trimmed) && /["'”’?!]$/.test(trimmed)) return false;
         // All-caps headings are the common case in public-domain transcriptions.
         var letters = trimmed.replace(/[^A-Za-z]/g, '');
         if (letters.length < 3) return false;
@@ -126,7 +146,11 @@
         var words = text.toLowerCase().split(/\s+/);
         return words.map(function (word, index) {
             if (index > 0 && small.test(word)) return word;
-            return word.replace(/^([a-z])/, function (m, c) { return c.toUpperCase(); });
+            // Capitalise after a hyphen too, so "THE BACK-SLIDER" does not come
+            // back as "The Back-slider".
+            return word.replace(/(^|-)([a-z])/g, function (m, sep, c) {
+                return sep + c.toUpperCase();
+            });
         }).join(' ');
     }
 
@@ -150,6 +174,12 @@
         options = options || {};
         var warnings = [];
         var lines = normalizeText(rawText).split('\n');
+
+        // Decided up front: a text that marks any heading with "# " is assumed to
+        // mark them all, so the all-caps guess can be switched off entirely.
+        var usesExplicitHeadings = lines.some(function (line) {
+            return explicitHeading(line) !== null;
+        });
 
         var sections = [];
         var current = null;
@@ -199,9 +229,12 @@
             var trimmed = line.trim();
 
             if (!trimmed) { flushBlock(); previousWasBlank = true; continue; }
-            if (isNoise(trimmed)) { flushBlock(); previousWasBlank = true; continue; }
+            if (isNoise(trimmed, !usesExplicitHeadings)) { flushBlock(); previousWasBlank = true; continue; }
 
-            var marker = chapterMarker(trimmed);
+            var explicit = explicitHeading(trimmed);
+            var headingText = explicit === null ? trimmed : explicit;
+
+            var marker = chapterMarker(headingText);
             if (marker !== null) {
                 flushBlock();
                 pendingChapterNumber = marker;
@@ -210,14 +243,21 @@
             }
 
             if (pendingChapterNumber !== null) {
-                startSection(trimmed, { kind: 'chapter', number: pendingChapterNumber });
+                startSection(headingText, { kind: 'chapter', number: pendingChapterNumber });
                 pendingChapterNumber = null;
                 previousWasBlank = false;
                 continue;
             }
 
-            if (ALIAS_MAP[normalizeKey(trimmed)] || looksLikeHeading(trimmed, previousWasBlank)) {
-                startSection(trimmed, null);
+            // Once a text uses explicit "# " markers, trust them exclusively —
+            // guessing as well would reintroduce the false positives they exist
+            // to prevent.
+            var isHeading = explicit !== null ||
+                (!usesExplicitHeadings &&
+                    (ALIAS_MAP[normalizeKey(trimmed)] || looksLikeHeading(trimmed, previousWasBlank)));
+
+            if (isHeading) {
+                startSection(headingText, null);
                 previousWasBlank = false;
                 continue;
             }
