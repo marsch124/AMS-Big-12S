@@ -366,14 +366,14 @@
         $('note-sheet-title').textContent = section
             ? 'Note on this passage'
             : step
-                ? 'Step ' + step.number + ' — ' + (existing ? 'your entry' : 'a new entry')
+                ? 'Step ' + step.number + ' — ' + (existing ? 'your note' : 'a new note')
                 : (existing ? 'Your note' : 'Something on your mind');
         $('note-sheet-quote').textContent = quote;
         $('note-sheet-quote').hidden = !quote;
         $('note-sheet-body').placeholder = section
             ? 'Write your note…'
             : step
-                ? 'Where you are with this step today. Dated, and kept — a later entry sits above this one rather than replacing it.'
+                ? 'Where you are with this step today. Dated, and kept — a later note sits above this one rather than replacing it.'
                 : 'A question for your sponsor, something to raise with your sponsee, or a thought of your own.';
         $('note-sheet-body').value = existing ? existing.body : '';
         $('note-delete').hidden = !existing;
@@ -531,12 +531,13 @@
         });
 
         $('journal-hint').textContent = entries.length
-            ? entries.length + (entries.length === 1 ? ' entry' : ' entries') +
+            ? entries.length + (entries.length === 1 ? ' note' : ' notes') +
               ', newest first. Nothing here is overwritten.'
-            : 'Nothing yet. Add an entry each time you read or work this step — a later pass sits above the last, not on top of it.';
+            : 'Nothing yet. Add a note each time you read or work this step — a later one sits above the last, not on top of it.';
 
         var list = $('step-entries');
         list.innerHTML = '';
+
         entries.forEach(function (entry) {
             var card = document.createElement('div');
             card.className = 'card note-card entry-card' + (entry.discussedAt ? ' is-done' : '');
@@ -554,16 +555,66 @@
                     ? '<p class="card-date">Edited ' + formatDate(entry.updatedAt) + '</p>' : '') +
                 (entry.discussedAt ? '<p class="card-done">Talked about ' +
                     formatDate(entry.discussedAt) + '</p>' : '');
-            main.addEventListener('click', function () {
+            card.appendChild(main);
+
+            var actions = document.createElement('div');
+            actions.className = 'card-actions';
+
+            if (entry.tag) {
+                var done = document.createElement('button');
+                done.className = 'chip' + (entry.discussedAt ? ' is-active' : '');
+                done.textContent = entry.discussedAt ? 'Talked about ✓' : 'Mark as talked about';
+                done.addEventListener('click', function () {
+                    var settled = !entry.discussedAt;
+                    Store.setNoteDiscussed(entry.id, settled).then(function () {
+                        toast(settled ? 'Ticked off' : 'Back on the list');
+                        renderStep(Store.getStep(step.id));
+                    });
+                });
+                actions.appendChild(done);
+            }
+
+            var edit = document.createElement('button');
+            edit.className = 'chip';
+            edit.textContent = 'Edit';
+            edit.addEventListener('click', function () {
                 openNoteSheet(null, null, entry, { stepId: step.id });
             });
-            card.appendChild(main);
+            actions.appendChild(edit);
+            card.appendChild(actions);
+
             list.appendChild(card);
+            applyClamp(card, main);
         });
 
         $('step-add-entry').onclick = function () {
             openNoteSheet(null, null, null, { stepId: step.id });
         };
+    }
+
+    /*
+     * A dictated note can run to several hundred words, and a column of those
+     * buries the rest of the step. Anything long enough to need it is folded to
+     * a few lines and opens on a tap; anything short is left alone rather than
+     * given a control that does nothing.
+     */
+    function applyClamp(card, main) {
+        var body = main.querySelector('.card-body');
+        if (!body) return;
+
+        card.classList.add('is-clamped');
+        var overflows = body.scrollHeight - body.clientHeight > 2;
+        if (!overflows) { card.classList.remove('is-clamped'); return; }
+
+        var toggle = document.createElement('span');
+        toggle.className = 'entry-toggle';
+        toggle.textContent = 'Show all';
+        main.appendChild(toggle);
+
+        main.addEventListener('click', function () {
+            var open = card.classList.toggle('is-clamped');
+            toggle.textContent = open ? 'Show all' : 'Show less';
+        });
     }
 
     /* -------------------------------------------------------------- notes */
@@ -581,7 +632,7 @@
         own: 'Nothing here yet. Tap <strong>+</strong> and write what is on your mind — it does not have to ' +
              'come from a page.',
         steps: 'Nothing written against a step yet. Open the <strong>Steps</strong> tab, choose one, and ' +
-               'add an entry — they gather here.'
+               'add a note — they gather here.'
     };
 
     function noteMatchesFilter(note) {

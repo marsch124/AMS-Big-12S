@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=7">
+<link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
 
@@ -135,8 +135,8 @@
 
       <section class="step-journal">
         <div class="journal-head">
-          <h2 class="section-heading">Your journal</h2>
-          <button class="btn btn-quiet btn-small" id="step-add-entry">Add an entry</button>
+          <h2 class="section-heading">Notes on this step</h2>
+          <button class="btn btn-quiet btn-small" id="step-add-entry">Add a note</button>
         </div>
         <p class="hint" id="journal-hint"></p>
         <div class="card-list" id="step-entries"></div>
@@ -379,6 +379,22 @@
 
       <h2 class="section-heading">Version history</h2>
       <div class="panel panel-flush">
+
+        <details class="disclosure">
+          <summary><span>Notes that fold</span><span class="ver-tag">1.7</span></summary>
+          <div class="disclosure-body">
+            <p>Dictate a long note and it no longer buries the step it belongs to.</p>
+            <ul>
+              <li>A note too long to sit comfortably in the page is <strong>folded to a few
+                  lines</strong> and opens on a tap. A short one is left alone rather than given
+                  a control that does nothing.</li>
+              <li><em>Your journal</em> is now <strong>Notes on this step</strong>, to match
+                  <em>Note on this passage</em> in the reader — the same thing said the same way.</li>
+              <li>Each note carries its own <strong>Edit</strong>, and marking one as talked
+                  about now works from the step page as well as the Notes tab.</li>
+            </ul>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>A journal on every step</span><span class="ver-tag">1.6</span></summary>
@@ -678,7 +694,7 @@
 <script src="js/db.js?v=1"></script>
 <script src="js/store.js?v=5"></script>
 <script src="js/backup.js?v=1"></script>
-<script src="js/ui.js?v=5"></script>
+<script src="js/ui.js?v=6"></script>
 <script src="js/app.js?v=5"></script>
 </body>
 </html>

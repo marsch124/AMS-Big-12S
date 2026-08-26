@@ -347,13 +347,50 @@ async function shot(page, name) {
         entryBodies.length === 2 && entryBodies[0].indexOf('Second pass') === 0,
         entryBodies.length + ' entries');
 
+    // A dictated note runs long; a short one must not grow a control it does not need.
+    await page.click('#step-add-entry');
+    await page.waitForSelector('#note-sheet:not([hidden])');
+    await page.fill('#note-sheet-body',
+        'Dictated on the walk home, so it rambles somewhat. '.repeat(9));
+    await page.click('#note-save');
+    await page.waitForSelector('#note-sheet', { state: 'hidden' });
+    await page.waitForTimeout(200);
+
+    const folded = await page.$eval('.entry-card >> nth=0', (e) => ({
+        clamped: e.classList.contains('is-clamped'),
+        toggle: (e.querySelector('.entry-toggle') || {}).textContent || null,
+        shown: e.querySelector('.card-body').clientHeight,
+        full: e.querySelector('.card-body').scrollHeight
+    }));
+    check('a long note is folded down, with a way to open it',
+        folded.clamped && folded.toggle === 'Show all' && folded.shown < folded.full,
+        folded.shown + 'px of ' + folded.full + 'px');
+
+    await page.click('.entry-card >> nth=0 >> .card-main');
+    await page.waitForTimeout(200);
+    const opened = await page.$eval('.entry-card >> nth=0', (e) => ({
+        clamped: e.classList.contains('is-clamped'),
+        toggle: e.querySelector('.entry-toggle').textContent,
+        shown: e.querySelector('.card-body').clientHeight
+    }));
+    check('and opens in place on a tap',
+        !opened.clamped && opened.toggle === 'Show less' && opened.shown === folded.full);
+
+    check('a short note is left alone, with no control that does nothing',
+        await page.$eval('.entry-card >> nth=2', (e) =>
+            !e.classList.contains('is-clamped') && !e.querySelector('.entry-toggle')));
+
+    check('editing a note is still reachable once tapping folds it',
+        await page.$eval('.entry-card >> nth=0', (e) =>
+            !!e.querySelector('.card-actions .chip')));
+
     await page.click('#step-back');
     await page.waitForSelector('#screen-steps.is-active');
     check('the steps list counts what you have written',
         (await page.$eval('.step-item >> nth=0', (e) => {
             const pill = e.querySelector('.step-count');
             return pill ? pill.textContent : '';
-        })) === '2');
+        })) === '3');
 
     await page.click('.step-item >> nth=3');
     check('a step awaiting content still takes a journal entry',
@@ -366,7 +403,7 @@ async function shot(page, name) {
     await page.click('.chip[data-filter="steps"]');
     await page.waitForTimeout(150);
     check('step entries gather under their own filter',
-        (await page.$$eval('#notes-list .card', (e) => e.length)) === 2);
+        (await page.$$eval('#notes-list .card', (e) => e.length)) === 3);
     check('and are headed by the step they belong to',
         (await page.$eval('#notes-list .card-where', (e) => e.textContent)) === 'Step 1 · Powerless');
 
@@ -401,7 +438,7 @@ async function shot(page, name) {
         () => Backup.serialize({ includeBookText: false })));
     const carried = stepBackup.notes.filter((n) => n.stepId === 'step01');
     check('a backup carries step entries, tied to their step',
-        carried.length === 2 && carried.every((n) => !n.sectionId),
+        carried.length === 3 && carried.every((n) => !n.sectionId),
         carried.length + ' entries for step 1');
 
     // ── appearance ────────────────────────────────────────────────────────

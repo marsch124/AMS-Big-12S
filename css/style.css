@@ -362,6 +362,27 @@ button { cursor: pointer; }
 
 .step-journal { margin-top: 6px; }
 .entry-card { border-left: 3px solid var(--accent); }
+.entry-card .card-main { cursor: pointer; }
+
+/* Folded until tapped. Only applied to notes long enough to need it — see
+   applyClamp() — so a two-line note never grows a control that does nothing. */
+.entry-card.is-clamped .card-body {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.entry-card.is-clamped .card-date,
+.entry-card.is-clamped .card-done { display: none; }
+
+.entry-toggle {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+}
+.entry-card.is-clamped .card-body::after { content: ''; }
 .entry-when {
   font-size: 11px;
   letter-spacing: 0.07em;
@@ -572,6 +593,10 @@ button { cursor: pointer; }
   padding: 0 10px 10px;
 }
 .card-actions .chip { flex: 1 1 auto; }
+/* A row holding only Edit should not stretch it into something that looks like
+   the main thing to do on the note. */
+.card-actions:has(.chip:only-child) { justify-content: flex-end; }
+.card-actions .chip:only-child { flex: 0 0 auto; }
 
 /* A point already talked about stays in the list — the record of having had
    the conversation is worth as much as the reminder was — but it steps back. */
