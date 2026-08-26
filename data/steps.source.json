@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "title": "The Twelve Steps",
+  "edition": "First Edition (1939)",
+  "wordingNote": "The steps are quoted from the 1939 first edition. The wording differs in places from later editions — step twelve here reads 'spiritual experience' where later editions read 'spiritual awakening'.",
+  "authorNote": "Explanations and questions are written for this app. They are not official A.A. material, not from the 1952 book Twelve Steps and Twelve Traditions, and are meant to be edited. Only the quoted step text and the linked passages come from the book.",
+
+  "steps": [
+    {
+      "id": "step01",
+      "number": 1,
+      "shortTitle": "Powerless",
+      "theme": "Honesty",
+
+      "text": { "sectionId": "ch05", "anchor": "1.We admitted we were powerless" },
+
+      "explanation": [
+        "Step one asks for two admissions, not one, and they are about different things. Powerless over alcohol is about what happens once you start drinking. That our lives had become unmanageable is about how things were going the rest of the time — whether or not there was a drink in your hand.",
+        "The book is blunt about the first. It says the delusion that we are like other people has to be smashed. Not managed, not worked around. Smashed. The chapter that carries most of this argument is More About Alcoholism, and it is worth reading before you write anything here.",
+        "Nothing in this step asks you to feel differently, or to have hope yet — hope is step two's business. The word the book uses is concede: to fully concede to your innermost self. That is a quieter thing than surrender, and a harder one to fake.",
+        "People come back to step one for years, usually to the second half of it. The first half tends to settle. The unmanageable part keeps finding new evidence."
+      ],
+
+      "references": [
+        {
+          "sectionId": "ch05",
+          "anchor": "1.We admitted we were powerless",
+          "label": "The step itself",
+          "why": "As it is printed in the 1939 edition."
+        },
+        {
+          "sectionId": "ch03",
+          "anchor": "We learned that we had to fully concede",
+          "label": "\"This is the first step in recovery\"",
+          "why": "The book naming step one directly, and saying what has to be given up to take it."
+        },
+        {
+          "sectionId": "ch03",
+          "anchor": "Most of us have been unwilling to admit",
+          "label": "Why it is hard to admit",
+          "why": "On the countless vain attempts to prove we could drink like other people."
+        },
+        {
+          "sectionId": "ch03",
+          "anchor": "We are like men who have lost their legs",
+          "label": "Men who have lost their legs",
+          "why": "The book's plainest statement that this does not get repaired, only arrested."
+        },
+        {
+          "sectionId": "doctors-op",
+          "anchor": "We believe, and so suggested a few years ago",
+          "label": "The allergy, in the doctor's words",
+          "why": "Dr. Silkworth on why the first drink is the one that matters."
+        },
+        {
+          "sectionId": "doctors-op",
+          "anchor": "All these, and many others, have one symptom in common",
+          "label": "The one symptom in common",
+          "why": "The phenomenon of craving, described as what sets this class apart."
+        },
+        {
+          "sectionId": "ch01",
+          "anchor": "The remorse, horror and hopelessness of the next morning",
+          "label": "What unmanageable looked like for Bill",
+          "why": "If the second half of the step feels abstract, this is it made concrete."
+        }
+      ],
+
+      "questions": [
+        { "id": "s1-q1", "text": "What happens to you once you take the first drink? Not what you intend to happen — what actually happens, going on the evidence." },
+        { "id": "s1-q2", "text": "List the ways you have tried to control it: rules, switches, breaks, geography. What did each one prove?" },
+        { "id": "s1-q3", "text": "The book says the delusion that we are like other people has to be smashed. Where do you still quietly believe you are like other people?" },
+        { "id": "s1-q4", "text": "Set drinking aside entirely. Where was your life unmanageable — money, work, health, promises, the people who live with you?" },
+        { "id": "s1-q5", "text": "Who has been carrying something for you that you should have been carrying yourself?" },
+        { "id": "s1-q6", "text": "What is the thing you would least like written down here? What makes it hard to write?" },
+        { "id": "s1-q7", "text": "The word the book uses is concede, not admit. Is there a difference for you, and which one have you actually done?" },
+        { "id": "s1-q8", "text": "If you are coming back to this step rather than taking it for the first time, what has changed since last time — and what has not?" }
+      ],
+
+      "work": {
+        "kind": "two-lists",
+        "intro": "Evidence, not conclusions. Add to these over time rather than filling them in once — the second half in particular tends to keep producing examples.",
+        "lists": [
+          {
+            "id": "powerless",
+            "title": "Powerless over alcohol",
+            "prompt": "Times the drinking went somewhere you did not choose."
+          },
+          {
+            "id": "unmanageable",
+            "title": "Life unmanageable",
+            "prompt": "Things that were coming apart whether or not you were drinking."
+          }
+        ]
+      }
+    }
+  ]
+}

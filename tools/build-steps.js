@@ -1,0 +1,167 @@
+#!/usr/bin/env node
+/*
+ * build-steps.js — resolve the step material's book references into data/steps.json.
+ *
+ *   node tools/build-steps.js
+ *   node tools/build-steps.js --check      # validate only, write nothing
+ *
+ * data/steps.source.json is written by hand and points at the book the way a
+ * note does: a section id plus the opening words of a paragraph. This resolves
+ * each of those to a paragraph index against data/book.json.
+ *
+ * It is deliberately unforgiving. An anchor that matches nothing, or matches
+ * more than one paragraph, is an error — every failure is listed and the build
+ * exits non-zero rather than shipping a link that opens the wrong passage. The
+ * anchors are kept in the output as well as the indexes, so the app can
+ * re-resolve at runtime if the reader ever imports a different copy of the text.
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.join(__dirname, '..');
+const SOURCE = path.join(ROOT, 'data', 'steps.source.json');
+const BOOK = path.join(ROOT, 'data', 'book.json');
+const OUT = path.join(ROOT, 'data', 'steps.json');
+
+/* Curly quotes, dashes and stray whitespace differ between what you type and
+ * what the typesetter set. Compare on a flattened form of both. */
+function flatten(text) {
+    return String(text)
+        .replace(/[‘’ʼ]/g, "'")
+        .replace(/[“”]/g, '"')
+        .replace(/[–—]/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
+function loadJson(file, label) {
+    if (!fs.existsSync(file)) fail('missing ' + label + ': ' + path.relative(ROOT, file));
+    try {
+        return JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch (error) {
+        fail('could not parse ' + label + ': ' + error.message);
+    }
+}
+
+function fail(message) {
+    console.error('Error: ' + message);
+    process.exit(1);
+}
+
+function main(argv) {
+    const checkOnly = argv.includes('--check');
+
+    const source = loadJson(SOURCE, 'steps source');
+    const book = loadJson(BOOK, 'book');
+
+    const sections = {};
+    book.sections.forEach((section) => {
+        sections[section.id] = section.paragraphs.map(flatten);
+    });
+
+    const problems = [];
+    let resolvedCount = 0;
+
+    /* Returns the single paragraph index this anchor names, or records why not. */
+    function resolve(ref, where) {
+        const paragraphs = sections[ref.sectionId];
+        if (!paragraphs) {
+            problems.push(where + ': no section "' + ref.sectionId + '" in the book');
+            return null;
+        }
+        const needle = flatten(ref.anchor);
+        if (!needle) {
+            problems.push(where + ': empty anchor');
+            return null;
+        }
+        const hits = [];
+        paragraphs.forEach((paragraph, index) => {
+            if (paragraph.indexOf(needle) === 0) hits.push(index);
+        });
+
+        if (hits.length === 1) { resolvedCount++; return hits[0]; }
+        if (hits.length === 0) {
+            // A near miss is almost always a typo, so say which paragraph was close.
+            const near = paragraphs.findIndex((p) => p.indexOf(needle.slice(0, 25)) === 0);
+            problems.push(where + ': no paragraph in ' + ref.sectionId + ' starts with "' +
+                ref.anchor.slice(0, 55) + '"' +
+                (near >= 0 ? '\n      did you mean ¶' + near + '? it starts "' +
+                    paragraphs[near].slice(0, 55) + '"' : ''));
+        } else {
+            problems.push(where + ': anchor "' + ref.anchor.slice(0, 45) +
+                '" matches ' + hits.length + ' paragraphs in ' + ref.sectionId +
+                ' (¶' + hits.join(', ¶') + ') — lengthen it');
+        }
+        return null;
+    }
+
+    const steps = source.steps.map((step) => {
+        const label = 'step ' + step.number;
+        const seen = {};
+
+        (step.questions || []).forEach((q) => {
+            if (!q.id) problems.push(label + ': a question has no id');
+            else if (seen[q.id]) problems.push(label + ': duplicate question id "' + q.id + '"');
+            seen[q.id] = true;
+        });
+
+        const text = Object.assign({}, step.text,
+            { paraIndex: resolve(step.text, label + ' step text') });
+
+        const references = (step.references || []).map((ref, i) =>
+            Object.assign({}, ref, { paraIndex: resolve(ref, label + ' reference ' + (i + 1)) }));
+
+        return Object.assign({}, step, { text: text, references: references });
+    });
+
+    const numbers = steps.map((s) => s.number);
+    numbers.forEach((n, i) => {
+        if (numbers.indexOf(n) !== i) problems.push('duplicate step number ' + n);
+    });
+
+    if (problems.length) {
+        console.error('\n' + problems.length + ' problem' + (problems.length === 1 ? '' : 's') +
+            ' — nothing was written:\n');
+        problems.forEach((p) => console.error('  ✗ ' + p));
+        console.error('');
+        process.exit(1);
+    }
+
+    const built = {
+        schema: source.schema,
+        title: source.title,
+        edition: source.edition,
+        wordingNote: source.wordingNote,
+        authorNote: source.authorNote,
+        builtAt: new Date().toISOString(),
+        steps: steps
+    };
+
+    if (!checkOnly) {
+        fs.writeFileSync(OUT, JSON.stringify(built, null, 1) + '\n', 'utf8');
+    }
+
+    console.log(checkOnly ? 'Checked ' + path.relative(ROOT, SOURCE)
+                          : 'Wrote ' + path.relative(ROOT, OUT));
+    console.log('  steps:      ' + steps.length + ' of 12 written');
+    console.log('  references: ' + resolvedCount + ' resolved, all unambiguous');
+    console.log('  questions:  ' + steps.reduce((n, s) => n + (s.questions || []).length, 0));
+    console.log('');
+    steps.forEach((step) => {
+        console.log('   ' + String(step.number).padStart(2) + '. ' + step.shortTitle.padEnd(12) +
+            step.references.length + ' refs   ' +
+            (step.questions || []).length + ' questions   work: ' +
+            (step.work ? step.work.kind : 'none'));
+        step.references.forEach((ref) => {
+            console.log('        → ' + (ref.sectionId + ' ¶' + ref.paraIndex).padEnd(16) + ref.label);
+        });
+    });
+
+    const missing = [];
+    for (let n = 1; n <= 12; n++) if (numbers.indexOf(n) === -1) missing.push(n);
+    if (missing.length) console.log('\n  Not yet written: step ' + missing.join(', '));
+}
+
+main(process.argv);
