@@ -1,0 +1,249 @@
+#!/usr/bin/env node
+/*
+ * smoke-test.js — end-to-end checks for AMS Big 12S.
+ *
+ * Drives a real browser against a locally served copy of the app and asserts
+ * the things that actually matter: the bundled text is complete, notes and
+ * bookmarks persist, the reading position survives a reload, backups round
+ * trip, and the whole book is readable with the network switched off.
+ *
+ *   python3 -m http.server 7802 &     # serve the repo root
+ *   npm install playwright            # once
+ *   node tools/smoke-test.js
+ *
+ * Environment:
+ *   BASE_URL        default http://127.0.0.1:7802/
+ *   CHROMIUM_PATH   an existing Chromium binary, if Playwright cannot find one
+ *   SHOT_DIR        write screenshots here (skipped when unset)
+ *
+ * Exit code 0 = all checks passed, 1 = a check failed, 2 = the harness broke.
+ */
+const { chromium, devices } = require('playwright');
+const fs = require('fs');
+
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:7802/';
+const SHOT_DIR = process.env.SHOT_DIR || '';
+
+const results = [];
+function check(name, ok, detail) {
+    results.push({ name, ok, detail });
+    console.log((ok ? '  PASS  ' : '  FAIL  ') + name + (detail ? '  — ' + detail : ''));
+}
+
+async function shot(page, name) {
+    if (!SHOT_DIR) return;
+    fs.mkdirSync(SHOT_DIR, { recursive: true });
+    await page.screenshot({ path: SHOT_DIR + '/' + name });
+}
+
+(async () => {
+    const browser = await chromium.launch(
+        process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+    const context = await browser.newContext({ ...devices['iPhone 13'], hasTouch: true, isMobile: true });
+    const page = await context.newPage();
+
+    const errors = [];
+    page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+    page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+
+    await page.goto(BASE, { waitUntil: 'networkidle' });
+    await page.waitForSelector('#screen-home.is-active');
+
+    // ── the book ships with the app ───────────────────────────────────────
+    check('app boots to home screen', true);
+    check('no "import the text" notice — text is bundled', !(await page.isVisible('#import-notice')));
+
+    const readable = await page.$$eval('.toc-item:not([disabled])', (e) => e.length);
+    check('contents lists every readable section', readable === 42, readable + ' readable of 43');
+
+    const titles = await page.$$eval('.toc-title', (e) => e.map((x) => x.textContent));
+    const wanted = ['Foreword', "The Doctor's Opinion", "Bill's Story", 'There Is A Solution',
+        'More About Alcoholism', 'We Agnostics', 'How It Works', 'Into Action',
+        'Working With Others', 'To Wives', 'The Family Afterward', 'To Employers',
+        'A Vision For You', 'The Personal Stories'];
+    const missing = wanted.filter((t) => !titles.includes(t));
+    check('all 11 chapters + front matter present', missing.length === 0, missing.join(', ') || 'all found');
+    check('all 29 personal stories present', titles.length === 43, titles.length + ' sections');
+
+    // ── reader ────────────────────────────────────────────────────────────
+    await page.click('.toc-item:not([disabled]) >> nth=2');   // Bill's Story
+    await page.waitForSelector('#screen-reader.is-active');
+    check('reader opens', (await page.textContent('#reader-title')) === "Bill's Story");
+    const paraCount = await page.$$eval('#reader-content .para', (e) => e.length);
+    check("Bill's Story has its full text", paraCount === 74, paraCount + ' paragraphs');
+
+    const opening = await page.textContent('#reader-content .para[data-index="0"]');
+    check('opening line reads correctly', opening.startsWith('War fever ran high in the New England town'),
+        JSON.stringify(opening.slice(0, 46)));
+
+    // ── note ──────────────────────────────────────────────────────────────
+    await page.click('#reader-content .para[data-index="1"]');
+    await page.waitForSelector('#para-sheet:not([hidden])');
+    await page.click('#para-sheet [data-action="note"]');
+    await page.waitForSelector('#note-sheet:not([hidden])');
+    await page.fill('#note-sheet-body', 'Come back to this one.');
+    await page.click('#note-save');
+    await page.waitForSelector('#note-sheet', { state: 'hidden' });
+    await page.waitForSelector('#reader-content .para[data-index="1"].has-note');
+    check('note saves and marks the paragraph', true);
+
+    await page.click('#reader-content .para[data-index="2"]');
+    await page.waitForSelector('#para-sheet:not([hidden])');
+    await page.click('#para-sheet [data-action="bookmark"]');
+    await page.waitForSelector('#reader-content .para[data-index="2"].has-bookmark');
+    check('bookmark toggles on', true);
+
+    // ── resume where you stopped ──────────────────────────────────────────
+    await page.click('#reader-back');
+    await page.waitForSelector('#screen-home.is-active');
+    await page.click('.toc-item:not([disabled]) >> nth=6');   // How It Works
+    await page.waitForSelector('#screen-reader.is-active');
+    check('How It Works opens', (await page.textContent('#reader-title')) === 'How It Works');
+
+    await page.evaluate(() => {
+        const b = document.getElementById('reader-body');
+        b.scrollTop = Math.floor(b.scrollHeight * 0.45);
+    });
+    await page.waitForTimeout(900);
+    const stoppedAt = await page.evaluate(() => Store.state.position.paraIndex);
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('#screen-home.is-active');
+    await page.waitForSelector('#continue-card:not([hidden])', { timeout: 5000 });
+    check('resumes the right chapter', (await page.textContent('#continue-title')) === 'How It Works');
+    check('progress percentage shown', /\d+% through the book/.test(await page.textContent('#continue-meta')));
+
+    await page.click('#continue-card');
+    await page.waitForSelector('#screen-reader.is-active');
+    const resumedAt = await page.evaluate(() => UI ? Store.state.position.paraIndex : -1);
+    check('resumes the right paragraph, not just the chapter',
+        Math.abs(resumedAt - stoppedAt) <= 1, 'stopped at ¶' + stoppedAt + ', resumed at ¶' + resumedAt);
+    await page.click('#reader-back');
+
+    // ── notes screen ──────────────────────────────────────────────────────
+    await page.click('.tab[data-screen="notes"]');
+    await page.waitForSelector('#screen-notes.is-active');
+    check('note listed after reload', (await page.$$eval('#notes-list .card', (e) => e.length)) === 1);
+    check('note quotes the passage it belongs to',
+        (await page.textContent('#notes-list .card')).includes("Bill's Story"));
+
+    await page.fill('#notes-search', 'zzzznomatch');
+    await page.waitForTimeout(120);
+    check('notes filter works', (await page.$$eval('#notes-list .card', (e) => e.length)) === 0);
+    await page.fill('#notes-search', '');
+    await page.waitForTimeout(120);
+
+    await page.click('#notes-list .card');
+    await page.waitForSelector('#screen-reader.is-active');
+    check('note jumps back to its passage', (await page.textContent('#reader-title')) === "Bill's Story");
+    await page.click('#reader-back');
+
+    // ── search the real text ──────────────────────────────────────────────
+    await page.click('.tab[data-screen="search"]');
+    await page.fill('#search-input', 'spiritual experience');
+    await page.waitForTimeout(400);
+    const hits = await page.$$eval('#search-results .card', (e) => e.length);
+    check('full-text search finds a real phrase', hits >= 5, hits + ' hits for "spiritual experience"');
+    await page.click('#search-results .card >> nth=0');
+    await page.waitForSelector('#screen-reader.is-active');
+    check('search result opens the passage', true);
+    await page.click('#reader-back');
+
+    // ── backup round trip ─────────────────────────────────────────────────
+    const slim = JSON.parse(await page.evaluate(() => Backup.serialize({ includeBookText: false })));
+    check('backup carries notes, bookmarks, position, settings',
+        slim.notes.length === 1 && slim.bookmarks.length === 1 &&
+        !!slim.position.sectionId && !!slim.settings);
+    check('backup stays small when the text is not included',
+        !slim.includesBookText && JSON.stringify(slim).length < 4000,
+        JSON.stringify(slim).length + ' bytes');
+
+    const full = await page.evaluate(() => Backup.serialize({ includeBookText: true }));
+    check('backup can carry the whole book when asked',
+        JSON.parse(full).book.sections.length === 43,
+        Math.round(full.length / 1024) + ' KB');
+
+    // the new-phone path: wipe what the user made, then restore it
+    await page.evaluate(async () => {
+        await DB.clear(DB.STORE_NOTES);
+        await DB.clear(DB.STORE_BOOKMARKS);
+        await DB.remove(DB.STORE_META, 'position');
+        localStorage.clear();
+    });
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('#screen-home.is-active');
+    await page.click('.tab[data-screen="notes"]');
+    check('wipe clears the notes', (await page.$$eval('#notes-list .card', (e) => e.length)) === 0);
+
+    const summary = await page.evaluate(async (json) =>
+        Backup.restoreBackup(Backup.parseBackup(json), 'replace'), JSON.stringify(slim));
+    check('restore reports what it did', summary.notes === 1 && summary.bookmarks === 1,
+        JSON.stringify(summary));
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('#screen-home.is-active');
+    await page.waitForSelector('#continue-card:not([hidden])', { timeout: 5000 });
+    const expectedTitle = await page.evaluate(
+        (id) => Store.getSection(id).title, slim.position.sectionId);
+    const restoredTitle = await page.textContent('#continue-title');
+    check('position restored', restoredTitle === expectedTitle,
+        'expected ' + expectedTitle + ', got ' + restoredTitle);
+    await page.click('.tab[data-screen="notes"]');
+    check('notes restored', (await page.$$eval('#notes-list .card', (e) => e.length)) === 1);
+
+    const rejected = await page.evaluate(() => {
+        try { Backup.parseBackup('{"app":"something else"}'); return null; }
+        catch (e) { return e.message; }
+    });
+    check('a foreign backup is rejected clearly', !!rejected, rejected);
+
+    // ── appearance ────────────────────────────────────────────────────────
+    await page.click('.tab[data-screen="settings"]');
+    await page.selectOption('#set-theme', 'dark');
+    await page.waitForTimeout(150);
+    check('theme switches', (await page.getAttribute('html', 'data-theme')) === 'dark');
+    await page.selectOption('#set-theme', 'sepia');
+    check('settings shows what text is loaded',
+        (await page.textContent('#book-status')).includes('First Edition (1939)'));
+
+    // ── offline ───────────────────────────────────────────────────────────
+    await page.waitForTimeout(500);
+    check('service worker registers',
+        await page.evaluate(() => navigator.serviceWorker.ready.then(() => true).catch(() => false)));
+    await context.setOffline(true);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#screen-home.is-active', { timeout: 10000 });
+    const offlineReadable = await page.$$eval('.toc-item:not([disabled])', (e) => e.length);
+    check('whole book readable with the network off', offlineReadable === 42,
+        offlineReadable + ' sections offline');
+    await page.click('.toc-item:not([disabled]) >> nth=6');
+    await page.waitForSelector('#screen-reader.is-active');
+    const offlinePara = await page.textContent('#reader-content .para[data-index="0"]');
+    check('offline text is the real text',
+        offlinePara.startsWith('Rarely have we seen a person fail'),
+        JSON.stringify(offlinePara.slice(0, 42)));
+    await context.setOffline(false);
+
+    // ── screenshots ───────────────────────────────────────────────────────
+    await page.waitForTimeout(300);
+    await shot(page, 'shot-reader.png');
+    await page.click('#reader-back');
+    await page.waitForTimeout(250);
+    await shot(page, 'shot-home.png');
+    await page.click('.tab[data-screen="search"]');
+    await page.fill('#search-input', 'gratitude');
+    await page.waitForTimeout(400);
+    await shot(page, 'shot-search.png');
+
+    check('no uncaught page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+
+    await browser.close();
+
+    const failed = results.filter((r) => !r.ok);
+    console.log('\n' + (results.length - failed.length) + '/' + results.length + ' checks passed');
+    if (failed.length) {
+        console.log('FAILURES:');
+        failed.forEach((f) => console.log('  - ' + f.name + (f.detail ? ': ' + f.detail : '')));
+        process.exit(1);
+    }
+})().catch((e) => { console.error('HARNESS ERROR:', e); process.exit(2); });

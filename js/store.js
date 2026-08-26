@@ -61,6 +61,9 @@
                         edition: imported.edition || (base && base.edition) || '',
                         sections: imported.sections,
                         textIncluded: true,
+                        // The reader supplied this copy themselves, so it is theirs
+                        // to remove; the bundled copy is not.
+                        isImported: true,
                         importedAt: imported.importedAt,
                         sourceName: imported.sourceName || ''
                     };
@@ -71,6 +74,7 @@
                         edition: base.edition,
                         sections: base.sections || [],
                         textIncluded: !!base.textIncluded,
+                        isImported: false,
                         importNotice: base.importNotice
                     };
                 } else {
@@ -104,7 +108,7 @@
             sourceName: (meta && meta.sourceName) || ''
         };
         return DB.put(DB.STORE_BOOK, record, 'current').then(function () {
-            state.book = Object.assign({}, record, { textIncluded: true });
+            state.book = Object.assign({}, record, { textIncluded: true, isImported: true });
             indexBook();
             return state.book;
         });

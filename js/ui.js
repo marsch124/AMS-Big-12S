@@ -462,13 +462,24 @@
         var counts = book.sections.reduce(function (total, section) {
             return total + section.paragraphs.length;
         }, 0);
-        $('book-status').innerHTML = book.textIncluded
-            ? 'Loaded: <strong>' + escapeHtml(book.edition || 'imported text') + '</strong> — ' +
-              book.sections.filter(function (s) { return s.paragraphs.length; }).length +
-              ' sections, ' + counts.toLocaleString() + ' paragraphs.' +
-              (book.importedAt ? '<br>Imported ' + formatDate(book.importedAt) + '.' : '')
-            : 'No book text loaded yet. The contents list is shown, but there is nothing to read.';
-        $('btn-clear-text').hidden = !book.textIncluded;
+        var readable = book.sections.filter(function (s) { return s.paragraphs.length; }).length;
+        if (!book.textIncluded) {
+            $('book-status').innerHTML =
+                'No book text loaded yet. The contents list is shown, but there is nothing to read.';
+        } else if (book.isImported) {
+            $('book-status').innerHTML =
+                'Reading <strong>your own imported copy</strong> — ' + readable + ' sections, ' +
+                counts.toLocaleString() + ' paragraphs.' +
+                (book.importedAt ? '<br>Imported ' + formatDate(book.importedAt) + '.' : '') +
+                '<br>The copy that came with the app is untouched underneath.';
+        } else {
+            $('book-status').innerHTML =
+                'Reading the copy that came with the app: <strong>' +
+                escapeHtml(book.edition || 'first edition') + '</strong> — ' + readable +
+                ' sections, ' + counts.toLocaleString() + ' paragraphs.';
+        }
+        // Only offer to remove text the reader actually supplied.
+        $('btn-clear-text').hidden = !book.isImported;
         $('backup-include-text').disabled = !book.textIncluded;
         if (!book.textIncluded) $('backup-include-text').checked = false;
     }
@@ -732,7 +743,7 @@
             });
         });
         $('btn-clear-text').addEventListener('click', function () {
-            if (!confirm('Remove the imported book text? Your notes and bookmarks are kept.')) return;
+            if (!confirm('Go back to the copy that came with the app? Your notes and bookmarks are kept.')) return;
             Store.clearImportedBook().then(function () {
                 renderSettings();
                 renderHome();

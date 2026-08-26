@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=2">
+<link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
 
@@ -179,14 +179,182 @@
         <input type="file" id="text-file" accept="text/plain,.txt,.md" hidden>
         <p class="hint" id="text-status"></p>
         <details class="details">
-          <summary>Where do I get the text?</summary>
-          <p>The <strong>first edition (1939)</strong> of <em>Alcoholics Anonymous</em> is in the
-             public domain in the United States, and plain-text copies are freely available
-             online. Download one as a <code>.txt</code> file and import it here.</p>
+          <summary>Do I need to do anything here?</summary>
+          <p><strong>No.</strong> The 1939 first edition already came with the app. This is only
+             for loading a different copy — a cleaner transcription, or one that restores the
+             Appendix Dover left out.</p>
+          <p>Your notes survive the swap: each one finds its passage by the words it was
+             written against, not by position.</p>
           <p>Later editions (2nd, 3rd and 4th) are still under copyright to A.A. World
              Services, so please do not import those unless you have permission.</p>
         </details>
-        <button class="btn btn-danger btn-block" id="btn-clear-text" hidden>Remove imported text</button>
+        <button class="btn btn-danger btn-block" id="btn-clear-text" hidden>Go back to the bundled copy</button>
+      </div>
+
+      <h2 class="section-heading">How this works</h2>
+      <div class="panel panel-flush">
+
+        <details class="disclosure">
+          <summary>Picking up where you stopped</summary>
+          <div class="disclosure-body">
+            <p>Your place is saved <strong>four times over</strong>: the moment you open a
+               chapter, continuously as you scroll, when you leave the reader, and when you
+               switch away from the app. The last two matter on iPhone, which closes
+               background apps without warning.</p>
+            <p>It remembers the <strong>paragraph</strong>, not just the chapter, so a long
+               chapter picks up where you actually were. The <strong>Continue reading</strong>
+               card on the Read tab shows it, with how far through the book you are.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
+          <summary>Notes, and how they stay put</summary>
+          <div class="disclosure-body">
+            <p>Tap any paragraph while reading and choose <strong>Add note</strong>. The
+               paragraph gets a coloured edge and the first words of your note appear
+               beneath it.</p>
+            <p>Each note quietly stores the <strong>opening words of the passage</strong> it
+               was written against. If you ever load a different copy of the text, notes find
+               their way back to the right paragraph by those words rather than by position
+               — so they do not drift when paragraph numbering shifts.</p>
+            <p>If a passage genuinely disappears from a new copy, its note is
+               <strong>flagged</strong> on the Notes tab rather than left pointing at the
+               wrong words. Nothing is deleted.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
+          <summary>Bookmarks and search</summary>
+          <div class="disclosure-body">
+            <p>Tap a paragraph and choose <strong>Bookmark this passage</strong> to mark it
+               without writing anything.</p>
+            <p><strong>Search</strong> covers every paragraph in the book. Tap a result to
+               land on that passage with it briefly highlighted. It stops at 200 matches, so
+               narrow the phrase if you are searching for a common word.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
+          <summary>Making it comfortable to read</summary>
+          <div class="disclosure-body">
+            <p>The <strong>Aa</strong> button in the top-right of the reader changes size,
+               spacing and theme without leaving the page. The same controls, plus the choice
+               of serif or sans-serif, are under <strong>Reading</strong> above.</p>
+            <p><strong>Match device</strong> follows your phone's light and dark setting.
+               <strong>Keep screen awake</strong> stops the display dimming while you read,
+               where the browser allows it.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
+          <summary>Backups, and moving to a new phone</summary>
+          <div class="disclosure-body">
+            <p>A backup is one JSON file holding your notes, bookmarks, reading position and
+               settings. On iPhone <strong>Create backup</strong> opens the share sheet — save
+               it to Files or iCloud Drive, or mail it to yourself.</p>
+            <p>On the new phone, install the app, then <strong>Choose backup file</strong>.
+               Pick <strong>Replace everything</strong> on a fresh install, or
+               <strong>Keep both</strong> to merge, where the newer copy of any note wins.</p>
+            <p>Leave <strong>Include the book text</strong> unticked and the file stays under
+               a kilobyte, because the app already ships with the text. Tick it only if you
+               have imported a copy of your own.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
+          <summary>Working offline</summary>
+          <div class="disclosure-body">
+            <p>The whole book and the whole app are stored on your device the first time you
+               open them. After that nothing is fetched — aeroplanes, basements and lifts all
+               work the same as anywhere else.</p>
+            <p>Add it to your home screen and it runs full-screen with no browser bar. On
+               iPhone: <strong>Share → Add to Home Screen</strong>.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
+          <summary>Where your reading lives</summary>
+          <div class="disclosure-body">
+            <p>Everything — notes, bookmarks, your place, your settings — is stored
+               <strong>on this device only</strong>. There is no account, no server, no
+               analytics, and no network request at all once the app has loaded. Nobody can
+               see what you have written, including whoever made this.</p>
+            <p>The other side of that: if you delete the app, or clear this site's data in
+               your browser settings, it is all gone and cannot be recovered. That is what
+               backups are for. Making one now and then costs a few seconds.</p>
+          </div>
+        </details>
+
+      </div>
+
+      <h2 class="section-heading">Version history</h2>
+      <div class="panel panel-flush">
+
+        <details class="disclosure">
+          <summary><span>Hand-drawn icons</span><span class="ver-tag">1.2</span></summary>
+          <div class="disclosure-body">
+            <p>All eight icons in the tab bar and the passage menu were redrawn by hand.</p>
+            <ul>
+              <li>They had been a mix of colour emoji and plain text glyphs, so half rendered
+                  in colour and half as flat type, and none could follow the theme.</li>
+              <li>They are now line drawings that take the accent colour in every theme,
+                  including dark, and stay sharp at any size.</li>
+              <li>The chosen tab's icon gives a small hop, suppressed if your phone has
+                  Reduce Motion switched on.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="disclosure">
+          <summary><span>The 1939 text</span><span class="ver-tag">1.1</span></summary>
+          <div class="disclosure-body">
+            <p>The complete first edition now ships with the app: <strong>43 sections, 1,453
+               paragraphs, 106,067 words</strong> — the Foreword, The Doctor's Opinion, all
+               eleven chapters and all twenty-nine personal stories. Nothing to import before
+               reading.</p>
+            <p><strong>Where it came from.</strong> The 2011 Dover republication of the 1939
+               edition. Dover's own 2011 introduction and biographical notes are still under
+               copyright and are excluded; only the 1939 text is here. Dover's edition also
+               omits the original two-page Appendix, which is why a footnote closing
+               <em>A Vision For You</em> points at something that is not there.</p>
+            <p><strong>Three faults this uncovered</strong>, each one losing or inventing
+               text:</p>
+            <ul>
+              <li>Two chapters were being split apart by lines of prose mistaken for
+                  headings — a capitalised question in <em>We Agnostics</em> and an
+                  attribution in <em>An Artist's Concept</em> — and those lines were being
+                  swallowed. Headings are now marked explicitly rather than guessed at.</li>
+              <li>The Foreword's closing signature was being deleted, because a filter meant
+                  to strip page headers matched it exactly.</li>
+              <li>Chapter openings were shouting — <em>RARELY have we seen a person fail</em>
+                  — where the printed book uses small capitals. They now read normally, while
+                  genuine capitals are left alone.</li>
+            </ul>
+            <p>Every build is now reconciled against its source word by word. This one is
+               exact, with nothing dropped.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
+          <summary><span>First release</span><span class="ver-tag">1.0</span></summary>
+          <div class="disclosure-body">
+            <p>The reader, notes, bookmarks, search, backups and offline support.</p>
+            <ul>
+              <li>Four themes, serif or sans-serif, adjustable size and line spacing.</li>
+              <li>Reading position tracked per paragraph. An early version only saved while
+                  scrolling, so a chapter short enough to fit on one screen was never
+                  remembered at all; it now saves on opening, on leaving, and on the app
+                  being sent to the background.</li>
+              <li>Notes and bookmarks anchored to a passage by its opening words, so they
+                  survive the text being reloaded in another format.</li>
+              <li>Full-text search across the book.</li>
+              <li>One-file backup and restore, using the iPhone share sheet, since a plain
+                  download is unreliable inside an installed web app.</li>
+              <li>Runs entirely offline once installed.</li>
+            </ul>
+          </div>
+        </details>
+
       </div>
 
       <h2 class="section-heading">About</h2>
@@ -326,7 +494,7 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=1"></script>
-<script src="js/store.js?v=1"></script>
+<script src="js/store.js?v=2"></script>
 <script src="js/backup.js?v=1"></script>
 <script src="js/ui.js?v=2"></script>
 <script src="js/app.js?v=1"></script>
