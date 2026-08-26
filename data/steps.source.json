@@ -775,11 +775,120 @@
       "shortTitle": "The list",
       "text": {
         "sectionId": "ch05",
-        "anchor": "8.Made a list"
+        "anchor": "8.Made a list of all persons"
       },
-      "explanation": [],
-      "references": [],
-      "questions": []
+      "explanation": [
+        "You have already made most of this list. The book says so plainly — we have a list of all persons we have harmed and to whom we are willing to make amends; we made it when we took inventory. Step eight is largely a matter of going back to step four, pulling the names out of it, and being honest about the ones you left off.",
+        "The step has two halves and only the first is clerical. Made a list is work you can do in an evening. Became willing to make amends to them all is not, and the book knows it: if we haven't the will to do this, we ask until it comes. That is the whole instruction. Not force it, not fake it, not wait for it to arrive on its own. Ask until it comes, and in the meantime keep the name on the list.",
+        "The hard part is what counts as harm. If you only write down money owed and promises broken, the list will be too short and you will know it. The book's picture is a tornado roaring through the lives of others — hearts broken, sweet relationships dead, affections uprooted — and its joke about the farmer coming up from the cyclone cellar to say don't see anything the matter here, Ma, ain't it grand the wind stopped blowin'. Sobriety is not the repair. It is what makes the repair possible.",
+        "Note what the step does not ask. Not that you forgive anyone, not that you decide who deserves an amend, not that you work out yet what you will actually do or say. Whether an amend can be made at all, and whether making it would injure someone, is step nine's problem. Here you are only naming people and telling the truth about your willingness."
+      ],
+      "references": [
+        {
+          "sectionId": "ch05",
+          "anchor": "8.Made a list of all persons",
+          "label": "The step itself",
+          "why": "As it is printed in the 1939 edition."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "Now we need more action",
+          "label": "\"We made it when we took inventory\"",
+          "why": "The book opening steps eight and nine together, and what to do when the will is not there."
+        },
+        {
+          "sectionId": "ch05",
+          "anchor": "If we have been thorough about our personal inventory",
+          "label": "Where the list came from",
+          "why": "Step four closing with the people you hurt already listed, and the willingness already named."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "The alcoholic is like a tornado",
+          "label": "The tornado, and the farmer",
+          "why": "What harm means, for anyone whose list is coming out suspiciously short."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "Yes, there is a long period of reconstruction ahead",
+          "label": "\"A remorseful mumbling won't fill the bill\"",
+          "why": "On the people closest to you, who are usually the hardest names to write down."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "Although these reparations take innumerable forms",
+          "label": "What being willing costs",
+          "why": "Willingness stated at full price — position, reputation, jail — before you agree to it."
+        }
+      ],
+      "questions": [
+        {
+          "id": "s8-q1",
+          "text": "Go through your step four and take the names out. Who is on it?"
+        },
+        {
+          "id": "s8-q2",
+          "text": "Who did you leave off, and what was the reason you gave yourself while doing it?"
+        },
+        {
+          "id": "s8-q3",
+          "text": "Whom have you harmed who never knew it? They belong on the list too."
+        },
+        {
+          "id": "s8-q4",
+          "text": "Where are you counting sobriety as the repair — the farmer's ain't it grand the wind stopped blowin'?"
+        },
+        {
+          "id": "s8-q5",
+          "text": "Which name are you least willing about? Say what the unwillingness actually is: shame, fear, or that you think they had it coming."
+        },
+        {
+          "id": "s8-q6",
+          "text": "Is anyone on this list mainly because you want something back from them — forgiveness, a hearing, a chance to explain?"
+        },
+        {
+          "id": "s8-q7",
+          "text": "Are you on your own list? The book does not put you there, and you may have views about that."
+        },
+        {
+          "id": "s8-q8",
+          "text": "For the names you are not willing about: have you asked, in the way the book means, or only waited?"
+        }
+      ],
+      "work": {
+        "kind": "amends-list",
+        "intro": "The names, and what the harm was. This is the list step nine then works through, so it is written once and lived with rather than made again.",
+        "from": {
+          "stepId": "step04",
+          "columns": [
+            {
+              "tableId": "conduct",
+              "columnId": "whom"
+            }
+          ]
+        },
+        "columns": [
+          {
+            "id": "who",
+            "label": "Who"
+          },
+          {
+            "id": "harm",
+            "label": "What the harm was"
+          }
+        ],
+        "states": [
+          {
+            "id": "willing",
+            "label": "Willing"
+          },
+          {
+            "id": "not-yet",
+            "label": "Not willing yet",
+            "hint": "The name stays on the list. The book's instruction is to ask until the will comes, not to take them off."
+          }
+        ]
+      }
     },
     {
       "id": "step09",
@@ -789,9 +898,135 @@
         "sectionId": "ch05",
         "anchor": "9.Made direct amends"
       },
-      "explanation": [],
-      "references": [],
-      "questions": []
+      "explanation": [
+        "Direct is the word that makes this step difficult, and it is chosen. Not an apology thought about, not a private resolution to do better, not a donation made in someone's general direction. You go to the person. The book's instruction on manner is one of the most quoted lines it has, and it is worth having by heart before you knock on anyone's door: we are there to sweep off our side of the street. His faults are not discussed. We stick to our own.",
+        "Then the exception, which is in the step itself and is not a loophole for your comfort. Except when to do so would injure them or others. The book is unusually firm here in both directions. It says do not be the hasty and foolish martyr who would needlessly sacrifice others to save himself, and it says that where other people would be implicated you secure their consent first. What it will not let you do is use somebody else's welfare as cover for your own embarrassment. The test is whether the injury would fall on them or on you.",
+        "On what it costs: you may lose your position or reputation, or face jail, and the book's answer is that you must be willing. Its promise about how these go is more modest than people remember — in nine cases out of ten the unexpected happens, feuds of years' standing can melt away in an hour, and if somebody throws you out of his office, you have still done your part. It's water over the dam. The outcome was never the thing you were responsible for.",
+        "Some of it cannot be done. There may be wrongs you can never fully right, people who cannot be seen, cases where postponement is genuinely valid rather than convenient. The book allows all three and then closes the exits: we don't worry about them if we can honestly say we would right them if we could, some people get an honest letter instead, and we don't delay if it can be avoided. Sensible, tactful, considerate, humble — and, it adds, without being servile. As God's people we stand on our feet; we don't crawl before anyone."
+      ],
+      "references": [
+        {
+          "sectionId": "ch05",
+          "anchor": "9.Made direct amends",
+          "label": "The step itself",
+          "why": "As it is printed in the 1939 edition."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "Under no condition do we criticize such a person",
+          "label": "\"We stick to our own\"",
+          "why": "How the book says to conduct the conversation, and what not to bring into it."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "Usually, however, other people are involved",
+          "label": "The hasty and foolish martyr",
+          "why": "The except-when clause worked through with a real case rather than stated in the abstract."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "Before taking drastic action which might implicate other people",
+          "label": "Whose consent you need first",
+          "why": "The rule in two sentences, including what to do once you have it."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "In nine cases out of ten the unexpected happens",
+          "label": "What usually happens, and what if it does not",
+          "why": "Including the one about being thrown out of his office."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "There may be some wrongs we can never fully right",
+          "label": "The ones you cannot put right",
+          "why": "Letters, postponement, and the line about not crawling before anyone."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "If we are painstaking about this phase of our development",
+          "label": "What the book says comes of it",
+          "why": "The promises, printed here at the end of the amends and not anywhere later."
+        }
+      ],
+      "questions": [
+        {
+          "id": "s9-q1",
+          "text": "Take one name. What, concretely, is the amend — the words, the money, the changed behaviour? Vagueness here is usually avoidance."
+        },
+        {
+          "id": "s9-q2",
+          "text": "Where are you planning to explain yourself rather than sweep your own side of the street?"
+        },
+        {
+          "id": "s9-q3",
+          "text": "Which amend would genuinely injure someone if you made it — and who is the someone? Be exact."
+        },
+        {
+          "id": "s9-q4",
+          "text": "Now check that answer. Would the injury fall on them, or on you?"
+        },
+        {
+          "id": "s9-q5",
+          "text": "Whose consent do you need before you can do this without dragging someone else into it?"
+        },
+        {
+          "id": "s9-q6",
+          "text": "What are you afraid will happen? Say what you would lose, then say whether you are willing to lose it."
+        },
+        {
+          "id": "s9-q7",
+          "text": "If they refuse to see you, or hear you out and stay angry, what then? Decide that now rather than in the doorway."
+        },
+        {
+          "id": "s9-q8",
+          "text": "Which of these are you postponing for a valid reason, and which for a comfortable one?"
+        }
+      ],
+      "work": {
+        "kind": "amends-progress",
+        "intro": "Step eight's list again, this time with what happened. This one is not finished and put away — it is kept for years, and an entry can change status more than once.",
+        "from": {
+          "stepId": "step08",
+          "work": "amends-list"
+        },
+        "statuses": [
+          {
+            "id": "not-yet",
+            "label": "Not yet"
+          },
+          {
+            "id": "planned",
+            "label": "Planned"
+          },
+          {
+            "id": "made",
+            "label": "Made"
+          },
+          {
+            "id": "letter",
+            "label": "Letter sent",
+            "hint": "The book's answer for people who cannot be seen."
+          },
+          {
+            "id": "withheld",
+            "label": "Withheld — it would injure someone",
+            "hint": "Name who, so this can be read back honestly later."
+          },
+          {
+            "id": "impossible",
+            "label": "Cannot be put right",
+            "hint": "Kept on the list rather than removed, with what you would do if you could."
+          }
+        ],
+        "fields": [
+          {
+            "id": "outcome",
+            "label": "What happened",
+            "prompt": "Theirs as well as yours. The book is clear the outcome was never the part you were responsible for."
+          }
+        ],
+        "promptLabel": "On"
+      }
     },
     {
       "id": "step10",

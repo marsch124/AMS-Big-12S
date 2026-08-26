@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.12 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.13 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -22,17 +22,17 @@ https://claude.ai/code/artifact/b467fb04-03e9-4f26-aa77-7f8f18b8c433
 | Phase 2 | done | Steps tab, list of twelve, step page: wording, explanation, references, questions |
 | Phase 3 | done | Dated notes per step, folded when long |
 | Phase 4 | done | Answerable questions keeping every earlier answer; hide, add your own |
-| Phase 5 | **in progress** | Writing the twelve. **Steps 1 to 7 are written; 8–12 are stubs.** |
+| Phase 5 | **in progress** | Writing the twelve. **Steps 1 to 9 are written; 10, 11 and 12 are stubs.** |
 | Phase 6 | **in progress** | Each step's own work — block 5 below. **Step 4's three tables are built and usable; every other kind is still declared-only.** |
 | Phase 7 | to do | Progress on the list, copy a step out for a sponsor, docs, v2.0 |
 
-**Next: steps 8 and 9, written together** — the book pairs them itself: "Lets
-look at steps eight and nine" (*Into Action* ¶13), and then runs on for most of
-the rest of the chapter. Unlike 6 and 7 there is plenty here, so these go back to
-the usual five to seven references each. Their work modules are one list seen
-twice: step 8 the names, carried from step 4; step 9 the same list with status
-and outcome, which is the one module that has to survive being edited for years.
-Send steps two or three at a time for review, not five at once.
+**Next: steps 10, 11 and 12 — the last three.** They are different in kind from
+everything before: 1–9 are taken once (and retaken), 10–12 are practised daily,
+which their work modules have to reflect. Material is in *Into Action* from ¶38
+on — ¶38 is step ten, ¶42 step eleven, ¶43 is the nightly review, and the morning
+and evening prompts follow; step twelve's own material is mostly *Working With
+Others*, plus the wording note that the 1939 text reads "spiritual experience"
+where later editions read "awakening". Send them two at a time, not three.
 
 **Phase 6, per step.** `work` is declared in `steps.source.json` for every step
 written so far (`two-lists` on 1 and 2, `prayer` on 3, `inventory-tables` on 4,
@@ -52,6 +52,10 @@ morning and evening prompts plus a practice log; 12 who you have worked with.
 "defects" when it takes the step up again. Both are in the 1939 text as Dover
 sets it — checked, not a transcription slip. Step 5's explanation says so rather
 than quietly picking one.
+
+**Step 9's promises are the ones printed in the amends (1.13).** *Into Action*
+¶36, "If we are painstaking about this phase of our development" — they belong to
+step nine in this edition, not to a later chapter, and step 9 links them there.
 
 **Steps 6 and 7 are short on purpose (1.12).** Martin asked for this
 explicitly, after being shown the alternative. The 1939 text gives the two of
