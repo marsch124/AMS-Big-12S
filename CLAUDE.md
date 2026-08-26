@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.13 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.14 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -52,6 +52,17 @@ morning and evening prompts plus a practice log; 12 who you have worked with.
 "defects" when it takes the step up again. Both are in the 1939 text as Dover
 sets it — checked, not a transcription slip. Step 5's explanation says so rather
 than quietly picking one.
+
+**One word of the book text has been corrected, on purpose (1.14).** *Into
+Action* ¶36 read "Wé are going to know a new freedom and happiness" — a stray
+acute from the EPUB conversion, sitting in the middle of the promises. Martin
+asked for it to be fixed. It was corrected in
+`data/alcoholics-anonymous-1939.txt` and `book.json` rebuilt from it, never
+patched in the app, and the rebuild still reports 106,067 of 106,067 with one
+paragraph changed by one word. **This is the only such change, and the bar for
+another one is the same: an artifact of conversion, demonstrably not the printed
+page, fixed at the source and rebuilt.** The other two accents in the whole text,
+protegé and fiancée, are the book's own and must stay.
 
 **Step 9's promises are the ones printed in the amends (1.13).** *Into Action*
 ¶36, "If we are painstaking about this phase of our development" — they belong to
