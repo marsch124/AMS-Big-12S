@@ -154,9 +154,9 @@ async function shot(page, name) {
     await page.waitForSelector('#screen-steps.is-active');
     const stepRows = await page.$$eval('.step-item', (e) => e.length);
     check('all twelve steps listed', stepRows === 12, stepRows + ' rows');
-    check('unwritten steps marked as such',
-        (await page.$$eval('.step-item.is-stub', (e) => e.length)) === 3,
-        (await page.$$eval('.step-item.is-stub', (e) => e.length)) + ' still stubs');
+    check('all twelve are written, none left as a stub',
+        (await page.$$eval('.step-item.is-stub', (e) => e.length)) === 0,
+        (await page.$$eval('.step-item.is-stub', (e) => e.length)) + ' stubs');
     check('every step shows its wording from the book',
         (await page.$$eval('.step-line', (e) => e.map((x) => x.textContent.trim())))
             .every((t) => t.length > 8));
@@ -193,11 +193,23 @@ async function shot(page, name) {
     await page.waitForSelector('#screen-steps.is-active');
 
     await page.click('.tab[data-screen="steps"]');
-    await page.click('.step-item >> nth=9');
+    await page.click('.step-item >> nth=11');
     await page.waitForSelector('#screen-step.is-active');
-    check('a step awaiting content says so, but still shows its wording',
-        await page.isVisible('#step-stub') &&
-        (await page.textContent('#step-quote')).startsWith('Continued to take personal inventory'));
+    check('the last step is written, not a stub',
+        !(await page.isVisible('#step-stub')) &&
+        (await page.textContent('#step-quote')).startsWith('Having had a spiritual experience') &&
+        (await page.$$eval('.ref-item', (e) => e.length)) === 7);
+
+    // step twelve is the only one pointing outside How It Works and Into
+    // Action, so it is what proves a cross-chapter reference still lands
+    await page.click('.ref-item >> nth=6');
+    await page.waitForSelector('#screen-reader.is-active');
+    check('a reference into another chapter still lands on its paragraph',
+        (await page.textContent('#reader-title')) === 'A Vision For You' &&
+        (await page.$eval('.para.is-target', (e) => e.textContent))
+            .startsWith('Abandon yourself to God'),
+        await page.textContent('#reader-title'));
+    await page.click('#reader-back');
     await page.click('#step-back');
     await page.waitForSelector('#screen-steps.is-active');
 
@@ -513,7 +525,7 @@ async function shot(page, name) {
         })) === '3');
 
     await page.click('.step-item >> nth=9');
-    check('a step awaiting content still takes a journal entry',
+    check('every step takes a journal entry, written or not',
         await page.isVisible('#step-add-entry'));
     await page.click('#step-back');
 

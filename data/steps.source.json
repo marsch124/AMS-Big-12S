@@ -1036,9 +1036,118 @@
         "sectionId": "ch05",
         "anchor": "10.Continued to take personal inventory"
       },
-      "explanation": [],
-      "references": [],
-      "questions": []
+      "explanation": [
+        "Something changes here, and it changes for the rest of the book. Steps one to nine are taken. Ten, eleven and twelve are practised. The book says so in as many words: this is not an overnight matter, it should continue for our life time. There is no version of step ten you complete.",
+        "It gives you four things to watch — selfishness, dishonesty, resentment and fear — which are the same four the inventory turned up, now in the present tense. And it gives you a sequence to run when one shows up, in which the striking thing is the speed. Ask at once. Discuss it immediately. Make amends quickly. Nothing here is scheduled for the weekend, because the point is to stop the thing accumulating into another step four.",
+        "Then the part people leave off when they quote it: and then we resolutely turn our thoughts to someone we can help. The inventory is not meant to end with you looking at yourself. It ends with you looking away. Love and tolerance of others is our code — which the book offers as a working method rather than as sentiment.",
+        "One caution, and it is the book's own. It is easy to let up on the spiritual program of action and rest on our laurels. What you have is described as a daily reprieve contingent on the maintenance of our spiritual condition — not a cure, and not a thing you did once in a good year. If you want the reward stated, it is a page earlier: we have ceased fighting anything or anyone, even alcohol."
+      ],
+      "references": [
+        {
+          "sectionId": "ch05",
+          "anchor": "10.Continued to take personal inventory",
+          "label": "The step itself",
+          "why": "As it is printed in the 1939 edition."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "This thought brings us to step ten",
+          "label": "The whole of step ten",
+          "why": "The four things to watch, the sequence to run, and where it is meant to end up."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "And we have ceased fighting anything or anyone",
+          "label": "\"A position of neutrality\"",
+          "why": "What the book says this daily business is actually for."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "It is easy to let up on the spiritual program of action",
+          "label": "A daily reprieve, not a cure",
+          "why": "The warning about resting on your laurels, and the terms the reprieve is held on."
+        },
+        {
+          "sectionId": "ch05",
+          "anchor": "If we were to live, we had to be free of anger",
+          "label": "Why resentment is the one to watch",
+          "why": "From the inventory chapter: the grouch and the brainstorm are a luxury you cannot afford."
+        }
+      ],
+      "questions": [
+        {
+          "id": "s10-q1",
+          "text": "Today: were you selfish, dishonest, resentful or afraid? Take them one at a time rather than as a mood."
+        },
+        {
+          "id": "s10-q2",
+          "text": "What did you notice and then decide to deal with later? Later is the part the book is arguing with."
+        },
+        {
+          "id": "s10-q3",
+          "text": "Do you owe an apology to anyone from today? Name them."
+        },
+        {
+          "id": "s10-q4",
+          "text": "Where were you right, and made sure everyone knew it?"
+        },
+        {
+          "id": "s10-q5",
+          "text": "The step says promptly. What is your actual lag between knowing you were wrong and saying so?"
+        },
+        {
+          "id": "s10-q6",
+          "text": "Whom could you help this week? The book puts that at the end of the inventory on purpose."
+        },
+        {
+          "id": "s10-q7",
+          "text": "Where are you resting on your laurels — treating the reprieve as though it had been made permanent?"
+        },
+        {
+          "id": "s10-q8",
+          "text": "What is the one thing you have been carrying for weeks that a prompt admission would have closed?"
+        }
+      ],
+      "work": {
+        "kind": "daily-entries",
+        "intro": "Short entries, one a day, kept as a run rather than as a journal. A line is enough. The point is the streak of noticing, not the writing.",
+        "watch": [
+          {
+            "id": "selfish",
+            "label": "Selfish"
+          },
+          {
+            "id": "dishonest",
+            "label": "Dishonest"
+          },
+          {
+            "id": "resentful",
+            "label": "Resentful"
+          },
+          {
+            "id": "afraid",
+            "label": "Afraid"
+          }
+        ],
+        "fields": [
+          {
+            "id": "what",
+            "label": "What came up",
+            "prompt": "A line will do."
+          },
+          {
+            "id": "owed",
+            "label": "Anything owed",
+            "prompt": "An apology, an amend, something to say to someone."
+          },
+          {
+            "id": "done",
+            "label": "Put right",
+            "prompt": "Left empty is honest. It is also the thing to look at over a month."
+          }
+        ],
+        "promptLabel": "Today"
+      }
     },
     {
       "id": "step11",
@@ -1048,9 +1157,118 @@
         "sectionId": "ch05",
         "anchor": "11.Sought through prayer"
       },
-      "explanation": [],
-      "references": [],
-      "questions": []
+      "explanation": [
+        "The step contains its own limit, and it is the most distinctive thing about it: praying only for knowledge of His will for us and the power to carry that out. Not for outcomes. Not for the thing you want, however reasonable it is. The book is not squeamish about why — left to ourselves we pray for what suits us, and then call the answer guidance.",
+        "What it actually gives you is a routine, in three parts. At night, a review: were we resentful, selfish, dishonest, or afraid? Do we owe an apology? Were we thinking of ourselves most of the time? On waking, a request that the day's thinking be directed, and specifically that it be divorced from self-pity, dishonest or self-seeking motives. And through the day, a pause — we pause when agitated or doubtful and ask for the right thought or action.",
+        "That nightly review sits under step eleven in this book, although it reads like step ten and most people work it there. Both readings are defensible. It is worth knowing that the arrangement is the book's, not a mistake in this app.",
+        "The book is also practical about the parts that do not come easily. On indecision: we ask for an intuitive thought, then we relax and take it easy, we don't struggle — and it admits that early on you are unlikely to be much good at telling inspiration from your own preferences. On self-consciousness about prayer: we shouldn't be shy on this matter, better men than we are using it constantly. And on the whole apparatus, four words that are either the most honest or the most infuriating in the chapter, depending on the day: it works — it really does."
+      ],
+      "references": [
+        {
+          "sectionId": "ch05",
+          "anchor": "11.Sought through prayer",
+          "label": "The step itself",
+          "why": "As it is printed in the 1939 edition, including the limit on what to pray for."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "Step eleven suggests prayer and meditation",
+          "label": "\"We shouldn't be shy on this matter\"",
+          "why": "The book opening the subject, for anyone who finds it awkward."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "When we retire at night",
+          "label": "The evening review",
+          "why": "The questions to ask, and the warning against turning them into remorse."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "On awakening let us think about the twenty-four hours ahead",
+          "label": "The morning",
+          "why": "What to ask before the day starts, and what to ask to be rid of."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "In thinking about our day we may face indecision",
+          "label": "When you cannot tell what to do",
+          "why": "Including the admission that you will not be good at this at first."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "As we go through the day, we pause when agitated or doubtful",
+          "label": "The pause, during the day",
+          "why": "The third part of the routine, and the one that has to happen in company."
+        }
+      ],
+      "questions": [
+        {
+          "id": "s11-q1",
+          "text": "What do you actually pray for? Compare it honestly with knowledge of His will and the power to carry it out."
+        },
+        {
+          "id": "s11-q2",
+          "text": "Which of the three — morning, evening, the pause — do you do least, and what is in the way?"
+        },
+        {
+          "id": "s11-q3",
+          "text": "Tonight: were you thinking of yourself most of the time, or of what you could pack into the stream of life?"
+        },
+        {
+          "id": "s11-q4",
+          "text": "The book warns against drifting into worry, remorse or morbid reflection. Does your review do that? What would stop it?"
+        },
+        {
+          "id": "s11-q5",
+          "text": "Where are you asking for guidance about a decision you have already made?"
+        },
+        {
+          "id": "s11-q6",
+          "text": "What does conscious contact mean to you, in plain words and without borrowing anyone's?"
+        },
+        {
+          "id": "s11-q7",
+          "text": "When did you last pause before reacting? What happened that time?"
+        },
+        {
+          "id": "s11-q8",
+          "text": "If the word prayer is the obstacle, what would you call this if you had to name it yourself?"
+        }
+      ],
+      "work": {
+        "kind": "daily-practice",
+        "intro": "The book's three parts, kept as a practice rather than a diary. Answer what you did, leave the rest — a thin week is information too.",
+        "parts": [
+          {
+            "id": "morning",
+            "label": "Morning",
+            "ref": {
+              "sectionId": "ch06",
+              "anchor": "On awakening let us think about the twenty-four hours ahead"
+            },
+            "prompt": "What is ahead, and what you asked to be free of before starting."
+          },
+          {
+            "id": "pause",
+            "label": "The pause",
+            "ref": {
+              "sectionId": "ch06",
+              "anchor": "As we go through the day, we pause when agitated or doubtful"
+            },
+            "prompt": "Where you stopped before reacting today, and what came of it."
+          },
+          {
+            "id": "evening",
+            "label": "Evening",
+            "ref": {
+              "sectionId": "ch06",
+              "anchor": "When we retire at night"
+            },
+            "prompt": "Resentful, selfish, dishonest or afraid? Anything owed? What could have been done better?"
+          }
+        ],
+        "promptLabel": "Today"
+      }
     },
     {
       "id": "step12",
@@ -1060,9 +1278,126 @@
         "sectionId": "ch05",
         "anchor": "12.Having had a spiritual experience"
       },
-      "explanation": [],
-      "references": [],
-      "questions": []
+      "explanation": [
+        "Three clauses, and the first is a claim about you rather than an instruction. Having had a spiritual experience as the result of these steps — the 1939 wording, where later editions read awakening. The book means it as the result of the nine steps behind you, not as a separate event you wait for.",
+        "The middle clause has a whole chapter to itself, and it opens by putting the case for it entirely in terms of your own survival: nothing will so much insure immunity from drinking as intensive work with other alcoholics. It works when other activities fail. Helping others is the foundation stone of your recovery. This is not framed as charity, and the book is blunt that it costs — sleep, evenings, your business, your telephone at any hour.",
+        "It is equally blunt about restraint, which is the part that gets forgotten. Do not chase someone who will not work with you; to spend too much time on any one situation is to deny some other alcoholic an opportunity. Do not force yourself on anyone. And if he prefers a different approach entirely, encourage him to follow his own conscience — we have no monopoly on God; we merely have an approach that worked with us.",
+        "The third clause, in all our affairs, is the one that outlasts the rest. The book's test of it is not piety but ordinary competence: assuming we are spiritually fit, we can do all sorts of things alcoholics are not supposed to do. Which leaves the last page, and the only instruction the book ends on — abandon yourself to God as you understand God, clear away the wreckage of your past, give freely of what you find, and join us."
+      ],
+      "references": [
+        {
+          "sectionId": "ch05",
+          "anchor": "12.Having had a spiritual experience",
+          "label": "The step itself",
+          "why": "As printed in 1939 — spiritual experience, where later editions read awakening."
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "Practical experience shows that nothing will so much insure immunity",
+          "label": "\"You can help when no one else can\"",
+          "why": "The twelfth suggestion, put first in terms of what it does for you."
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "Never avoid these responsibilities",
+          "label": "The foundation stone, and what it costs",
+          "why": "The Good Samaritan every day, itemised — sleep, pleasures, business, the telephone."
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "Do not be discouraged if your prospect does not respond at once",
+          "label": "When to stop trying",
+          "why": "On not chasing a man who will not work with you, and why that is not giving up."
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "If he thinks he can do the job in some other way",
+          "label": "\"We have no monopoly on God\"",
+          "why": "What to do when someone wants a different road entirely."
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "Assuming we are spiritually fit",
+          "label": "In all our affairs",
+          "why": "The third clause tested against ordinary life rather than against piety."
+        },
+        {
+          "sectionId": "ch11",
+          "anchor": "Abandon yourself to God as you understand God",
+          "label": "The last paragraph in the book",
+          "why": "Where all of it is going, in four sentences."
+        }
+      ],
+      "questions": [
+        {
+          "id": "s12-q1",
+          "text": "What happened to you, in your own words? Not what you are supposed to say happened."
+        },
+        {
+          "id": "s12-q2",
+          "text": "Whom have you actually sat with? Not intended to, not felt for — sat with."
+        },
+        {
+          "id": "s12-q3",
+          "text": "Where are you carrying the message by talking about yourself?"
+        },
+        {
+          "id": "s12-q4",
+          "text": "Is there someone you are chasing who will not work with you? What is keeping you on it?"
+        },
+        {
+          "id": "s12-q5",
+          "text": "Whom have you quietly written off, and on what evidence?"
+        },
+        {
+          "id": "s12-q6",
+          "text": "\"In all our affairs.\" Which affair is the exception you have been making — work, money, family, the internet?"
+        },
+        {
+          "id": "s12-q7",
+          "text": "Where do you behave one way in the rooms and another way outside them?"
+        },
+        {
+          "id": "s12-q8",
+          "text": "What have you been given that you are not giving freely?"
+        }
+      ],
+      "work": {
+        "kind": "people-worked-with",
+        "intro": "Who you have sat with, and what came of it. Kept because it is easy to forget how many there have been, and easy to remember only the ones that went badly.",
+        "columns": [
+          {
+            "id": "who",
+            "label": "Who",
+            "hint": "A first name or initials is enough."
+          },
+          {
+            "id": "how",
+            "label": "How it came about"
+          },
+          {
+            "id": "what",
+            "label": "What happened",
+            "hint": "Theirs and yours. The book is clear the outcome was never the part you were responsible for."
+          }
+        ],
+        "states": [
+          {
+            "id": "ongoing",
+            "label": "Still in touch"
+          },
+          {
+            "id": "ended",
+            "label": "Not in touch"
+          },
+          {
+            "id": "unknown",
+            "label": "Do not know",
+            "hint": "The commonest answer, and not a failure."
+          }
+        ],
+        "promptLabel": "First sat down"
+      }
     }
   ]
 }

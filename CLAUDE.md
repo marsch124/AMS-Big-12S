@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.14 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.15 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -22,21 +22,33 @@ https://claude.ai/code/artifact/b467fb04-03e9-4f26-aa77-7f8f18b8c433
 | Phase 2 | done | Steps tab, list of twelve, step page: wording, explanation, references, questions |
 | Phase 3 | done | Dated notes per step, folded when long |
 | Phase 4 | done | Answerable questions keeping every earlier answer; hide, add your own |
-| Phase 5 | **in progress** | Writing the twelve. **Steps 1 to 9 are written; 10, 11 and 12 are stubs.** |
+| Phase 5 | **done** | Writing the twelve. **All twelve are written. 83 references resolve, none ambiguous. No stubs remain.** |
 | Phase 6 | **in progress** | Each step's own work — block 5 below. **Step 4's three tables are built and usable; every other kind is still declared-only.** |
 | Phase 7 | to do | Progress on the list, copy a step out for a sponsor, docs, v2.0 |
 
-**Next: steps 10, 11 and 12 — the last three.** They are different in kind from
-everything before: 1–9 are taken once (and retaken), 10–12 are practised daily,
-which their work modules have to reflect. Material is in *Into Action* from ¶38
-on — ¶38 is step ten, ¶42 step eleven, ¶43 is the nightly review, and the morning
-and evening prompts follow; step twelve's own material is mostly *Working With
-Others*, plus the wording note that the 1939 text reads "spiritual experience"
-where later editions read "awakening". Send them two at a time, not three.
+**Next: phase 6, the remaining work modules.** The writing is finished; what is
+left is rendering what each step declares. Only `inventory-tables` (step 4) is
+built. Seven kinds remain, and they are not equal in size — in rough order of
+value: `amends-list` + `amends-progress` (8 and 9, one list seen twice, the
+biggest and the one that must survive years of editing), `daily-entries` and
+`daily-practice` (10 and 11, a different rhythm from everything else — short,
+dated, repeated, and wanting a run or streak rather than a list), `prayer` (3 and
+7, the smallest), `two-lists` (1 and 2), `carried-defects` (6, which reads step
+4's blame columns), and `people-worked-with` (12).
 
-**Phase 6, per step.** `work` is declared in `steps.source.json` for every step
-written so far (`two-lists` on 1 and 2, `prayer` on 3, `inventory-tables` on 4,
-`sittings` on 5). **Only `inventory-tables` has a renderer.** `renderStepWork()`
+Build them by adding a branch in `renderStepWork()` in `ui.js`. Step 4's build is
+the pattern to copy: rows in their own IndexedDB store, carried explicitly by
+`backup.js`, an empty row refused, and a smoke test that covers the backup round
+trip *both* ways — including that a backup written before the kind existed does
+not wipe what is on the device.
+
+After that, phase 7: progress on the steps list, copying a step out for a
+sponsor, docs, v2.0.
+
+**Phase 6, per step.** All twelve now declare a `work` kind: `two-lists` (1, 2),
+`prayer` (3, 7), `inventory-tables` (4), `sittings` (5), `carried-defects` (6),
+`amends-list` (8), `amends-progress` (9), `daily-entries` (10), `daily-practice`
+(11), `people-worked-with` (12). **Only `inventory-tables` has a renderer.** `renderStepWork()`
 in `ui.js` hides the whole work section for a kind it cannot draw, so steps 1, 2,
 3 and 5 show no work section at all rather than an empty one — build the next
 kind by adding a branch there. What each needs: 1 two lists of evidence; 2 what cannot be accepted yet
@@ -52,6 +64,13 @@ morning and evening prompts plus a practice log; 12 who you have worked with.
 "defects" when it takes the step up again. Both are in the 1939 text as Dover
 sets it — checked, not a transcription slip. Step 5's explanation says so rather
 than quietly picking one.
+
+**The evening review is filed under step eleven, not step ten (1.15).** *Into
+Action* ¶42 opens step eleven, and ¶43 — "When we retire at night, we
+constructively review our day" — follows it, although its content reads like
+step ten and most people work it there. Step 11 carries it, and step 11's
+explanation says plainly that the arrangement is the book's rather than a
+mistake in this app. Do not quietly move it to step 10.
 
 **One word of the book text has been corrected, on purpose (1.14).** *Into
 Action* ¶36 read "Wé are going to know a new freedom and happiness" — a stray
