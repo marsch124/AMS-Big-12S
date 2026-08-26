@@ -5,8 +5,8 @@
  * works when the app is served from a GitHub Pages subpath or from the root of
  * a local dev server.
  */
-const APP_VERSION = '1.9';
-const CACHE_NAME = 'ams-big-12s-v11';
+const APP_VERSION = '1.10';
+const CACHE_NAME = 'ams-big-12s-v12';
 
 const SHELL = [
     './',

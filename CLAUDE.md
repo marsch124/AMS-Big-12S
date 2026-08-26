@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.9 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.10 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -22,24 +22,32 @@ https://claude.ai/code/artifact/b467fb04-03e9-4f26-aa77-7f8f18b8c433
 | Phase 2 | done | Steps tab, list of twelve, step page: wording, explanation, references, questions |
 | Phase 3 | done | Dated notes per step, folded when long |
 | Phase 4 | done | Answerable questions keeping every earlier answer; hide, add your own |
-| Phase 5 | **in progress** | Writing the twelve. **Steps 1, 2 and 3 are written; 4–12 are stubs.** |
+| Phase 5 | **in progress** | Writing the twelve. **Steps 1 to 5 are written; 6–12 are stubs.** |
 | Phase 6 | to do | Each step's own work — block 5 below |
 | Phase 7 | to do | Progress on the list, copy a step out for a sponsor, docs, v2.0 |
 
-**Next: steps 4 and 5, written together** — you write the inventory, then read it
-to someone. Step 4's questions matter most, because its three inventory tables
-arrive in phase 6 and the questions must set them up rather than duplicate them.
-Send steps two or three at a time for review, not eleven at once.
+**Next: steps 6 and 7, written together** — the book runs them into one another
+in two short paragraphs at the top of *Into Action*, and step 7's prayer is
+printed there. Step 7 takes the same `prayer` work module as step 3. Send steps
+two or three at a time for review, not seven at once.
 
 **Phase 6, per step.** `work` is already declared in `steps.source.json` for the
-steps written so far (`two-lists` on 1 and 2, `prayer` on 3) but **nothing renders
-it yet**. What each needs: 1 two lists of evidence; 2 what cannot be accepted yet
+steps written so far (`two-lists` on 1 and 2, `prayer` on 3, `inventory-tables`
+on 4, `sittings` on 5) but **nothing renders it yet**. The declarations on 4 and
+5 name their columns and fields, so phase 6 builds to those rather than
+inventing a shape. What each needs: 1 two lists of evidence; 2 what cannot be accepted yet
 and what has shifted; 3 and 7 a prayer with a date kept each time; **4 three
 inventory tables — resentments, fears, conduct — the largest build here**; 5 who
 you sat with and what was held back; 6 the defects from step 4 carried through;
 8 the amends list, names carried from step 4; 9 the same list with status and
 outcome, lives for years; 10 short daily entries, a different rhythm; 11 the
 morning and evening prompts plus a practice log; 12 who you have worked with.
+
+**The step text disagrees with itself in one place.** Step five as printed in
+*How It Works* says "the exact nature of our wrongs"; *Into Action* says
+"defects" when it takes the step up again. Both are in the 1939 text as Dover
+sets it — checked, not a transcription slip. Step 5's explanation says so rather
+than quietly picking one.
 
 **Settled already — do not re-ask.** Sponsor (not "spindrift", a transcription
 slip). Chapter-and-passage references, no page numbers: the Dover pagination does

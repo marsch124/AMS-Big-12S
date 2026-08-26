@@ -4,7 +4,7 @@
  "edition": "First Edition (1939)",
  "wordingNote": "The steps are quoted from the 1939 first edition. The wording differs in places from later editions — step twelve here reads 'spiritual experience' where later editions read 'spiritual awakening'.",
  "authorNote": "Explanations and questions are written for this app. They are not official A.A. material, not from the 1952 book Twelve Steps and Twelve Traditions, and are meant to be edited. Only the quoted step text and the linked passages come from the book.",
- "builtAt": "2026-08-26T19:33:11.177Z",
+ "builtAt": "2026-08-26T19:55:19.075Z",
  "steps": [
   {
    "id": "step01",
@@ -338,22 +338,289 @@
     "anchor": "4.Made a searching",
     "paraIndex": 9
    },
-   "explanation": [],
-   "references": [],
-   "questions": []
+   "explanation": [
+    "Step four is written down. That is not a stylistic preference — the book says it four separate times: we set them on paper, we placed them before us in black and white, we put them on paper, we got this all down on paper and looked at it. Something you have only turned over in your head is not an inventory. The image the book reaches for is a shop taking stock, a fact-finding and a fact-facing process, and it is honest about the object of the exercise: to find the damaged goods and get rid of them promptly and without regret.",
+    "Resentment comes first, and the book does not treat it as a matter of manners. It calls resentment the number one offender, says it destroys more alcoholics than anything else, and then goes considerably further than most people expect — we found that it is fatal. Not unhelpful. Fatal. The argument is that staying angry shuts you off from the one thing keeping you sober, and the drinking then takes care of the rest.",
+    "Then it turns the list round, and this is what makes it a moral inventory instead of a list of grievances. Putting out of our minds the wrongs others had done, we resolutely looked for our own mistakes. Where had we been selfish, dishonest, self-seeking and frightened? Keep the book's own line to hand for when this gets uncomfortable: the inventory was ours, not the other man's.",
+    "Two more passes follow by the same method. Fear gets a page of its own, even where no resentment attaches to it — an evil and corroding thread, the book calls it, with the fabric of our existence shot through. Then conduct, sex included and not only sex, tested by one question rather than anyone's rules: where were we at fault, and what should we have done instead. This is the step people stall on longest. It asks for thoroughness. It does not ask you to be finished by Sunday."
+   ],
+   "references": [
+    {
+     "sectionId": "ch05",
+     "anchor": "4.Made a searching",
+     "label": "The step itself",
+     "why": "As it is printed in the 1939 edition.",
+     "paraIndex": 9
+    },
+    {
+     "sectionId": "ch05",
+     "anchor": "Therefore, we started upon a personal inventory",
+     "label": "The business that goes broke",
+     "why": "Step four named directly, and the stock-taking image the whole thing rests on.",
+     "paraIndex": 34
+    },
+    {
+     "sectionId": "ch05",
+     "anchor": "Resentment is the \"number one\" offender",
+     "label": "The number one offender",
+     "why": "Why resentment is taken first, and the columns the grudge list is built from.",
+     "paraIndex": 36
+    },
+    {
+     "sectionId": "ch05",
+     "anchor": "It is plain that a life which includes deep resentment",
+     "label": "\"We found that it is fatal\"",
+     "why": "The book's case that for an alcoholic this is survival, not self-improvement.",
+     "paraIndex": 62
+    },
+    {
+     "sectionId": "ch05",
+     "anchor": "Referring to our list again",
+     "label": "\"The inventory was ours, not the other man's\"",
+     "why": "The turn from what was done to you to what you did. The heart of the step.",
+     "paraIndex": 67
+    },
+    {
+     "sectionId": "ch05",
+     "anchor": "Notice that the word fear is bracketed",
+     "label": "Fear, the corroding thread",
+     "why": "Why fear is worth a separate pass even where nobody wronged you.",
+     "paraIndex": 68
+    },
+    {
+     "sectionId": "ch05",
+     "anchor": "We reviewed our own conduct over the years past",
+     "label": "The questions for the third pass",
+     "why": "Whom had we hurt, where were we at fault, what should we have done instead.",
+     "paraIndex": 73
+    }
+   ],
+   "questions": [
+    {
+     "id": "s4-q1",
+     "text": "What are you afraid this will turn up? Begin there — it is usually the reason the step exists."
+    },
+    {
+     "id": "s4-q2",
+     "text": "The book asks for searching and fearless. Which of those two is harder for you, and where is it going to show?"
+    },
+    {
+     "id": "s4-q3",
+     "text": "Who would you most like to leave off the list, and what reason are you giving yourself?"
+    },
+    {
+     "id": "s4-q4",
+     "text": "When you think about a resentment, whose conduct do you find yourself explaining first — theirs, or your own?"
+    },
+    {
+     "id": "s4-q5",
+     "text": "Take one where you were genuinely, unarguably wronged. What was your part anyway?"
+    },
+    {
+     "id": "s4-q6",
+     "text": "Where has fear been running something you have been calling by a better name — caution, standards, principle, loyalty?"
+    },
+    {
+     "id": "s4-q7",
+     "text": "Whom have you hurt and never accounted for, because nobody ever made you?"
+    },
+    {
+     "id": "s4-q8",
+     "text": "What would make you stop halfway through this? Name it now, so you recognise it when it arrives."
+    }
+   ],
+   "work": {
+    "kind": "inventory-tables",
+    "intro": "Three passes, in the order the book takes them. Do them one at a time. None of them is finished on the day you start, and the first is much the longest.",
+    "tables": [
+     {
+      "id": "resentments",
+      "title": "Resentments",
+      "prompt": "People, institutions or principles you are angry at. The last column is the one doing the work.",
+      "columns": [
+       {
+        "id": "who",
+        "label": "I'm resentful at"
+       },
+       {
+        "id": "cause",
+        "label": "The cause"
+       },
+       {
+        "id": "affects",
+        "label": "Affects my",
+        "hint": "Self-esteem, security, ambitions, personal or sex relations."
+       },
+       {
+        "id": "part",
+        "label": "Where I was to blame",
+        "hint": "Selfish, dishonest, self-seeking, frightened."
+       }
+      ]
+     },
+     {
+      "id": "fears",
+      "title": "Fears",
+      "prompt": "On paper even where no resentment attaches to them.",
+      "columns": [
+       {
+        "id": "fear",
+        "label": "What I am afraid of"
+       },
+       {
+        "id": "why",
+        "label": "Why I have it"
+       }
+      ]
+     },
+     {
+      "id": "conduct",
+      "title": "Conduct",
+      "prompt": "Where you were selfish, dishonest or inconsiderate. Sex included, and not only sex.",
+      "columns": [
+       {
+        "id": "what",
+        "label": "What I did"
+       },
+       {
+        "id": "whom",
+        "label": "Whom it hurt"
+       },
+       {
+        "id": "fault",
+        "label": "Where I was at fault"
+       },
+       {
+        "id": "instead",
+        "label": "What I should have done instead"
+       }
+      ]
+     }
+    ]
+   }
   },
   {
    "id": "step05",
    "number": 5,
-   "shortTitle": "Admitted",
+   "shortTitle": "Told someone",
    "text": {
     "sectionId": "ch05",
     "anchor": "5.Admitted to God",
     "paraIndex": 10
    },
-   "explanation": [],
-   "references": [],
-   "questions": []
+   "explanation": [
+    "Step five is step four said out loud to somebody. Three hearers are named — God, yourself, and one other human being — and it is the third that people balk at. Worth knowing as you read: the step as printed says the exact nature of our wrongs, while the chapter that takes it up again says defects. It is one of the places where the 1939 text does not quite agree with itself. The work is the same either way.",
+    "The book puts its reason first and does not dress it up: if we skip this vital step, we may not overcome drinking. Then it says what it has watched happen. People took inventory all right, and hung on to some of the worst items in stock — and almost invariably got drunk, and wondered why, having done everything else. A solitary self-appraisal, it says, is not enough. You can be honest on paper in a way that costs you nothing.",
+    "On who hears it, the book is practical rather than pious. Think well before choosing. It suggests a priest if you have one, a doctor, a psychologist, or simply a close-mouthed and understanding friend — someone who can keep a confidence, who grasps what you are doing, and who will not try to change your plan. It also draws a line most people need drawing: you may not unburden yourself onto someone the telling would hurt. We have no right to save our own skin at another person's expense. Be hard on yourself, considerate of others. And if there is genuinely no one, the step may wait — but only if you are ready to take it at the first opportunity, and not as an excuse.",
+    "The account of afterwards is not modest. We can look the world in the eye. Our fears fall from us. All of it hangs on two words in the same sentence: withholding nothing. Then the book sends you home to sit somewhere quiet for an hour and read the first five steps back, asking whether the work is solid, whether the stones are properly in place, whether you tried to make mortar without sand. Be honest about what you left out. The thing you are planning not to mention is usually the thing the step is for."
+   ],
+   "references": [
+    {
+     "sectionId": "ch05",
+     "anchor": "5.Admitted to God",
+     "label": "The step itself",
+     "why": "As it is printed in the 1939 edition.",
+     "paraIndex": 10
+    },
+    {
+     "sectionId": "ch06",
+     "anchor": "Having made our personal inventory",
+     "label": "Where the book takes it up",
+     "why": "The opening of Into Action — and the paragraph that says defects where the step says wrongs.",
+     "paraIndex": 0
+    },
+    {
+     "sectionId": "ch06",
+     "anchor": "This is perhaps difficult",
+     "label": "\"Hung on to some of the worst items in stock\"",
+     "why": "The best reason first, and what the book saw happen to people who kept something back.",
+     "paraIndex": 1
+    },
+    {
+     "sectionId": "ch06",
+     "anchor": "We must be entirely honest with somebody",
+     "label": "Choosing who hears it",
+     "why": "The book thinking through the candidates, without insisting on any of them.",
+     "paraIndex": 5
+    },
+    {
+     "sectionId": "ch06",
+     "anchor": "If we cannot, or would rather not do this",
+     "label": "\"Hard on ourself, but always considerate of others\"",
+     "why": "The limit on what you may put onto someone it would injure.",
+     "paraIndex": 6
+    },
+    {
+     "sectionId": "ch06",
+     "anchor": "We pocket our pride and go to it",
+     "label": "Withholding nothing, and what follows",
+     "why": "What the book says the far side of this step is like.",
+     "paraIndex": 9
+    },
+    {
+     "sectionId": "ch06",
+     "anchor": "Returning home we find a place where we can be quiet",
+     "label": "The arch, and reading the five back",
+     "why": "The review the book asks for afterwards, before anyone moves on to step six.",
+     "paraIndex": 10
+    }
+   ],
+   "questions": [
+    {
+     "id": "s5-q1",
+     "text": "Who are you going to tell? If no name has come to mind, what is the objection to each of the ones that did?"
+    },
+    {
+     "id": "s5-q2",
+     "text": "The book wants someone who can keep a confidence and will not try to change your plan. Does the person you have in mind pass both tests?"
+    },
+    {
+     "id": "s5-q3",
+     "text": "What are you planning to leave out? Write it down here, even if you write it nowhere else."
+    },
+    {
+     "id": "s5-q4",
+     "text": "What do you expect them to think of you afterwards? Where did that expectation come from?"
+    },
+    {
+     "id": "s5-q5",
+     "text": "Is anything in your inventory genuinely not yours to disclose — and are you certain that is the real reason for leaving it out?"
+    },
+    {
+     "id": "s5-q6",
+     "text": "The book describes people who kept back the worst items in stock and drank over it. What would yours be?"
+    },
+    {
+     "id": "s5-q7",
+     "text": "If you are postponing this: is it that there is nobody, or that there is nobody you want?"
+    },
+    {
+     "id": "s5-q8",
+     "text": "Afterwards — what actually happened, and what is still unsaid?"
+    }
+   ],
+   "work": {
+    "kind": "sittings",
+    "intro": "A record of the telling, kept with its date. If you go back later and say the thing you left out, that is a second entry rather than a correction of the first.",
+    "promptLabel": "Sat down on",
+    "fields": [
+     {
+      "id": "who",
+      "label": "Who I sat with",
+      "prompt": "A name, or whatever you want to call them here."
+     },
+     {
+      "id": "covered",
+      "label": "What I took them through",
+      "prompt": "Roughly. This is a record that it happened, not a second inventory."
+     },
+     {
+      "id": "heldBack",
+      "label": "What I held back",
+      "prompt": "Left empty is an answer too. So is coming back to fill it in."
+     }
+    ]
+   }
   },
   {
    "id": "step06",
