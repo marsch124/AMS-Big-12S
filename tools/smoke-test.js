@@ -321,6 +321,89 @@ async function shot(page, name) {
     check('everything written is still there after a reload',
         (await page.$$eval('#notes-list .card', (e) => e.length)) === 3);
 
+    // ── the step journal ──────────────────────────────────────────────────
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=0');
+    await page.waitForSelector('#screen-step.is-active');
+
+    await page.click('#step-add-entry');
+    await page.waitForSelector('#note-sheet:not([hidden])');
+    check('a step entry is offered as an entry, not a passage note',
+        (await page.textContent('#note-sheet-title')).indexOf('Step 1') === 0 &&
+        (await page.getAttribute('#note-sheet-quote', 'hidden')) !== null);
+    await page.fill('#note-sheet-body', 'First read of step one.');
+    await page.click('#note-save');
+    await page.waitForSelector('#note-sheet', { state: 'hidden' });
+    check('the entry is kept against the step',
+        (await page.$$eval('.entry-card', (e) => e.length)) === 1);
+
+    await page.click('#step-add-entry');
+    await page.waitForSelector('#note-sheet:not([hidden])');
+    await page.fill('#note-sheet-body', 'Second pass, later.');
+    await page.click('#note-save');
+    await page.waitForSelector('#note-sheet', { state: 'hidden' });
+    const entryBodies = await page.$$eval('.entry-card .card-body', (e) => e.map((x) => x.textContent));
+    check('a later pass sits above the earlier one, not on top of it',
+        entryBodies.length === 2 && entryBodies[0].indexOf('Second pass') === 0,
+        entryBodies.length + ' entries');
+
+    await page.click('#step-back');
+    await page.waitForSelector('#screen-steps.is-active');
+    check('the steps list counts what you have written',
+        (await page.$eval('.step-item >> nth=0', (e) => {
+            const pill = e.querySelector('.step-count');
+            return pill ? pill.textContent : '';
+        })) === '2');
+
+    await page.click('.step-item >> nth=3');
+    check('a step awaiting content still takes a journal entry',
+        await page.isVisible('#step-add-entry'));
+    await page.click('#step-back');
+
+    // step entries belong to their step, not to the loose pile
+    await page.click('.tab[data-screen="notes"]');
+    await page.waitForSelector('#screen-notes.is-active');
+    await page.click('.chip[data-filter="steps"]');
+    await page.waitForTimeout(150);
+    check('step entries gather under their own filter',
+        (await page.$$eval('#notes-list .card', (e) => e.length)) === 2);
+    check('and are headed by the step they belong to',
+        (await page.$eval('#notes-list .card-where', (e) => e.textContent)) === 'Step 1 · Powerless');
+
+    await page.click('.chip[data-filter="own"]');
+    await page.waitForTimeout(150);
+    // The invariant that matters is that a chip's number is of exactly what its
+    // list contains — a badge saying 3 over a list of 1 is worse than no badge.
+    const looseShown = await page.$$eval('#notes-list .card', (e) => e.length);
+    const reflectionsChip = await page.$eval('.chip[data-filter="own"]', (e) => e.textContent.trim());
+    const reflectionsCount = parseInt((reflectionsChip.match(/\d+/) || [0])[0], 10);
+    const headsUnderReflections = await page.$$eval('#notes-list .card-where',
+        (e) => e.map((x) => x.textContent));
+    check('Reflections excludes step work, and its count agrees with its list',
+        reflectionsCount === looseShown &&
+        !headsUnderReflections.some((h) => h.indexOf('Step ') === 0),
+        looseShown + ' shown, chip reads "' + reflectionsChip + '"');
+
+    await page.click('.chip[data-filter="steps"]');
+    await page.waitForTimeout(150);
+    await page.click('#notes-list .card-main >> nth=0');
+    await page.waitForSelector('#screen-step.is-active');
+    check('a step entry leads back to its step', (await page.textContent('#step-title')) === 'Step 1');
+    await page.click('#step-back');
+    // back to Notes before touching a chip — #step-back lands on the Steps list
+    await page.click('.tab[data-screen="notes"]');
+    await page.waitForSelector('#screen-notes.is-active');
+    await page.click('.chip[data-filter="all"]');
+    await page.waitForTimeout(120);
+
+    // step entries are notes, so they must ride the backup like any other
+    const stepBackup = JSON.parse(await page.evaluate(
+        () => Backup.serialize({ includeBookText: false })));
+    const carried = stepBackup.notes.filter((n) => n.stepId === 'step01');
+    check('a backup carries step entries, tied to their step',
+        carried.length === 2 && carried.every((n) => !n.sectionId),
+        carried.length + ' entries for step 1');
+
     // ── appearance ────────────────────────────────────────────────────────
     await page.click('.tab[data-screen="settings"]');
     await page.selectOption('#set-theme', 'dark');

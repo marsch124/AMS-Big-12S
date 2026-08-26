@@ -286,8 +286,34 @@
     // A note written on the Notes tab rather than against a paragraph. It has
     // no section, no anchor and nothing to re-find, so the resolver leaves it
     // alone rather than declaring it an orphan.
+    // Not written against a passage. True of a loose reflection and of a step
+    // journal entry alike — both of which resolveNote must leave alone.
     function isStandalone(note) {
         return !note.sectionId;
+    }
+
+    // Written against a step rather than a page. Still standalone by the test
+    // above, which is why the Reflections list has to exclude these explicitly:
+    // a journal entry belongs to its step, not to the loose pile.
+    function isStepNote(note) {
+        return !!note.stepId;
+    }
+
+    function isLooseNote(note) {
+        return isStandalone(note) && !isStepNote(note);
+    }
+
+    function notesForStep(stepId) {
+        return state.notes.filter(function (note) { return note.stepId === stepId; });
+    }
+
+    function lastWorkedOn(stepId) {
+        var entries = notesForStep(stepId);
+        if (!entries.length) return null;
+        return entries.reduce(function (latest, note) {
+            var at = note.createdAt || note.updatedAt || '';
+            return at > latest ? at : latest;
+        }, '');
     }
 
     // Paragraph numbering can shift if the reader re-imports a differently
@@ -320,6 +346,7 @@
             sectionId: null,     // a note of one's own, until a passage says otherwise
             paraIndex: null,
             anchor: '',
+            stepId: null,        // set when written against a step
             tag: '',             // '' | 'sponsor' | 'sponsee'
             discussedAt: null
         }, note, { updatedAt: now });
@@ -472,6 +499,10 @@
         loadNotes: loadNotes,
         notesForSection: notesForSection,
         isStandalone: isStandalone,
+        isStepNote: isStepNote,
+        isLooseNote: isLooseNote,
+        notesForStep: notesForStep,
+        lastWorkedOn: lastWorkedOn,
         resolveNote: resolveNote,
         saveNote: saveNote,
         setNoteDiscussed: setNoteDiscussed,

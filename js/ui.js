@@ -10,7 +10,7 @@
     var searchTimer = null;
     var wakeLock = null;
     var pasteHandler = null;
-    var notesFilter = 'all';   // all | sponsor | sponsee | own
+    var notesFilter = 'all';   // all | sponsor | sponsee | steps | own
     var noteTag = '';          // the chip currently lit in the note sheet
     var noteOnPassage = false; // whether that sheet has a passage behind it
 
@@ -360,14 +360,21 @@
         var section = sectionId ? Store.getSection(sectionId) : null;
         var quote = section && section.paragraphs[paraIndex] ? section.paragraphs[paraIndex] : '';
 
+        var stepId = options.stepId || (existing && existing.stepId) || null;
+        var step = stepId ? Store.getStep(stepId) : null;
+
         $('note-sheet-title').textContent = section
             ? 'Note on this passage'
-            : (existing ? 'Your note' : 'Something on your mind');
+            : step
+                ? 'Step ' + step.number + ' — ' + (existing ? 'your entry' : 'a new entry')
+                : (existing ? 'Your note' : 'Something on your mind');
         $('note-sheet-quote').textContent = quote;
         $('note-sheet-quote').hidden = !quote;
         $('note-sheet-body').placeholder = section
             ? 'Write your note…'
-            : 'A question for your sponsor, something to raise with your sponsee, or a thought of your own.';
+            : step
+                ? 'Where you are with this step today. Dated, and kept — a later entry sits above this one rather than replacing it.'
+                : 'A question for your sponsor, something to raise with your sponsee, or a thought of your own.';
         $('note-sheet-body').value = existing ? existing.body : '';
         $('note-delete').hidden = !existing;
         noteOnPassage = !!section;
@@ -379,6 +386,7 @@
             var record = {
                 sectionId: sectionId || null,
                 paraIndex: section ? paraIndex : null,
+                stepId: stepId,
                 body: body,
                 tag: noteTag,
                 anchor: section ? Store.anchorFor(section.paragraphs[paraIndex]) : ''
@@ -394,9 +402,7 @@
             Store.saveNote(record).then(function () {
                 closeSheets();
                 toast('Note saved');
-                if (current.screen === 'reader') {
-                    renderReader(Store.getSection(current.sectionId), { paraIndex: paraIndex });
-                } else { renderNotes(); }
+                refreshAfterNoteChange(paraIndex);
             });
         };
 
@@ -404,14 +410,24 @@
             Store.deleteNote(existing.id).then(function () {
                 closeSheets();
                 toast('Note deleted');
-                if (current.screen === 'reader') {
-                    renderReader(Store.getSection(current.sectionId), { paraIndex: paraIndex });
-                } else { renderNotes(); }
+                refreshAfterNoteChange(paraIndex);
             });
         };
 
         openSheet('note-sheet');
         setTimeout(function () { $('note-sheet-body').focus(); }, 120);
+    }
+
+    // Whichever screen is showing when a note changes is the one to redraw.
+    function refreshAfterNoteChange(paraIndex) {
+        if (current.screen === 'reader') {
+            renderReader(Store.getSection(current.sectionId), { paraIndex: paraIndex });
+        } else if (current.screen === 'step') {
+            var step = Store.getStep(current.stepId);
+            if (step) renderStep(step);
+        } else {
+            renderNotes();
+        }
     }
 
     /* --------------------------------------------------------------- steps */
@@ -425,14 +441,17 @@
 
         Store.allSteps().forEach(function (step) {
             var written = Store.stepIsWritten(step);
+            var entries = Store.notesForStep(step.id).length;
             var item = document.createElement('button');
-            item.className = 'step-item' + (written ? '' : ' is-stub');
+            item.className = 'step-item' + (written || entries ? '' : ' is-stub');
             item.innerHTML =
                 '<span class="step-num">' + step.number + '</span>' +
                 '<span class="step-body">' +
                   '<span class="step-name">' + escapeHtml(step.shortTitle) + '</span>' +
                   '<span class="step-line">' + escapeHtml(firstWords(Store.stepText(step), 12)) + '</span>' +
                 '</span>' +
+                (entries ? '<span class="step-count" title="entries in your journal">' +
+                    entries + '</span>' : '') +
                 (written ? '<span class="step-go">›</span>' : '<span class="step-soon">soon</span>');
             item.addEventListener('click', function () { openStep(step.id); });
             list.appendChild(item);
@@ -455,6 +474,8 @@
         $('step-title').textContent = 'Step ' + step.number;
         $('step-sub').textContent = step.shortTitle;
         $('step-quote').textContent = Store.stepText(step);
+
+        renderStepJournal(step);
 
         $('step-stub').hidden = written;
         $('step-written').hidden = !written;
@@ -504,9 +525,51 @@
         });
     }
 
+    function renderStepJournal(step) {
+        var entries = Store.notesForStep(step.id).slice().sort(function (a, b) {
+            return (b.createdAt || '').localeCompare(a.createdAt || '');
+        });
+
+        $('journal-hint').textContent = entries.length
+            ? entries.length + (entries.length === 1 ? ' entry' : ' entries') +
+              ', newest first. Nothing here is overwritten.'
+            : 'Nothing yet. Add an entry each time you read or work this step — a later pass sits above the last, not on top of it.';
+
+        var list = $('step-entries');
+        list.innerHTML = '';
+        entries.forEach(function (entry) {
+            var card = document.createElement('div');
+            card.className = 'card note-card entry-card' + (entry.discussedAt ? ' is-done' : '');
+
+            var main = document.createElement('button');
+            main.className = 'card-main';
+            main.innerHTML =
+                '<div class="card-head">' +
+                    '<span class="entry-when">' + escapeHtml(formatDate(entry.createdAt)) + '</span>' +
+                    (entry.tag ? '<span class="tag-pill' + (entry.discussedAt ? ' is-done' : '') +
+                        '">' + escapeHtml(TAG_SHORT[entry.tag]) + '</span>' : '') +
+                '</div>' +
+                '<p class="card-body">' + escapeHtml(entry.body) + '</p>' +
+                (entry.updatedAt && entry.updatedAt.slice(0, 10) !== (entry.createdAt || '').slice(0, 10)
+                    ? '<p class="card-date">Edited ' + formatDate(entry.updatedAt) + '</p>' : '') +
+                (entry.discussedAt ? '<p class="card-done">Talked about ' +
+                    formatDate(entry.discussedAt) + '</p>' : '');
+            main.addEventListener('click', function () {
+                openNoteSheet(null, null, entry, { stepId: step.id });
+            });
+            card.appendChild(main);
+            list.appendChild(card);
+        });
+
+        $('step-add-entry').onclick = function () {
+            openNoteSheet(null, null, null, { stepId: step.id });
+        };
+    }
+
     /* -------------------------------------------------------------- notes */
 
-    var FILTER_LABELS = { all: 'All', sponsor: 'Sponsor', sponsee: 'Sponsee', own: 'Reflections' };
+    var FILTER_LABELS = { all: 'All', sponsor: 'Sponsor', sponsee: 'Sponsee',
+                          steps: 'Steps', own: 'Reflections' };
 
     var EMPTY_COPY = {
         all: 'No notes yet. While reading, tap any paragraph and choose <strong>Add note</strong> — ' +
@@ -516,22 +579,31 @@
         sponsee: 'Nothing waiting for your sponsee. Tap <strong>+</strong> to put something on the list, ' +
                  'or mark a note for them while you are reading.',
         own: 'Nothing here yet. Tap <strong>+</strong> and write what is on your mind — it does not have to ' +
-             'come from a page.'
+             'come from a page.',
+        steps: 'Nothing written against a step yet. Open the <strong>Steps</strong> tab, choose one, and ' +
+               'add an entry — they gather here.'
     };
 
     function noteMatchesFilter(note) {
         if (notesFilter === 'all') return true;
-        if (notesFilter === 'own') return Store.isStandalone(note);
+        if (notesFilter === 'steps') return Store.isStepNote(note);
+        // A step entry is standalone too, so Reflections has to rule it out or
+        // the loose pile fills up with step work.
+        if (notesFilter === 'own') return Store.isLooseNote(note);
         return note.tag === notesFilter;
     }
 
     // The counts are of points still waiting, not of everything ever written:
     // a list of forty settled matters is not forty things to raise.
     function renderNoteFilters() {
+        // Each count must be of exactly what its filter shows. isStandalone is
+        // true of step entries as well, so counting Reflections with it would
+        // put a number on the chip that its own list does not contain.
         var counts = {
             sponsor: Store.waitingFor('sponsor'),
             sponsee: Store.waitingFor('sponsee'),
-            own: Store.state.notes.filter(Store.isStandalone).length
+            steps: Store.state.notes.filter(Store.isStepNote).length,
+            own: Store.state.notes.filter(Store.isLooseNote).length
         };
         Array.prototype.forEach.call(document.querySelectorAll('#notes-filters .chip'), function (chip) {
             var key = chip.dataset.filter;
@@ -582,9 +654,11 @@
     function noteCard(note) {
         var section = Store.getSection(note.sectionId);
         var standalone = Store.isStandalone(note);
+        var step = Store.isStepNote(note) ? Store.getStep(note.stepId) : null;
         var quote = section && section.paragraphs[note.paraIndex]
             ? firstWords(section.paragraphs[note.paraIndex], 26) : '';
-        var where = standalone ? '' : (section ? section.title : 'Unknown section');
+        var where = step ? 'Step ' + step.number + ' · ' + step.shortTitle
+                         : standalone ? '' : (section ? section.title : 'Unknown section');
         var head = where || note.tag;   // nothing to head a plain thought with
 
         var card = document.createElement('div');
@@ -606,6 +680,7 @@
         // A note written against a passage still leads back to it; one that was
         // never on a page has nowhere to go, so it opens for editing instead.
         main.addEventListener('click', function () {
+            if (step) { openStep(step.id); return; }
             if (standalone || note.orphan) { openNoteSheet(note.sectionId, note.paraIndex, note); return; }
             openReader(note.sectionId, { paraIndex: note.paraIndex, highlight: true });
         });
@@ -632,7 +707,7 @@
         edit.className = 'chip';
         edit.textContent = 'Edit';
         edit.addEventListener('click', function () {
-            openNoteSheet(note.sectionId, note.paraIndex, note);
+            openNoteSheet(note.sectionId, note.paraIndex, note, { stepId: note.stepId || null });
         });
         actions.appendChild(edit);
 

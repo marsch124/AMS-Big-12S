@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=6">
+<link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
 
@@ -84,6 +84,7 @@
         <button class="chip is-active" data-filter="all">All</button>
         <button class="chip" data-filter="sponsor">Sponsor</button>
         <button class="chip" data-filter="sponsee">Sponsee</button>
+        <button class="chip" data-filter="steps">Steps</button>
         <button class="chip" data-filter="own">Reflections</button>
       </div>
       <div id="notes-actions"></div>
@@ -131,6 +132,15 @@
     </header>
     <div class="screen-body" id="step-body">
       <blockquote class="step-quote" id="step-quote"></blockquote>
+
+      <section class="step-journal">
+        <div class="journal-head">
+          <h2 class="section-heading">Your journal</h2>
+          <button class="btn btn-quiet btn-small" id="step-add-entry">Add an entry</button>
+        </div>
+        <p class="hint" id="journal-hint"></p>
+        <div class="card-list" id="step-entries"></div>
+      </section>
 
       <div id="step-stub" hidden>
         <p class="empty">This step has not been written up yet. Its wording is above, and the
@@ -369,6 +379,24 @@
 
       <h2 class="section-heading">Version history</h2>
       <div class="panel panel-flush">
+
+        <details class="disclosure">
+          <summary><span>A journal on every step</span><span class="ver-tag">1.6</span></summary>
+          <div class="disclosure-body">
+            <p>Every step now takes dated entries, added each time you read or work it.</p>
+            <ul>
+              <li>Entries are kept, never replaced. A second pass sits <strong>above</strong> the
+                  first, with both dates intact.</li>
+              <li>They are notes like any other, so an entry can be marked for your sponsor,
+                  searched beside your book notes, and carried in the same backup.</li>
+              <li>A new <strong>Steps</strong> filter on the Notes tab gathers everything written
+                  against a step; <strong>Reflections</strong> now means what did not come from a
+                  page <em>or</em> a step.</li>
+              <li>Steps you have written against show a count, and a step still awaiting its
+                  write-up takes entries all the same — its wording is there to work with.</li>
+            </ul>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>The twelve steps arrive</span><span class="ver-tag">1.5</span></summary>
@@ -648,9 +676,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=1"></script>
-<script src="js/store.js?v=4"></script>
+<script src="js/store.js?v=5"></script>
 <script src="js/backup.js?v=1"></script>
-<script src="js/ui.js?v=4"></script>
-<script src="js/app.js?v=4"></script>
+<script src="js/ui.js?v=5"></script>
+<script src="js/app.js?v=5"></script>
 </body>
 </html>

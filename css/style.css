@@ -351,6 +351,26 @@ button { cursor: pointer; }
 
 /* ════════════════════════════════════════════════════════════════ steps ══ */
 
+.journal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.journal-head .section-heading { margin-bottom: 10px; }
+.btn-small { padding: 7px 12px; font-size: 13px; }
+
+.step-journal { margin-top: 6px; }
+.entry-card { border-left: 3px solid var(--accent); }
+.entry-when {
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+
 .steplist { display: flex; flex-direction: column; }
 
 .step-item {
@@ -393,6 +413,15 @@ button { cursor: pointer; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.step-count {
+  flex: none;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  background: var(--bg-sunken);
+  border-radius: 20px;
+  padding: 2px 8px;
 }
 .step-go { flex: none; color: var(--accent); font-size: 20px; }
 .step-soon {

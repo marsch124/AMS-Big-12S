@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.5 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.6 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Non-negotiables
 
@@ -51,7 +51,7 @@ data/steps.json                     Built steps with references resolved
 tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
-tools/smoke-test.js    56 end-to-end browser checks
+tools/smoke-test.js    66 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -63,7 +63,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 56 checks, expect 56/56
+node tools/smoke-test.js                  # 66 checks, expect 66/66
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.
@@ -106,6 +106,14 @@ chapter, on scroll (debounced 400 ms), on leaving the reader, and on
 `pagehide` / `visibilitychange`. The original only saved on scroll, so any
 chapter short enough to fit one screen was never remembered. iOS kills
 backgrounded PWAs without a `visibilitychange`, hence `pagehide`.
+
+**One note store, four kinds of note.** A step journal entry is a note with a
+`stepId` and no `sectionId`. That makes it *standalone* by `isStandalone()`,
+which is right for `resolveNote()` but wrong for the Reflections list — so
+`isLooseNote()` (standalone **and** no `stepId`) is what the "own" filter and its
+count both use. Any chip's number must be of exactly what its own list shows: the
+first cut counted Reflections with `isStandalone`, and the badge read 2 over an
+empty list.
 
 **One note store, three kinds of note.** A note carries `sectionId` +
 `paraIndex` + `anchor` when it was written against a passage, and `sectionId:
