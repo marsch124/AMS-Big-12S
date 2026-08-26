@@ -374,6 +374,112 @@ async function shot(page, name) {
     await page.click('#step-back');
     await page.waitForSelector('#screen-steps.is-active');
 
+    // ── steps eight and nine: one list, seen twice ────────────────────────
+    const toStep = async (i) => {
+        await page.click('.tab[data-screen="steps"]');
+        await page.waitForSelector('#screen-steps.is-active');
+        await page.click('.step-item >> nth=' + i);
+        await page.waitForSelector('#screen-step.is-active');
+    };
+
+    await toStep(8);
+    check('step nine says so when step eight has no list yet',
+        (await page.textContent('#step-work-body')).indexOf('Step eight') !== -1);
+
+    // a name in step four's conduct pass should be offered to step eight
+    await toStep(3);
+    await page.click('.inv-table >> nth=2 >> .btn:has-text("Add the first")');
+    await page.waitForSelector('#inv-sheet:not([hidden])');
+    let boxes = await page.$$('#inv-sheet-fields textarea');
+    await boxes[0].fill('Took money from the till');
+    await boxes[1].fill('Robert at the shop');
+    await boxes[2].fill('Dishonesty');
+    await boxes[3].fill('Owned up, years late');
+    await page.click('#inv-save');
+    await page.waitForSelector('#inv-sheet', { state: 'hidden' });
+
+    await toStep(7);
+    check('step eight offers the names step four already knows',
+        !!(await page.$('button:has-text("Carry over")')));
+    await page.click('button:has-text("Carry over")');
+    await page.waitForTimeout(300);
+    check('and carries them onto the list',
+        (await page.$$eval('.inv-card', (e) => e.length)) === 1 &&
+        (await page.textContent('.inv-cards')).indexOf('Robert at the shop') !== -1);
+
+    await page.click('.btn:has-text("Add another")');
+    await page.waitForSelector('#inv-sheet:not([hidden])');
+    boxes = await page.$$('#inv-sheet-fields textarea');
+    await boxes[0].fill('Anna');
+    await boxes[1].fill('Years of broken promises, and the money.');
+    await page.click('.chip:has-text("Willing")');
+    await page.click('#inv-save');
+    await page.waitForSelector('#inv-sheet', { state: 'hidden' });
+    check('a name is kept with where the willingness stands',
+        (await page.$$eval('.inv-card', (e) => e.length)) === 2 &&
+        (await page.textContent('.inv-state')) === 'Willing');
+
+    await toStep(8);
+    check('step nine reads step eight\u2019s list rather than a list of its own',
+        (await page.$$eval('.inv-card', (e) => e.length)) === 2);
+
+    await page.click('.inv-card >> nth=1');
+    await page.waitForSelector('#inv-sheet:not([hidden])');
+    check('and opens the entry under the name step eight gave it',
+        (await page.textContent('#inv-sheet-title')) === 'Anna');
+    // the list belongs to step eight; step nine records against it, never removes
+    check('step nine cannot delete a name off the list',
+        await page.$eval('#inv-delete', (e) => e.hidden));
+
+    await page.click('.chip:has-text("Made")');
+    const outcome = await page.$$('#inv-sheet-fields textarea');
+    await outcome[0].fill('Sat down on the Sunday. Not resolved, but said.');
+    await page.fill('#inv-date', '2026-08-16');
+    await page.click('#inv-save');
+    await page.waitForSelector('#inv-sheet', { state: 'hidden' });
+    check('step nine records what happened, and counts it',
+        (await page.textContent('#step-work-body')).indexOf('1 of 2') !== -1);
+    check('with the date the reader chose, not the day they typed it',
+        /2026/.test(await page.textContent('.inv-cards')));
+
+    // the whole point of the design: two steps, two states, one row
+    const shared = await page.evaluate(() =>
+        Store.state.inventory.filter((r) => r.stepId === 'step08' && r.values.who === 'Anna')[0]);
+    check('both steps\u2019 states sit on one row, neither overwriting the other',
+        shared.states.step08 === 'willing' && shared.states.step09 === 'made' &&
+        shared.on === '2026-08-16' && !!shared.values.harm && !!shared.values.outcome,
+        JSON.stringify(shared.states));
+    check('and step nine did not create a second row',
+        (await page.evaluate(() =>
+            Store.state.inventory.filter((r) => r.stepId === 'step09').length)) === 0);
+
+    await toStep(7);
+    check('step eight\u2019s willingness survived step nine writing to the row',
+        (await page.textContent('.inv-state')) === 'Willing');
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await toStep(8);
+    check('the amends list survives a reload with its progress',
+        (await page.$$eval('.inv-card', (e) => e.length)) === 2 &&
+        (await page.textContent('#step-work-body')).indexOf('1 of 2') !== -1);
+
+    const amendsBackup = JSON.parse(await page.evaluate(() =>
+        Backup.serialize({ includeBookText: false })));
+    const amendRow = amendsBackup.inventory.filter((r) => r.states && r.states.step09)[0];
+    check('a backup carries the states and the chosen date',
+        !!amendRow && amendRow.states.step08 === 'willing' && amendRow.on === '2026-08-16');
+
+    await page.evaluate(async () => { await DB.clear(DB.STORE_INVENTORY); });
+    await page.evaluate(async (json) =>
+        Backup.restoreBackup(Backup.parseBackup(json), 'replace'), JSON.stringify(amendsBackup));
+    await page.reload({ waitUntil: 'networkidle' });
+    await toStep(8);
+    check('and a restore brings the progress back, not just the names',
+        (await page.textContent('#step-work-body')).indexOf('1 of 2') !== -1 &&
+        (await page.$$eval('.inv-card', (e) => e.length)) === 2);
+    await page.click('#step-back');
+    await page.waitForSelector('#screen-steps.is-active');
+
     // ── things to talk about ──────────────────────────────────────────────
     // A point for the sponsor that came from nowhere in particular: written
     // straight onto the Notes tab, with no passage behind it.

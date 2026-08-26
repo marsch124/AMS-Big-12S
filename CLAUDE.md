@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.15 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.16 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -23,18 +23,17 @@ https://claude.ai/code/artifact/b467fb04-03e9-4f26-aa77-7f8f18b8c433
 | Phase 3 | done | Dated notes per step, folded when long |
 | Phase 4 | done | Answerable questions keeping every earlier answer; hide, add your own |
 | Phase 5 | **done** | Writing the twelve. **All twelve are written. 83 references resolve, none ambiguous. No stubs remain.** |
-| Phase 6 | **in progress** | Each step's own work — block 5 below. **Step 4's three tables are built and usable; every other kind is still declared-only.** |
+| Phase 6 | **in progress** | Each step's own work — block 5 below. **Built: `inventory-tables` (4), `amends-list` (8), `amends-progress` (9). Five kinds still declared-only.** |
 | Phase 7 | to do | Progress on the list, copy a step out for a sponsor, docs, v2.0 |
 
-**Next: phase 6, the remaining work modules.** The writing is finished; what is
-left is rendering what each step declares. Only `inventory-tables` (step 4) is
-built. Seven kinds remain, and they are not equal in size — in rough order of
-value: `amends-list` + `amends-progress` (8 and 9, one list seen twice, the
-biggest and the one that must survive years of editing), `daily-entries` and
-`daily-practice` (10 and 11, a different rhythm from everything else — short,
-dated, repeated, and wanting a run or streak rather than a list), `prayer` (3 and
-7, the smallest), `two-lists` (1 and 2), `carried-defects` (6, which reads step
-4's blame columns), and `people-worked-with` (12).
+**Next: `daily-entries` (10) and `daily-practice` (11), as a pair.** They share a
+rhythm unlike anything built so far — short, dated, repeated daily — and want a
+run or a streak rather than a list. The record already carries `on`, so the work
+is mostly the rendering: an entry per day, this week visible at a glance, and no
+guilt-inducing empty grid for the days you missed. After those: `prayer` (3 and
+7, the smallest, and `on` covers it), `two-lists` (1 and 2),
+`carried-defects` (6, which annotates step 4's rows exactly as step 9 annotates
+step 8's), and `people-worked-with` (12).
 
 Build them by adding a branch in `renderStepWork()` in `ui.js`. Step 4's build is
 the pattern to copy: rows in their own IndexedDB store, carried explicitly by
@@ -98,6 +97,18 @@ particular do not reach for the 1952 *Twelve Steps and Twelve Traditions*, which
 is where nearly all the familiar step 6 and 7 teaching comes from and is out of
 bounds. The eight questions per step are unchanged: those are ours, not the
 book's, and are where the value on these two pages actually is.
+
+**A row can be written by two steps (1.16).** Step 9 records onto the row step 8
+made, and step 6 will do the same to step 4's. Three things make that safe and
+none of them is optional. `states` is a **map keyed by step id**
+(`{step08:'willing', step09:'made'}`) because the two steps ask different
+questions of the same row and a single field would have them overwriting each
+other. `values` is flat and shared, so `build-steps.js` **refuses to build** when
+a step and the step named in its `from` use the same field id — that guard has a
+test. And the annotating step never deletes: step 9 hides the delete button, and
+step 8 asks before removing a name that carries step 9's record. `on` is the
+reader's chosen date, deliberately not `createdAt` — an amend made last week can
+be recorded today.
 
 **Step four's inventory is built (1.11).** Three tables, the columns taken from
 the grudge list the book prints plus the "where were we to blame" turn. Two views
@@ -169,7 +180,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 97 checks, expect 97/97
+node tools/smoke-test.js                  # 113 checks, expect 113/113
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

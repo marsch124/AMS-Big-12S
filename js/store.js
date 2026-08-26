@@ -233,6 +233,13 @@
             stepId: row.stepId,
             tableId: row.tableId,
             values: values,
+            // Keyed by the step that owns the state, because one row can carry
+            // more than one: step eight's willingness and step nine's progress
+            // sit on the same amends entry and are different questions.
+            states: Object.assign({}, row.states || {}),
+            // A date the reader chose, which is not createdAt — an amend made
+            // last week can be recorded today.
+            on: row.on || null,
             createdAt: row.createdAt || now,
             updatedAt: now
         };
@@ -249,6 +256,34 @@
         return DB.remove(DB.STORE_INVENTORY, id).then(function () {
             state.inventory = state.inventory.filter(function (row) { return row.id !== id; });
         });
+    }
+
+    function rowState(row, stepId) {
+        return (row && row.states && row.states[stepId]) || null;
+    }
+
+    // Setting a state is its own operation: step nine changes the progress on a
+    // row without touching the words step eight wrote into it.
+    function setRowState(id, stepId, stateId) {
+        var row = state.inventory.filter(function (r) { return r.id === id; })[0];
+        if (!row) return Promise.resolve(null);
+        var next = Object.assign({}, row.states || {});
+        if (stateId) next[stepId] = stateId; else delete next[stepId];
+        return saveInventoryRow(Object.assign({}, row, { states: next }));
+    }
+
+    // Where a step's work reads its rows from. A step with no `from` owns its
+    // rows; one with a `from` annotates another step's.
+    function rowsForWork(step) {
+        var work = workFor(step);
+        if (!work) return [];
+        if (work.from && work.from.stepId && work.from.work) {
+            var source = getStep(work.from.stepId);
+            var sourceWork = workFor(source);
+            if (!sourceWork) return [];
+            return inventoryFor(work.from.stepId, sourceWork.tableId || work.from.work);
+        }
+        return inventoryFor(step.id, work.tableId || work.kind);
     }
 
     // Plain text of a whole table, for taking to the person who will hear it.
@@ -711,6 +746,9 @@
         inventoryFor: inventoryFor,
         inventoryCount: inventoryCount,
         rowIsEmpty: rowIsEmpty,
+        rowState: rowState,
+        setRowState: setRowState,
+        rowsForWork: rowsForWork,
         saveInventoryRow: saveInventoryRow,
         deleteInventoryRow: deleteInventoryRow,
         inventoryAsText: inventoryAsText,

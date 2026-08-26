@@ -1126,3 +1126,23 @@ button { cursor: pointer; }
 }
 
 .inv-scrollhint { margin: .4rem 0 0; font-size: .78rem; }
+
+/* A state on a row — step eight's willingness, step nine's progress. */
+.inv-state {
+  align-self: flex-start;
+  font-size: .74rem;
+  font-weight: 600;
+  padding: .12rem .55rem;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  color: var(--text-dim);
+}
+.inv-state.is-willing,
+.inv-state.is-made,
+.inv-state.is-letter { background: var(--accent); color: var(--accent-on); }
+.inv-state.is-withheld,
+.inv-state.is-impossible { background: var(--bg-sunken); color: var(--danger); }
+
+.inv-states { margin-bottom: .9rem; }
+.inv-states .chip-row { margin-bottom: .2rem; flex-wrap: wrap; }
+.inv-states .hint { margin: .1rem 0 0; }

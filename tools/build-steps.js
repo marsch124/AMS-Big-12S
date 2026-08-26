@@ -116,6 +116,41 @@ function main(argv) {
         return Object.assign({}, step, { text: text, references: references });
     });
 
+    /* Two steps can write into one row — step nine records its progress onto the
+     * entry step eight wrote. That only stays safe while their field ids are
+     * distinct, so a collision is a build error rather than a silent overwrite
+     * of somebody's amends list. */
+    const byId = {};
+    source.steps.forEach((step) => { byId[step.id] = step; });
+
+    function fieldIds(work) {
+        if (!work) return [];
+        const out = [];
+        (work.columns || []).forEach((c) => out.push(c.id));
+        (work.fields || []).forEach((f) => out.push(f.id));
+        (work.tables || []).forEach((t) => (t.columns || []).forEach((c) => out.push(c.id)));
+        return out;
+    }
+
+    source.steps.forEach((step) => {
+        const work = step.work;
+        if (!work || !work.from || !work.from.work) return;
+        const target = byId[work.from.stepId];
+        if (!target) {
+            problems.push('step ' + step.number + ': work reads from "' +
+                work.from.stepId + '", which is not a step');
+            return;
+        }
+        const mine = fieldIds(work);
+        const theirs = fieldIds(target.work);
+        const clash = mine.filter((id) => theirs.indexOf(id) !== -1);
+        if (clash.length) {
+            problems.push('step ' + step.number + ': writes into step ' + target.number +
+                "'s rows, but both use the field id" + (clash.length === 1 ? ' ' : 's ') +
+                clash.join(', ') + ' — one would overwrite the other');
+        }
+    });
+
     const numbers = steps.map((s) => s.number);
     numbers.forEach((n, i) => {
         if (numbers.indexOf(n) !== i) problems.push('duplicate step number ' + n);

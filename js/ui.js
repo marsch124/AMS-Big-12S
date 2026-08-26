@@ -550,7 +550,8 @@
         // Only step four's tables are built. The other kinds are declared in the
         // data and still have no renderer, so their steps show no work section
         // rather than an empty one.
-        if (!work || work.kind !== 'inventory-tables') {
+        var kinds = ['inventory-tables', 'amends-list', 'amends-progress'];
+        if (!work || kinds.indexOf(work.kind) === -1) {
             holder.hidden = true;
             body.innerHTML = '';
             return;
@@ -560,9 +561,184 @@
         $('step-work-intro').textContent = work.intro || '';
         body.innerHTML = '';
 
-        (work.tables || []).forEach(function (table) {
-            body.appendChild(renderInvTable(step, table));
+        if (work.kind === 'inventory-tables') {
+            (work.tables || []).forEach(function (table) {
+                body.appendChild(renderInvTable(step, table));
+            });
+        } else if (work.kind === 'amends-list') {
+            body.appendChild(renderAmendsList(step, work));
+        } else {
+            body.appendChild(renderAmendsProgress(step, work));
+        }
+    }
+
+    /* ------------------------------------------------ steps eight and nine */
+
+    function stateById(list, id) {
+        return (list || []).filter(function (s) { return s.id === id; })[0] || null;
+    }
+
+    // Step eight: the names and the harm, each with where your willingness
+    // actually stands. Rows live under step eight and step nine writes onto them.
+    function renderAmendsList(step, work) {
+        var rows = Store.rowsForWork(step);
+        var box = document.createElement('div');
+
+        var counts = document.createElement('p');
+        counts.className = 'inv-prompt';
+        var willing = rows.filter(function (r) {
+            return Store.rowState(r, step.id) === 'willing';
+        }).length;
+        counts.textContent = rows.length
+            ? rows.length + ' on the list, ' + willing + ' willing'
+            : 'Nobody on the list yet.';
+        box.appendChild(counts);
+
+        var list = document.createElement('div');
+        list.className = 'inv-cards';
+        rows.forEach(function (row, index) {
+            list.appendChild(amendCard(step, work, row, index, work.states, step.id));
         });
+        box.appendChild(list);
+
+        var actions = document.createElement('div');
+        actions.className = 'btn-row';
+        var add = document.createElement('button');
+        add.className = 'btn btn-quiet btn-small';
+        add.textContent = rows.length ? 'Add another' : 'Add the first';
+        add.addEventListener('click', function () { openAmendSheet(step, work, null); });
+        actions.appendChild(add);
+
+        // Names already written into step four's conduct table, not yet here.
+        var carried = carryableNames(work, rows);
+        if (carried.length) {
+            var carry = document.createElement('button');
+            carry.className = 'btn btn-quiet btn-small';
+            carry.textContent = 'Carry over ' + carried.length + ' from step four';
+            carry.addEventListener('click', function () {
+                Promise.all(carried.map(function (name) {
+                    return Store.saveInventoryRow({
+                        stepId: step.id,
+                        tableId: work.tableId || work.kind,
+                        values: { who: name }
+                    });
+                })).then(function () {
+                    renderStepWork(step);
+                    toast(carried.length + ' carried over');
+                });
+            });
+            actions.appendChild(carry);
+        }
+        box.appendChild(actions);
+        return box;
+    }
+
+    // Whom you named in step four's conduct pass but have not put on this list.
+    function carryableNames(work, rows) {
+        if (!work.from || !work.from.columns) return [];
+        var have = {};
+        rows.forEach(function (r) {
+            have[String((r.values && r.values.who) || '').trim().toLowerCase()] = true;
+        });
+        var found = [];
+        work.from.columns.forEach(function (source) {
+            Store.inventoryFor(work.from.stepId, source.tableId).forEach(function (r) {
+                var name = String((r.values && r.values[source.columnId]) || '').trim();
+                if (!name) return;
+                var key = name.toLowerCase();
+                if (have[key]) return;
+                have[key] = true;
+                found.push(name);
+            });
+        });
+        return found;
+    }
+
+    function amendCard(step, work, row, index, states, stateStepId) {
+        var card = document.createElement('button');
+        card.className = 'inv-card';
+        var chosen = stateById(states, Store.rowState(row, stateStepId));
+        var parts = ['<span class="inv-n">' + (index + 1) + '</span>'];
+
+        ['who', 'harm'].forEach(function (id) {
+            var value = (row.values && row.values[id]) || '';
+            if (!value && id === 'harm') return;
+            parts.push(
+                '<span class="inv-field">' +
+                    '<span class="inv-label">' + (id === 'who' ? 'Who' : 'What the harm was') + '</span>' +
+                    '<span class="inv-value">' + escapeHtml(value || 'Not said yet') + '</span>' +
+                '</span>');
+        });
+        if (chosen) {
+            parts.push('<span class="inv-state is-' + escapeHtml(chosen.id) + '">' +
+                escapeHtml(chosen.label) + '</span>');
+        }
+        card.innerHTML = parts.join('');
+        card.addEventListener('click', function () { openAmendSheet(step, work, row); });
+        return card;
+    }
+
+    // Step nine: step eight's list again, with what happened. It never creates
+    // a row of its own — it writes onto the entry step eight made.
+    function renderAmendsProgress(step, work) {
+        var rows = Store.rowsForWork(step);
+        var box = document.createElement('div');
+
+        if (!rows.length) {
+            var empty = document.createElement('p');
+            empty.className = 'empty';
+            empty.textContent = 'Step eight\u2019s list is empty, so there is nothing here yet. ' +
+                'The names are made there and worked through here.';
+            box.appendChild(empty);
+            return box;
+        }
+
+        var done = rows.filter(function (r) {
+            var st = Store.rowState(r, step.id);
+            return st === 'made' || st === 'letter';
+        }).length;
+        var counts = document.createElement('p');
+        counts.className = 'inv-prompt';
+        counts.textContent = done + ' of ' + rows.length + ' made or written to.';
+        box.appendChild(counts);
+
+        var list = document.createElement('div');
+        list.className = 'inv-cards';
+        rows.forEach(function (row, index) {
+            var card = document.createElement('button');
+            card.className = 'inv-card';
+            var chosen = stateById(work.statuses, Store.rowState(row, step.id));
+            var parts = ['<span class="inv-n">' + (index + 1) + '</span>'];
+            parts.push(
+                '<span class="inv-field">' +
+                    '<span class="inv-label">Who</span>' +
+                    '<span class="inv-value">' +
+                        escapeHtml((row.values && row.values.who) || 'Unnamed') + '</span>' +
+                '</span>');
+            var outcome = (row.values && row.values.outcome) || '';
+            if (outcome) {
+                parts.push(
+                    '<span class="inv-field">' +
+                        '<span class="inv-label">What happened' +
+                            (row.on ? ' \u00b7 ' + escapeHtml(formatDay(row.on)) : '') + '</span>' +
+                        '<span class="inv-value">' + escapeHtml(outcome) + '</span>' +
+                    '</span>');
+            }
+            parts.push('<span class="inv-state is-' +
+                escapeHtml(chosen ? chosen.id : 'not-yet') + '">' +
+                escapeHtml(chosen ? chosen.label : 'Not yet') + '</span>');
+            card.innerHTML = parts.join('');
+            card.addEventListener('click', function () { openProgressSheet(step, work, row); });
+            list.appendChild(card);
+        });
+        box.appendChild(list);
+        return box;
+    }
+
+    function formatDay(iso) {
+        var d = new Date(iso + 'T00:00:00');
+        if (isNaN(d)) return iso;
+        return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
     }
 
     function renderInvTable(step, table) {
@@ -708,6 +884,187 @@
         holder.appendChild(wrap);
         holder.appendChild(hint);
         return holder;
+    }
+
+    // A chip row for the states a step declares, returning what is chosen.
+    function stateChooser(states, current) {
+        var wrap = document.createElement('div');
+        wrap.className = 'inv-states';
+        var chosen = { id: current };
+        var hint = document.createElement('p');
+        hint.className = 'hint';
+
+        var row = document.createElement('div');
+        row.className = 'chip-row';
+        (states || []).forEach(function (st) {
+            var chip = document.createElement('button');
+            chip.className = 'chip' + (current === st.id ? ' is-on' : '');
+            chip.textContent = st.label;
+            chip.addEventListener('click', function () {
+                // Tapping the lit one clears it: "no answer yet" is a real answer.
+                chosen.id = (chosen.id === st.id) ? null : st.id;
+                row.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('is-on'); });
+                if (chosen.id) chip.classList.add('is-on');
+                var picked = stateById(states, chosen.id);
+                hint.textContent = (picked && picked.hint) || '';
+            });
+            row.appendChild(chip);
+        });
+        var picked = stateById(states, current);
+        hint.textContent = (picked && picked.hint) || '';
+        wrap.appendChild(row);
+        wrap.appendChild(hint);
+        wrap.chosen = chosen;
+        return wrap;
+    }
+
+    function openAmendSheet(step, work, existing) {
+        $('inv-sheet-title').textContent = (existing ? 'Edit' : 'New') + ' \u2014 amends list';
+        $('inv-sheet-prompt').textContent = 'Who, and what the harm was. Step nine works through this list.';
+
+        var fields = $('inv-sheet-fields');
+        fields.innerHTML = '';
+        var inputs = {};
+        (work.columns || []).forEach(function (col) {
+            var wrap = document.createElement('label');
+            wrap.className = 'inv-input';
+            wrap.innerHTML = '<span class="sheet-label">' + escapeHtml(col.label) + '</span>';
+            if (col.hint) {
+                var h = document.createElement('span');
+                h.className = 'hint';
+                h.textContent = col.hint;
+                wrap.appendChild(h);
+            }
+            var input = document.createElement('textarea');
+            input.className = 'note-input';
+            input.rows = 2;
+            input.value = (existing && existing.values && existing.values[col.id]) || '';
+            wrap.appendChild(input);
+            inputs[col.id] = input;
+            fields.appendChild(wrap);
+        });
+
+        var willLabel = document.createElement('span');
+        willLabel.className = 'sheet-label';
+        willLabel.textContent = 'Willingness';
+        fields.appendChild(willLabel);
+        var chooser = stateChooser(work.states, existing ? Store.rowState(existing, step.id) : null);
+        fields.appendChild(chooser);
+
+        var del = $('inv-delete');
+        del.hidden = !existing;
+        del.onclick = function () {
+            if (!existing) return;
+            // Deleting the name takes step nine's record of it too, so say so.
+            var hasProgress = !!(existing.states && existing.states.step09) ||
+                !!(existing.values && existing.values.outcome);
+            if (hasProgress && !confirm('This name carries what step nine recorded against it. Delete both?')) return;
+            Store.deleteInventoryRow(existing.id).then(function () {
+                closeSheets();
+                renderStepWork(step);
+                toast('Removed from the list');
+            });
+        };
+
+        $('inv-save').onclick = function () {
+            var values = {};
+            Object.keys(inputs).forEach(function (k) { values[k] = inputs[k].value; });
+            if (Store.rowIsEmpty(values) && !chooser.chosen.id) {
+                if (existing) { closeSheets(); return; }
+                toast('Nothing to save yet');
+                return;
+            }
+            var states = Object.assign({}, existing ? existing.states : {});
+            if (chooser.chosen.id) states[step.id] = chooser.chosen.id;
+            else delete states[step.id];
+
+            Store.saveInventoryRow({
+                id: existing ? existing.id : null,
+                createdAt: existing ? existing.createdAt : null,
+                stepId: existing ? existing.stepId : step.id,
+                tableId: existing ? existing.tableId : (work.tableId || work.kind),
+                // Never drop what step nine wrote while saving step eight's half.
+                values: Object.assign({}, existing ? existing.values : {}, values),
+                states: states,
+                on: existing ? existing.on : null
+            }).then(function () {
+                closeSheets();
+                renderStepWork(step);
+                toast(existing ? 'Updated' : 'Added to the list');
+            });
+        };
+        $('inv-cancel').onclick = closeSheets;
+        openSheet('inv-sheet');
+    }
+
+    function openProgressSheet(step, work, row) {
+        $('inv-sheet-title').textContent = (row.values && row.values.who) || 'Amend';
+        $('inv-sheet-prompt').textContent = (row.values && row.values.harm) || '';
+
+        var fields = $('inv-sheet-fields');
+        fields.innerHTML = '';
+
+        var statusLabel = document.createElement('span');
+        statusLabel.className = 'sheet-label';
+        statusLabel.textContent = 'Where this stands';
+        fields.appendChild(statusLabel);
+        var chooser = stateChooser(work.statuses, Store.rowState(row, step.id));
+        fields.appendChild(chooser);
+
+        var inputs = {};
+        (work.fields || []).forEach(function (f) {
+            var wrap = document.createElement('label');
+            wrap.className = 'inv-input';
+            wrap.innerHTML = '<span class="sheet-label">' + escapeHtml(f.label) + '</span>';
+            if (f.prompt) {
+                var h = document.createElement('span');
+                h.className = 'hint';
+                h.textContent = f.prompt;
+                wrap.appendChild(h);
+            }
+            var input = document.createElement('textarea');
+            input.className = 'note-input';
+            input.rows = 3;
+            input.value = (row.values && row.values[f.id]) || '';
+            wrap.appendChild(input);
+            inputs[f.id] = input;
+            fields.appendChild(wrap);
+        });
+
+        var dateWrap = document.createElement('label');
+        dateWrap.className = 'inv-input';
+        dateWrap.innerHTML = '<span class="sheet-label">' +
+            escapeHtml(work.promptLabel || 'On') + '</span>';
+        var date = document.createElement('input');
+        date.type = 'date';
+        date.className = 'note-input';
+        date.id = 'inv-date';
+        date.value = row.on || '';
+        dateWrap.appendChild(date);
+        fields.appendChild(dateWrap);
+
+        // Step nine never removes a name; that is step eight's list.
+        $('inv-delete').hidden = true;
+
+        $('inv-save').onclick = function () {
+            var values = Object.assign({}, row.values);
+            Object.keys(inputs).forEach(function (k) { values[k] = inputs[k].value.trim(); });
+            var states = Object.assign({}, row.states);
+            if (chooser.chosen.id) states[step.id] = chooser.chosen.id;
+            else delete states[step.id];
+
+            Store.saveInventoryRow(Object.assign({}, row, {
+                values: values,
+                states: states,
+                on: date.value || null
+            })).then(function () {
+                closeSheets();
+                renderStepWork(step);
+                toast('Saved');
+            });
+        };
+        $('inv-cancel').onclick = closeSheets;
+        openSheet('inv-sheet');
     }
 
     function openInvSheet(step, table, existing) {
