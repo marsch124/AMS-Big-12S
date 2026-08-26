@@ -1,0 +1,77 @@
+{
+  "name": "AMS Big 12S",
+  "short_name": "Big 12S",
+  "description": "Read Alcoholics Anonymous (1939 first edition) offline, take notes, and pick up where you stopped.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#12100e",
+  "theme_color": "#8c6d46",
+  "categories": [
+    "books",
+    "education",
+    "lifestyle"
+  ],
+  "shortcuts": [
+    {
+      "name": "Continue Reading",
+      "short_name": "Continue",
+      "description": "Jump straight back to where you stopped",
+      "url": "./?action=continue",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "My Notes",
+      "short_name": "Notes",
+      "description": "Browse every note you have written",
+      "url": "./?action=notes",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "short_name": "Search",
+      "description": "Search the full text of the book",
+      "url": "./?action=search",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

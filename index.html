@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="sepia">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<title>AMS Big 12S</title>
+<meta name="description" content="Read Alcoholics Anonymous (1939 first edition) offline, take notes, and pick up where you stopped.">
+<meta name="theme-color" content="#8c6d46">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Big 12S">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/favicon-64.png" sizes="64x64">
+<link rel="stylesheet" href="css/style.css?v=1">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ══════════════════════════════════════════════════ Library / home ── -->
+  <section class="screen is-active" id="screen-home">
+    <header class="topbar">
+      <div class="topbar-titles">
+        <h1 class="topbar-title" id="home-title">Alcoholics Anonymous</h1>
+        <p class="topbar-sub" id="home-edition"></p>
+      </div>
+    </header>
+
+    <div class="screen-body">
+      <div class="notice" id="import-notice" hidden>
+        <h2>The book text is not loaded yet</h2>
+        <p>This app ships with the table of contents only. Import a plain-text copy of the
+           first edition to start reading.</p>
+        <button class="btn btn-primary" data-goto="settings-import">Import book text</button>
+      </div>
+
+      <button class="continue-card" id="continue-card" hidden>
+        <span class="continue-label">Continue reading</span>
+        <span class="continue-title" id="continue-title"></span>
+        <span class="continue-excerpt" id="continue-excerpt"></span>
+        <span class="progress"><span class="progress-bar" id="continue-progress"></span></span>
+        <span class="continue-meta" id="continue-meta"></span>
+      </button>
+
+      <h2 class="section-heading">Contents</h2>
+      <nav class="toc" id="toc"></nav>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ Reader ── -->
+  <section class="screen" id="screen-reader">
+    <header class="topbar topbar-reader">
+      <button class="icon-btn" id="reader-back" aria-label="Back to contents">‹</button>
+      <div class="topbar-titles">
+        <h1 class="topbar-title" id="reader-title"></h1>
+      </div>
+      <button class="icon-btn" id="reader-type" aria-label="Text options">Aa</button>
+    </header>
+
+    <div class="screen-body reader-body" id="reader-body">
+      <article class="reader" id="reader-content"></article>
+      <nav class="chapter-nav" id="chapter-nav">
+        <button class="btn btn-quiet" id="prev-chapter">‹ Previous</button>
+        <button class="btn btn-quiet" id="next-chapter">Next ›</button>
+      </nav>
+    </div>
+    <div class="reading-progress"><span id="reader-progress-bar"></span></div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════ Notes ── -->
+  <section class="screen" id="screen-notes">
+    <header class="topbar">
+      <div class="topbar-titles"><h1 class="topbar-title">My notes</h1></div>
+      <button class="icon-btn" id="notes-filter-btn" aria-label="Filter notes">☰</button>
+    </header>
+    <div class="screen-body">
+      <input class="field" type="search" id="notes-search" placeholder="Search your notes" autocomplete="off">
+      <div id="notes-list" class="card-list"></div>
+      <p class="empty" id="notes-empty" hidden>
+        No notes yet. While reading, tap any paragraph and choose <strong>Add note</strong>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ Search ── -->
+  <section class="screen" id="screen-search">
+    <header class="topbar">
+      <div class="topbar-titles"><h1 class="topbar-title">Search the book</h1></div>
+    </header>
+    <div class="screen-body">
+      <input class="field" type="search" id="search-input" placeholder="Search the full text" autocomplete="off">
+      <p class="hint" id="search-status"></p>
+      <div id="search-results" class="card-list"></div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════ Settings ── -->
+  <section class="screen" id="screen-settings">
+    <header class="topbar">
+      <div class="topbar-titles"><h1 class="topbar-title">Settings</h1></div>
+    </header>
+    <div class="screen-body">
+
+      <h2 class="section-heading">Reading</h2>
+      <div class="panel">
+        <label class="row">
+          <span>Theme</span>
+          <select id="set-theme">
+            <option value="sepia">Sepia</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="auto">Match device</option>
+          </select>
+        </label>
+        <label class="row">
+          <span>Typeface</span>
+          <select id="set-typeface">
+            <option value="serif">Serif</option>
+            <option value="sans">Sans-serif</option>
+          </select>
+        </label>
+        <label class="row">
+          <span>Text size <em id="set-fontsize-value"></em></span>
+          <input type="range" id="set-fontsize" min="14" max="30" step="1">
+        </label>
+        <label class="row">
+          <span>Line spacing <em id="set-lineheight-value"></em></span>
+          <input type="range" id="set-lineheight" min="130" max="220" step="5">
+        </label>
+        <label class="row">
+          <span>Keep screen awake while reading</span>
+          <input type="checkbox" id="set-keepawake">
+        </label>
+      </div>
+
+      <h2 class="section-heading">Backup</h2>
+      <div class="panel">
+        <p class="panel-note">
+          A backup is a single JSON file holding your notes, bookmarks, reading position
+          and settings. Save it somewhere you control — Files, iCloud Drive, email —
+          then import it on your new phone.
+        </p>
+        <label class="row">
+          <span>Include the book text in the backup</span>
+          <input type="checkbox" id="backup-include-text" checked>
+        </label>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-export">Create backup</button>
+          <button class="btn" id="btn-copy-backup">Copy as text</button>
+        </div>
+        <p class="hint" id="backup-status"></p>
+      </div>
+
+      <h2 class="section-heading">Restore</h2>
+      <div class="panel">
+        <label class="row">
+          <span>If a note exists in both places</span>
+          <select id="restore-mode">
+            <option value="merge">Keep both, newest wins</option>
+            <option value="replace">Replace everything on this device</option>
+          </select>
+        </label>
+        <div class="btn-row">
+          <button class="btn" id="btn-import-file">Choose backup file</button>
+          <button class="btn btn-quiet" id="btn-import-paste">Paste backup text</button>
+        </div>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
+        <p class="hint" id="restore-status"></p>
+      </div>
+
+      <h2 class="section-heading" id="settings-import">Book text</h2>
+      <div class="panel">
+        <p class="panel-note" id="book-status"></p>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-text-file">Choose text file</button>
+          <button class="btn" id="btn-text-paste">Paste text</button>
+        </div>
+        <input type="file" id="text-file" accept="text/plain,.txt,.md" hidden>
+        <p class="hint" id="text-status"></p>
+        <details class="details">
+          <summary>Where do I get the text?</summary>
+          <p>The <strong>first edition (1939)</strong> of <em>Alcoholics Anonymous</em> is in the
+             public domain in the United States, and plain-text copies are freely available
+             online. Download one as a <code>.txt</code> file and import it here.</p>
+          <p>Later editions (2nd, 3rd and 4th) are still under copyright to A.A. World
+             Services, so please do not import those unless you have permission.</p>
+        </details>
+        <button class="btn btn-danger btn-block" id="btn-clear-text" hidden>Remove imported text</button>
+      </div>
+
+      <h2 class="section-heading">About</h2>
+      <div class="panel">
+        <p class="panel-note">
+          <strong>AMS Big 12S</strong> <span id="about-version"></span><br>
+          Everything you write stays on this device. Nothing is uploaded, and there is no
+          account, no tracking and no analytics.
+        </p>
+        <p class="panel-note">
+          Not affiliated with, endorsed by or connected to Alcoholics Anonymous World
+          Services, Inc.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ Tab bar ── -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tab is-active" data-screen="home"><span class="tab-icon">📖</span><span>Read</span></button>
+    <button class="tab" data-screen="notes"><span class="tab-icon">✎</span><span>Notes</span></button>
+    <button class="tab" data-screen="search"><span class="tab-icon">🔍</span><span>Search</span></button>
+    <button class="tab" data-screen="settings"><span class="tab-icon">⚙</span><span>Settings</span></button>
+  </nav>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ Sheets ── -->
+<div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
+
+<div class="sheet" id="para-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <p class="sheet-quote" id="para-sheet-quote"></p>
+  <button class="sheet-action" data-action="note">✎ <span id="para-sheet-note-label">Add note</span></button>
+  <button class="sheet-action" data-action="bookmark"><span id="para-sheet-bookmark-label">🔖 Bookmark this passage</span></button>
+  <button class="sheet-action" data-action="copy">⧉ Copy text</button>
+  <button class="sheet-action" data-action="share">↗ Share</button>
+  <button class="sheet-action sheet-cancel" data-action="cancel">Cancel</button>
+</div>
+
+<div class="sheet" id="note-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title">Note</h2>
+  <p class="sheet-quote" id="note-sheet-quote"></p>
+  <textarea id="note-sheet-body" class="note-input" rows="6" placeholder="Write your note…"></textarea>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="note-save">Save note</button>
+    <button class="btn btn-danger" id="note-delete" hidden>Delete</button>
+    <button class="btn btn-quiet" id="note-cancel">Cancel</button>
+  </div>
+</div>
+
+<div class="sheet" id="type-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title">Text options</h2>
+  <label class="row"><span>Size</span><input type="range" id="type-fontsize" min="14" max="30" step="1"></label>
+  <label class="row"><span>Spacing</span><input type="range" id="type-lineheight" min="130" max="220" step="5"></label>
+  <div class="theme-swatches">
+    <button class="swatch swatch-sepia" data-theme-pick="sepia" aria-label="Sepia">Aa</button>
+    <button class="swatch swatch-light" data-theme-pick="light" aria-label="Light">Aa</button>
+    <button class="swatch swatch-dark" data-theme-pick="dark" aria-label="Dark">Aa</button>
+  </div>
+  <button class="btn btn-quiet btn-block" id="type-close">Done</button>
+</div>
+
+<div class="sheet" id="paste-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title" id="paste-title">Paste</h2>
+  <p class="hint" id="paste-hint"></p>
+  <textarea id="paste-body" class="note-input" rows="8" placeholder="Paste here…"></textarea>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="paste-confirm">Continue</button>
+    <button class="btn btn-quiet" id="paste-cancel">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="js/parser.js?v=1"></script>
+<script src="js/db.js?v=1"></script>
+<script src="js/store.js?v=1"></script>
+<script src="js/backup.js?v=1"></script>
+<script src="js/ui.js?v=1"></script>
+<script src="js/app.js?v=1"></script>
+</body>
+</html>

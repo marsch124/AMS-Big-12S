@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "id": "aa-1e",
+  "title": "Alcoholics Anonymous",
+  "subtitle": "The Story of How More Than One Hundred Men Have Recovered From Alcoholism",
+  "edition": "First Edition (1939)",
+  "textIncluded": false,
+  "importNotice": "This app ships with the table of contents only. Import the text of the 1939 first edition from Settings -> Import book text. See README.md for where to obtain it.",
+  "sections": [
+    { "id": "foreword",     "kind": "front",   "title": "Foreword",              "paragraphs": [] },
+    { "id": "doctors-op",   "kind": "front",   "title": "The Doctor's Opinion",  "paragraphs": [] },
+    { "id": "ch01", "kind": "chapter", "number": 1,  "title": "Bill's Story",           "paragraphs": [] },
+    { "id": "ch02", "kind": "chapter", "number": 2,  "title": "There Is A Solution",    "paragraphs": [] },
+    { "id": "ch03", "kind": "chapter", "number": 3,  "title": "More About Alcoholism",  "paragraphs": [] },
+    { "id": "ch04", "kind": "chapter", "number": 4,  "title": "We Agnostics",           "paragraphs": [] },
+    { "id": "ch05", "kind": "chapter", "number": 5,  "title": "How It Works",           "paragraphs": [] },
+    { "id": "ch06", "kind": "chapter", "number": 6,  "title": "Into Action",            "paragraphs": [] },
+    { "id": "ch07", "kind": "chapter", "number": 7,  "title": "Working With Others",    "paragraphs": [] },
+    { "id": "ch08", "kind": "chapter", "number": 8,  "title": "To Wives",               "paragraphs": [] },
+    { "id": "ch09", "kind": "chapter", "number": 9,  "title": "The Family Afterward",   "paragraphs": [] },
+    { "id": "ch10", "kind": "chapter", "number": 10, "title": "To Employers",           "paragraphs": [] },
+    { "id": "ch11", "kind": "chapter", "number": 11, "title": "A Vision For You",       "paragraphs": [] },
+    { "id": "stories", "kind": "part", "title": "The Personal Stories", "paragraphs": [] }
+  ]
+}
