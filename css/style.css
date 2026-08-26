@@ -145,8 +145,26 @@ button { cursor: pointer; }
   justify-content: center;
   gap: 3px;
 }
-.tab-icon { font-size: 19px; line-height: 1; }
+.tab-icon { display: inline-flex; line-height: 1; }
+.tab-icon svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
 .tab.is-active { color: var(--accent); }
+/* A small hop when a tab is chosen — enough to feel alive, not enough to nag. */
+.tab.is-active .tab-icon svg { animation: icon-hop 420ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes icon-hop {
+  0%   { transform: scale(1) rotate(0deg); }
+  45%  { transform: scale(1.16) rotate(-7deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
 
 /* ═══════════════════════════════════════════════════════════════ library ══ */
 
@@ -466,7 +484,9 @@ button { cursor: pointer; }
   overflow: hidden;
 }
 .sheet-action {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 13px;
   width: 100%;
   text-align: left;
   border: 0;
@@ -475,9 +495,24 @@ button { cursor: pointer; }
   padding: 15px 2px;
   font-size: 16px;
 }
+.action-icon {
+  flex: none;
+  display: inline-flex;
+  color: var(--accent);
+}
+.action-icon svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
 .sheet-action:first-of-type { border-top: 0; }
 .sheet-action:active { background: var(--bg-sunken); }
-.sheet-cancel { color: var(--text-dim); text-align: center; }
+.sheet-cancel { color: var(--text-dim); justify-content: center; }
 
 .note-input {
   width: 100%;

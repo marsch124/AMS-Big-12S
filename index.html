@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=1">
+<link rel="stylesheet" href="css/style.css?v=2">
 </head>
 <body>
 
@@ -218,10 +218,35 @@
 
   <!-- ═══════════════════════════════════════════════════════════ Tab bar ── -->
   <nav class="tabbar" id="tabbar">
-    <button class="tab is-active" data-screen="home"><span class="tab-icon">📖</span><span>Read</span></button>
-    <button class="tab" data-screen="notes"><span class="tab-icon">✎</span><span>Notes</span></button>
-    <button class="tab" data-screen="search"><span class="tab-icon">🔍</span><span>Search</span></button>
-    <button class="tab" data-screen="settings"><span class="tab-icon">⚙</span><span>Settings</span></button>
+    <button class="tab is-active" data-screen="home">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M2.9 5.6c3.1-.5 6.1 0 9.1 1.9 3-1.9 6-2.4 9.1-1.9v11.9c-3.1-.5-6.1 0-9.1 1.9-3-1.9-6-2.4-9.1-1.9z"/>
+        <path d="M12 7.5v11.9"/>
+      </svg></span><span>Read</span>
+    </button>
+    <button class="tab" data-screen="notes">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3.8 20.4 8.6 15.4"/>
+        <path d="M20.4 3.6C11.6 4.9 6.4 10.1 8.6 15.4c5.6 2.2 10.8-3 11.8-11.8z"/>
+        <path d="M17.5 6.5C14.1 8.7 11.2 11.6 9.2 15"/>
+      </svg></span><span>Notes</span>
+    </button>
+    <button class="tab" data-screen="search">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="10.6" cy="10.6" r="5.6"/>
+        <path d="M14.7 14.9 19.8 20"/>
+        <path d="M8.2 8a3.4 3.4 0 0 1 2.4-1.4"/>
+        <path d="M18.6 4.4v2.9M17.1 5.8H20"/>
+      </svg></span><span>Search</span>
+    </button>
+    <button class="tab" data-screen="settings">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3.4 8.2h4.5M12.5 8.2h8.1"/>
+        <circle cx="10.2" cy="8.2" r="2.4"/>
+        <path d="M3.4 15.8h9.3M17.3 15.8h3.3"/>
+        <circle cx="15" cy="15.8" r="2.4"/>
+      </svg></span><span>Settings</span>
+    </button>
   </nav>
 
 </div>
@@ -232,10 +257,32 @@
 <div class="sheet" id="para-sheet" hidden>
   <div class="sheet-handle"></div>
   <p class="sheet-quote" id="para-sheet-quote"></p>
-  <button class="sheet-action" data-action="note">✎ <span id="para-sheet-note-label">Add note</span></button>
-  <button class="sheet-action" data-action="bookmark"><span id="para-sheet-bookmark-label">🔖 Bookmark this passage</span></button>
-  <button class="sheet-action" data-action="copy">⧉ Copy text</button>
-  <button class="sheet-action" data-action="share">↗ Share</button>
+  <button class="sheet-action" data-action="note">
+    <span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3.8 20.4 8.6 15.4"/>
+      <path d="M20.4 3.6C11.6 4.9 6.4 10.1 8.6 15.4c5.6 2.2 10.8-3 11.8-11.8z"/>
+      <path d="M17.5 6.5C14.1 8.7 11.2 11.6 9.2 15"/>
+    </svg></span><span id="para-sheet-note-label">Add note</span>
+  </button>
+  <button class="sheet-action" data-action="bookmark">
+    <span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6.6 5.6c0-.6.5-1.1 1.1-1.1h8.6c.6 0 1.1.5 1.1 1.1v13.9L12 15.8l-5.4 3.7z"/>
+      <path d="M9.6 8.9h4.8"/>
+    </svg></span><span id="para-sheet-bookmark-label">Bookmark this passage</span>
+  </button>
+  <button class="sheet-action" data-action="copy">
+    <span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="8.8" y="8.8" width="10.7" height="10.7" rx="2.4"/>
+      <path d="M15.3 5.7H6.9a2.4 2.4 0 0 0-2.4 2.4v8.4"/>
+    </svg></span><span>Copy text</span>
+  </button>
+  <button class="sheet-action" data-action="share">
+    <span class="action-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 15.2V4.4"/>
+      <path d="m8.5 7.9 3.5-3.5 3.5 3.5"/>
+      <path d="M6.7 12.4v5.5c0 1 .8 1.8 1.8 1.8h7c1 0 1.8-.8 1.8-1.8v-5.5"/>
+    </svg></span><span>Share</span>
+  </button>
   <button class="sheet-action sheet-cancel" data-action="cancel">Cancel</button>
 </div>
 
@@ -281,7 +328,7 @@
 <script src="js/db.js?v=1"></script>
 <script src="js/store.js?v=1"></script>
 <script src="js/backup.js?v=1"></script>
-<script src="js/ui.js?v=1"></script>
+<script src="js/ui.js?v=2"></script>
 <script src="js/app.js?v=1"></script>
 </body>
 </html>

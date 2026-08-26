@@ -6,18 +6,18 @@
  * a local dev server.
  */
 const APP_VERSION = '1.1';
-const CACHE_NAME = 'ams-big-12s-v2';
+const CACHE_NAME = 'ams-big-12s-v3';
 
 const SHELL = [
     './',
     'index.html',
     'manifest.json',
-    'css/style.css?v=1',
+    'css/style.css?v=2',
     'js/parser.js?v=1',
     'js/db.js?v=1',
     'js/store.js?v=1',
     'js/backup.js?v=1',
-    'js/ui.js?v=1',
+    'js/ui.js?v=2',
     'js/app.js?v=1',
     'data/book.json',
     'icons/icon-192.png',

@@ -292,7 +292,7 @@
 
         $('para-sheet-quote').textContent = section.paragraphs[index];
         $('para-sheet-note-label').textContent = existing ? 'Edit note' : 'Add note';
-        $('para-sheet-bookmark-label').textContent = bookmarked ? '🔖 Remove bookmark' : '🔖 Bookmark this passage';
+        $('para-sheet-bookmark-label').textContent = bookmarked ? 'Remove bookmark' : 'Bookmark this passage';
         openSheet('para-sheet');
     }
 
