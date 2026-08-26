@@ -10,6 +10,44 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   `main` / root. It is **on**; pushing to `main` republishes automatically.
 - **Current version:** 1.9 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
+## Where this is up to
+
+The twelve-step section is being built in phases. The full design plan, with the
+anatomy of a step page and what each step's own work needs, is at
+https://claude.ai/code/artifact/b467fb04-03e9-4f26-aa77-7f8f18b8c433
+
+| | | |
+|---|---|---|
+| Phase 1 | done | `steps.source.json` format, `build-steps.js`, step 1 written |
+| Phase 2 | done | Steps tab, list of twelve, step page: wording, explanation, references, questions |
+| Phase 3 | done | Dated notes per step, folded when long |
+| Phase 4 | done | Answerable questions keeping every earlier answer; hide, add your own |
+| Phase 5 | **in progress** | Writing the twelve. **Steps 1, 2 and 3 are written; 4–12 are stubs.** |
+| Phase 6 | to do | Each step's own work — block 5 below |
+| Phase 7 | to do | Progress on the list, copy a step out for a sponsor, docs, v2.0 |
+
+**Next: steps 4 and 5, written together** — you write the inventory, then read it
+to someone. Step 4's questions matter most, because its three inventory tables
+arrive in phase 6 and the questions must set them up rather than duplicate them.
+Send steps two or three at a time for review, not eleven at once.
+
+**Phase 6, per step.** `work` is already declared in `steps.source.json` for the
+steps written so far (`two-lists` on 1 and 2, `prayer` on 3) but **nothing renders
+it yet**. What each needs: 1 two lists of evidence; 2 what cannot be accepted yet
+and what has shifted; 3 and 7 a prayer with a date kept each time; **4 three
+inventory tables — resentments, fears, conduct — the largest build here**; 5 who
+you sat with and what was held back; 6 the defects from step 4 carried through;
+8 the amends list, names carried from step 4; 9 the same list with status and
+outcome, lives for years; 10 short daily entries, a different rhythm; 11 the
+morning and evening prompts plus a practice log; 12 who you have worked with.
+
+**Settled already — do not re-ask.** Sponsor (not "spindrift", a transcription
+slip). Chapter-and-passage references, no page numbers: the Dover pagination does
+not match the edition people quote. Explanations in my voice, editable by him.
+Step 4 gets full tables, not free text. Step work rides the normal backup, with a
+plain warning at the moment of export. **No lock and no encryption** — asked and
+declined explicitly.
+
 ## Non-negotiables
 
 **Never write book text from memory.** People quote this book precisely. A
