@@ -122,9 +122,100 @@
         "sectionId": "ch05",
         "anchor": "2.Came to believe"
       },
-      "explanation": [],
-      "references": [],
-      "questions": []
+      "explanation": [
+        "Two words carry this one: came, and believe. Came, because it is arrived at rather than possessed — usually slowly, and usually after step one has left you without anywhere else to put the weight.",
+        "The book is unusually accommodating here, and people are often surprised by that. It says your own conception, however inadequate, is enough to start with, and then reduces the whole step to a single question: do you now believe, or are you even willing to believe. Willing counts. That is deliberate.",
+        "Restore us to sanity is the harder half, because of what it implies. The book means something specific and narrow by it — the moment of picking up the first drink again with every reason not to, and no memory of why not. Chapter three calls that plain insanity and means it plainly.",
+        "Nothing here asks you to settle what you believe, or to believe anything in particular. It asks you to stop insisting you already know."
+      ],
+      "references": [
+        {
+          "sectionId": "ch05",
+          "anchor": "2.Came to believe",
+          "label": "The step itself",
+          "why": "As it is printed in the 1939 edition."
+        },
+        {
+          "sectionId": "ch04",
+          "anchor": "Lack of power, that was our dilemma",
+          "label": "\"Lack of power, that was our dilemma\"",
+          "why": "Why there is a second step at all, in three sentences."
+        },
+        {
+          "sectionId": "ch04",
+          "anchor": "We needed to ask ourselves but one short question",
+          "label": "The one short question",
+          "why": "The whole step reduced to a sentence — and willing to believe is allowed to count."
+        },
+        {
+          "sectionId": "ch04",
+          "anchor": "Much to our relief, we discovered we did not need",
+          "label": "Your own conception is enough",
+          "why": "The book declining to tell you what to believe."
+        },
+        {
+          "sectionId": "ch04",
+          "anchor": "We know how he feels. We have shared his honest doubt",
+          "label": "For anyone who bristles at this chapter",
+          "why": "Written by people who were violently anti-religious themselves."
+        },
+        {
+          "sectionId": "ch03",
+          "anchor": "Whatever the precise definition of the word may be",
+          "label": "What \"restore us to sanity\" points at",
+          "why": "The narrow, specific thing the book calls insanity."
+        }
+      ],
+      "questions": [
+        {
+          "id": "s2-q1",
+          "text": "What did you actually believe before any of this? Not what you were taught, and not what you would say out loud — what you actually believed."
+        },
+        {
+          "id": "s2-q2",
+          "text": "\"Do I now believe, or am I even willing to believe.\" Where are you in that sentence today?"
+        },
+        {
+          "id": "s2-q3",
+          "text": "What are you unwilling to believe, and what would it cost you to turn out to be wrong about it?"
+        },
+        {
+          "id": "s2-q4",
+          "text": "The book says your own conception, however inadequate, is enough. What is yours today, in your own words rather than borrowed ones?"
+        },
+        {
+          "id": "s2-q5",
+          "text": "What has kept you sober so far that was not your own will — people, a room, a phone call, luck? Whatever you want to call it, name it."
+        },
+        {
+          "id": "s2-q6",
+          "text": "Chapter three calls picking up the first drink again plain insanity. Where does that describe you, and where do you still argue with it?"
+        },
+        {
+          "id": "s2-q7",
+          "text": "If you are stuck on the word God, what exactly is the objection — the word, the idea behind it, or the people you associate with it?"
+        },
+        {
+          "id": "s2-q8",
+          "text": "What would have to happen for you to say you had come to believe? Would you notice if it already had?"
+        }
+      ],
+      "work": {
+        "kind": "two-lists",
+        "intro": "Step two is a record of changing your mind, so it is worth dating. What sits on the left today may move across later, and the point is to be able to see that it did.",
+        "lists": [
+          {
+            "id": "cannot",
+            "title": "What I cannot accept yet",
+            "prompt": "Said plainly, without softening it for anyone."
+          },
+          {
+            "id": "shifted",
+            "title": "What has shifted",
+            "prompt": "Things you once could not accept and now can, and roughly when."
+          }
+        ]
+      }
     },
     {
       "id": "step03",
@@ -134,9 +225,87 @@
         "sectionId": "ch05",
         "anchor": "3.Made a decision"
       },
-      "explanation": [],
-      "references": [],
-      "questions": []
+      "explanation": [
+        "Step three is a decision, not an achievement. The wording is careful about this: made a decision to turn our will and our lives over. The turning over is what the remaining nine steps are for. This is the decision to start.",
+        "The argument the book makes is about self-will, and it is not flattering. It describes a man trying to run the whole show — arranging the lights, the scenery and everyone else's part — convinced that things would go well if the rest of the cast would only do as he wished. It is meant to be recognisable, and for most people it is.",
+        "Then it puts the turn in eleven words: first of all, we had to quit playing God. It didn't work.",
+        "There is a prayer in the text, and many people say it with someone else in the room. It is also a decision people take more than once — after a bad week, or years later on a different question entirely — which is why this page keeps a date each time rather than one date forever."
+      ],
+      "references": [
+        {
+          "sectionId": "ch05",
+          "anchor": "3.Made a decision",
+          "label": "The step itself",
+          "why": "As it is printed in the 1939 edition."
+        },
+        {
+          "sectionId": "ch05",
+          "anchor": "Being convinced, we were at step three",
+          "label": "\"Just what do we mean by that?\"",
+          "why": "The book asking the question you are about to ask, and then answering it."
+        },
+        {
+          "sectionId": "ch05",
+          "anchor": "The first requirement was that we be convinced",
+          "label": "The actor who wants to run the whole show",
+          "why": "The case against self-will, and the passage most people remember from this chapter."
+        },
+        {
+          "sectionId": "ch05",
+          "anchor": "This is the how and why of it",
+          "label": "\"We had to quit playing God. It didn't work.\"",
+          "why": "The turn itself, in one line."
+        },
+        {
+          "sectionId": "ch05",
+          "anchor": "We were now at step three",
+          "label": "The words many have used",
+          "why": "The prayer as the 1939 edition prints it."
+        }
+      ],
+      "questions": [
+        {
+          "id": "s3-q1",
+          "text": "What are you actually deciding? Put it in your own words, without any of the borrowed language."
+        },
+        {
+          "id": "s3-q2",
+          "text": "Where in the last month were you arranging the lights and the scenery — running a show that was not yours to run?"
+        },
+        {
+          "id": "s3-q3",
+          "text": "Whose life have you been managing besides your own, and how well has that gone for them?"
+        },
+        {
+          "id": "s3-q4",
+          "text": "\"Any life run on self-will could hardly be a success.\" Where has your self-will actually worked? Be fair to it before you hand it over."
+        },
+        {
+          "id": "s3-q5",
+          "text": "What are you afraid of losing if you turn this over?"
+        },
+        {
+          "id": "s3-q6",
+          "text": "What is the part you are quietly keeping back? There usually is one."
+        },
+        {
+          "id": "s3-q7",
+          "text": "If you have taken this step before: what did the decision change, and what did it not touch at all?"
+        },
+        {
+          "id": "s3-q8",
+          "text": "Who did you take this step with, or who would you want beside you when you do?"
+        }
+      ],
+      "work": {
+        "kind": "prayer",
+        "intro": "A decision taken more than once. Each time is kept with its date rather than replacing the last.",
+        "prayerRef": {
+          "sectionId": "ch05",
+          "anchor": "We were now at step three"
+        },
+        "promptLabel": "Taken today"
+      }
     },
     {
       "id": "step04",

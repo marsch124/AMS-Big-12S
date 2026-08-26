@@ -155,7 +155,8 @@ async function shot(page, name) {
     const stepRows = await page.$$eval('.step-item', (e) => e.length);
     check('all twelve steps listed', stepRows === 12, stepRows + ' rows');
     check('unwritten steps marked as such',
-        (await page.$$eval('.step-item.is-stub', (e) => e.length)) === 11);
+        (await page.$$eval('.step-item.is-stub', (e) => e.length)) === 9,
+        (await page.$$eval('.step-item.is-stub', (e) => e.length)) + ' still stubs');
     check('every step shows its wording from the book',
         (await page.$$eval('.step-line', (e) => e.map((x) => x.textContent.trim())))
             .every((t) => t.length > 8));
@@ -183,7 +184,13 @@ async function shot(page, name) {
     check('and lands on the right paragraph',
         targeted.startsWith('We learned that we had to fully concede'),
         JSON.stringify(targeted.slice(0, 40)));
+    // Leaving the reader returns to the step it was opened from, not the Read tab.
     await page.click('#reader-back');
+    check('leaving the reader goes back to the step it was opened from',
+        await page.isVisible('#screen-step.is-active') ||
+        (await page.$eval('#screen-step', (e) => e.classList.contains('is-active'))));
+    await page.click('#step-back');
+    await page.waitForSelector('#screen-steps.is-active');
 
     await page.click('.tab[data-screen="steps"]');
     await page.click('.step-item >> nth=3');

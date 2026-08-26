@@ -155,6 +155,13 @@
 
     function openReader(sectionId, options) {
         options = options || {};
+        // Remember where the reader was opened from, so leaving it goes back
+        // there rather than dumping you on the Read tab. Chapter-to-chapter
+        // moves inside the reader must not overwrite it.
+        if (current.screen !== 'reader') {
+            current.readerFrom = current.screen;
+            current.readerFromStep = current.stepId;
+        }
         var section = Store.getSection(sectionId);
         if (!section || !section.paragraphs.length) {
             toast('That section has no text yet.');
@@ -1167,7 +1174,11 @@
             });
         });
 
-        $('reader-back').addEventListener('click', function () { showScreen('home'); });
+        $('reader-back').addEventListener('click', function () {
+            var from = current.readerFrom;
+            if (from === 'step' && current.readerFromStep) { openStep(current.readerFromStep); return; }
+            showScreen(from && from !== 'reader' ? from : 'home');
+        });
         $('step-back').addEventListener('click', function () { showScreen('steps'); });
         $('reader-type').addEventListener('click', function () {
             var settings = Store.state.settings;
