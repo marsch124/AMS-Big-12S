@@ -155,7 +155,7 @@ async function shot(page, name) {
     const stepRows = await page.$$eval('.step-item', (e) => e.length);
     check('all twelve steps listed', stepRows === 12, stepRows + ' rows');
     check('unwritten steps marked as such',
-        (await page.$$eval('.step-item.is-stub', (e) => e.length)) === 7,
+        (await page.$$eval('.step-item.is-stub', (e) => e.length)) === 5,
         (await page.$$eval('.step-item.is-stub', (e) => e.length)) + ' still stubs');
     check('every step shows its wording from the book',
         (await page.$$eval('.step-line', (e) => e.map((x) => x.textContent.trim())))
@@ -193,11 +193,11 @@ async function shot(page, name) {
     await page.waitForSelector('#screen-steps.is-active');
 
     await page.click('.tab[data-screen="steps"]');
-    await page.click('.step-item >> nth=5');
+    await page.click('.step-item >> nth=7');
     await page.waitForSelector('#screen-step.is-active');
     check('a step awaiting content says so, but still shows its wording',
         await page.isVisible('#step-stub') &&
-        (await page.textContent('#step-quote')).startsWith('Were entirely ready'));
+        (await page.textContent('#step-quote')).startsWith('Made a list of all persons'));
     await page.click('#step-back');
     await page.waitForSelector('#screen-steps.is-active');
 
@@ -512,7 +512,7 @@ async function shot(page, name) {
             return pill ? pill.textContent : '';
         })) === '3');
 
-    await page.click('.step-item >> nth=5');
+    await page.click('.step-item >> nth=7');
     check('a step awaiting content still takes a journal entry',
         await page.isVisible('#step-add-entry'));
     await page.click('#step-back');

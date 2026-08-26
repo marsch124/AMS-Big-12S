@@ -592,9 +592,99 @@
         "sectionId": "ch05",
         "anchor": "6.Were entirely ready"
       },
-      "explanation": [],
-      "references": [],
-      "questions": []
+      "explanation": [
+        "Sixty-five words. That is the whole of what this book gives step six, and it is worth knowing before you go looking for more. It asks one question, then asks it again harder: are we now ready to let God remove from us all the things which we have admitted are objectionable? Can He now take them all — every one?",
+        "The words doing the work are entirely and all these. Not the ones you have grown tired of, or the ones that have started to embarrass you in front of people. Then comes the sentence that looks like a way out and is not: should we still cling to something we will not let go, we ask God to help us be willing. You are not required to arrive willing. You are required to name the thing you are still holding, and stop calling it something else.",
+        "These defects points backwards, not outwards. It means the particular things on the list you made in step four — not a general audit of human failings, which is always more comfortable. If you want the book's own name for what sits underneath them, it is a chapter earlier, and it is not flattering: selfishness, self-centeredness, driven by a hundred forms of fear, self-delusion, self-seeking and self-pity."
+      ],
+      "references": [
+        {
+          "sectionId": "ch05",
+          "anchor": "6.Were entirely ready",
+          "label": "The step itself",
+          "why": "As it is printed in the 1939 edition."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "If we can answer to our satisfaction",
+          "label": "Everything the book says about it",
+          "why": "Sixty-five words, including the line to use when you are still clinging to something."
+        },
+        {
+          "sectionId": "ch05",
+          "anchor": "Selfishness-self-centeredness!",
+          "label": "What the defects are, underneath",
+          "why": "The book naming the root rather than the symptoms."
+        },
+        {
+          "sectionId": "ch01",
+          "anchor": "My friend promised when these things were done",
+          "label": "Willingness, honesty and humility",
+          "why": "Named as the essential requirements, in Bill's account of being told how this works."
+        }
+      ],
+      "questions": [
+        {
+          "id": "s6-q1",
+          "text": "Go back to your step four. Which defect on it are you genuinely ready to be rid of?"
+        },
+        {
+          "id": "s6-q2",
+          "text": "Which one are you still holding? Name it plainly, without the reason attached."
+        },
+        {
+          "id": "s6-q3",
+          "text": "What does that one still do for you? Nobody keeps a defect that has stopped paying."
+        },
+        {
+          "id": "s6-q4",
+          "text": "The step says entirely ready, and all these. Where are you quietly negotiating for an exception?"
+        },
+        {
+          "id": "s6-q5",
+          "text": "Who would notice first if this were actually removed — and how would you feel about them noticing?"
+        },
+        {
+          "id": "s6-q6",
+          "text": "Are you willing to be made willing? That is a different question from the one above, and the book allows it."
+        },
+        {
+          "id": "s6-q7",
+          "text": "What are you afraid you would be without it?"
+        },
+        {
+          "id": "s6-q8",
+          "text": "If you have been here before: what were you not ready for last time, and where does it stand now?"
+        }
+      ],
+      "work": {
+        "kind": "carried-defects",
+        "intro": "The defects you named in step four, carried through so you are answering about the real ones rather than about defects in general. Each gets an honest answer, not a tick.",
+        "from": {
+          "stepId": "step04",
+          "columns": [
+            {
+              "tableId": "resentments",
+              "columnId": "part"
+            },
+            {
+              "tableId": "conduct",
+              "columnId": "fault"
+            }
+          ]
+        },
+        "states": [
+          {
+            "id": "ready",
+            "label": "Ready to have it removed"
+          },
+          {
+            "id": "clinging",
+            "label": "Still holding on to this",
+            "hint": "The book's answer to this is not to force it. It is to ask for help being willing."
+          }
+        ]
+      }
     },
     {
       "id": "step07",
@@ -604,9 +694,80 @@
         "sectionId": "ch05",
         "anchor": "7.Humbly asked"
       },
-      "explanation": [],
-      "references": [],
-      "questions": []
+      "explanation": [
+        "Sixty-nine words, and most of them are the prayer itself. The book does not explain step seven. It tells you what to say, and then says: we have then completed step seven. That is the entire treatment, and the brevity is not an oversight — steps six and seven are the hinge between the inventory behind you and the amends in front, and the book clearly expects you to spend less time here than you will spend on either side.",
+        "The word to sit with is humbly. Bill's own account of this working puts it about as plainly as it can be put: there had been a humble willingness to have Him with me — and He came. Not a performance of humility, and not self-abasement, which is only pride facing the other way. Something closer to the end of arguing.",
+        "One caution, which is in the book and is better had now than later. Writing to families about what to expect, it says a man's defects of character are not going to disappear over night, and that he has entered upon a period of growth. Nothing in step seven promises the shortcomings are gone by Thursday. It is asked once, and then by most people many times."
+      ],
+      "references": [
+        {
+          "sectionId": "ch05",
+          "anchor": "7.Humbly asked",
+          "label": "The step itself",
+          "why": "As it is printed in the 1939 edition."
+        },
+        {
+          "sectionId": "ch06",
+          "anchor": "When ready, we say something like this",
+          "label": "The prayer, and the whole of the step",
+          "why": "What the book gives you to say, ending with we have then completed step seven."
+        },
+        {
+          "sectionId": "ch01",
+          "anchor": "The real significance of my experience in the Cathedral",
+          "label": "\"A humble willingness — and He came\"",
+          "why": "The nearest the book comes to saying what humbly means here."
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "When working with a man and his family",
+          "label": "Not overnight, but a period of growth",
+          "why": "The book's own brake on expecting the shortcomings to go at once."
+        }
+      ],
+      "questions": [
+        {
+          "id": "s7-q1",
+          "text": "Say the prayer in your own words first. What comes out when you are not borrowing the phrasing?"
+        },
+        {
+          "id": "s7-q2",
+          "text": "What does humbly mean to you here — and is what you are picturing actually humility, or just feeling bad?"
+        },
+        {
+          "id": "s7-q3",
+          "text": "You are asking for these to be removed. Which one would you miss?"
+        },
+        {
+          "id": "s7-q4",
+          "text": "The prayer asks for removal of what stands in the way of usefulness. Useful to whom, in your case?"
+        },
+        {
+          "id": "s7-q5",
+          "text": "Where have you asked for something to be taken away while keeping hold of it yourself?"
+        },
+        {
+          "id": "s7-q6",
+          "text": "The book warns families that this is a period of growth, not an overnight change. What are you expecting, honestly?"
+        },
+        {
+          "id": "s7-q7",
+          "text": "If nothing feels different tomorrow, what will you conclude — and is that conclusion fair?"
+        },
+        {
+          "id": "s7-q8",
+          "text": "If you have taken this step before: what has actually changed since, and what has not moved at all?"
+        }
+      ],
+      "work": {
+        "kind": "prayer",
+        "intro": "Asked more than once by most people. Each time is kept with its date rather than replacing the last, so you can see the years it took rather than only the latest.",
+        "prayerRef": {
+          "sectionId": "ch06",
+          "anchor": "When ready, we say something like this"
+        },
+        "promptLabel": "Asked today"
+      }
     },
     {
       "id": "step08",
