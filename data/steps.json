@@ -4,13 +4,12 @@
  "edition": "First Edition (1939)",
  "wordingNote": "The steps are quoted from the 1939 first edition. The wording differs in places from later editions — step twelve here reads 'spiritual experience' where later editions read 'spiritual awakening'.",
  "authorNote": "Explanations and questions are written for this app. They are not official A.A. material, not from the 1952 book Twelve Steps and Twelve Traditions, and are meant to be edited. Only the quoted step text and the linked passages come from the book.",
- "builtAt": "2026-08-26T18:47:15.114Z",
+ "builtAt": "2026-08-26T18:53:00.266Z",
  "steps": [
   {
    "id": "step01",
    "number": 1,
    "shortTitle": "Powerless",
-   "theme": "Honesty",
    "text": {
     "sectionId": "ch05",
     "anchor": "1.We admitted we were powerless",
@@ -123,6 +122,149 @@
      }
     ]
    }
+  },
+  {
+   "id": "step02",
+   "number": 2,
+   "shortTitle": "Came to believe",
+   "text": {
+    "sectionId": "ch05",
+    "anchor": "2.Came to believe",
+    "paraIndex": 7
+   },
+   "explanation": [],
+   "references": [],
+   "questions": []
+  },
+  {
+   "id": "step03",
+   "number": 3,
+   "shortTitle": "Turned it over",
+   "text": {
+    "sectionId": "ch05",
+    "anchor": "3.Made a decision",
+    "paraIndex": 8
+   },
+   "explanation": [],
+   "references": [],
+   "questions": []
+  },
+  {
+   "id": "step04",
+   "number": 4,
+   "shortTitle": "Inventory",
+   "text": {
+    "sectionId": "ch05",
+    "anchor": "4.Made a searching",
+    "paraIndex": 9
+   },
+   "explanation": [],
+   "references": [],
+   "questions": []
+  },
+  {
+   "id": "step05",
+   "number": 5,
+   "shortTitle": "Admitted",
+   "text": {
+    "sectionId": "ch05",
+    "anchor": "5.Admitted to God",
+    "paraIndex": 10
+   },
+   "explanation": [],
+   "references": [],
+   "questions": []
+  },
+  {
+   "id": "step06",
+   "number": 6,
+   "shortTitle": "Entirely ready",
+   "text": {
+    "sectionId": "ch05",
+    "anchor": "6.Were entirely ready",
+    "paraIndex": 11
+   },
+   "explanation": [],
+   "references": [],
+   "questions": []
+  },
+  {
+   "id": "step07",
+   "number": 7,
+   "shortTitle": "Humbly asked",
+   "text": {
+    "sectionId": "ch05",
+    "anchor": "7.Humbly asked",
+    "paraIndex": 12
+   },
+   "explanation": [],
+   "references": [],
+   "questions": []
+  },
+  {
+   "id": "step08",
+   "number": 8,
+   "shortTitle": "The list",
+   "text": {
+    "sectionId": "ch05",
+    "anchor": "8.Made a list",
+    "paraIndex": 13
+   },
+   "explanation": [],
+   "references": [],
+   "questions": []
+  },
+  {
+   "id": "step09",
+   "number": 9,
+   "shortTitle": "Amends",
+   "text": {
+    "sectionId": "ch05",
+    "anchor": "9.Made direct amends",
+    "paraIndex": 14
+   },
+   "explanation": [],
+   "references": [],
+   "questions": []
+  },
+  {
+   "id": "step10",
+   "number": 10,
+   "shortTitle": "Continued",
+   "text": {
+    "sectionId": "ch05",
+    "anchor": "10.Continued to take personal inventory",
+    "paraIndex": 15
+   },
+   "explanation": [],
+   "references": [],
+   "questions": []
+  },
+  {
+   "id": "step11",
+   "number": 11,
+   "shortTitle": "Prayer and meditation",
+   "text": {
+    "sectionId": "ch05",
+    "anchor": "11.Sought through prayer",
+    "paraIndex": 16
+   },
+   "explanation": [],
+   "references": [],
+   "questions": []
+  },
+  {
+   "id": "step12",
+   "number": 12,
+   "shortTitle": "Carried the message",
+   "text": {
+    "sectionId": "ch05",
+    "anchor": "12.Having had a spiritual experience",
+    "paraIndex": 17
+   },
+   "explanation": [],
+   "references": [],
+   "questions": []
   }
  ]
 }

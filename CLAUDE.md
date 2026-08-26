@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.4 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.5 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Non-negotiables
 
@@ -46,9 +46,12 @@ js/ui.js            Screens, rendering, all event wiring
 js/app.js           Bootstrap
 data/book.json                      Parsed book the app reads (~577 KB)
 data/alcoholics-anonymous-1939.txt  Source text book.json was built from
+data/steps.source.json              Step material, written by hand
+data/steps.json                     Built steps with references resolved
 tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
-tools/smoke-test.js    45 end-to-end browser checks
+tools/build-steps.js   steps.source.json → steps.json, resolving book references
+tools/smoke-test.js    56 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -60,7 +63,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 45 checks, expect 45/45
+node tools/smoke-test.js                  # 56 checks, expect 56/56
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.
@@ -113,6 +116,24 @@ anything. `Store.isStandalone()` is the test; `Store.resolveNote()` returns a
 passage-less note untouched rather than calling it an orphan. Do not split these
 into a second store — one store is what makes a passage note and a talking point
 the same object, searchable together and carried by the same backup.
+
+**Step references are anchored the same way notes are, and resolved twice.**
+`tools/build-steps.js` resolves each anchor against `book.json` at build time and
+refuses to write anything if one matches nothing or matches more than one
+paragraph. `Store.resolveStepRef()` resolves it *again* at runtime, trusting the
+anchor over the stored index, so links survive the reader importing their own
+copy. The two `flatten()` implementations — one in the build script, one in
+`store.js` — must stay identical or the runtime pass will disagree with the
+build. A reference that cannot be found is shown as unavailable, never opened at
+a guessed paragraph.
+
+**Question ids are load-bearing.** Answers will be stored against `s1-q1` and
+friends, so renaming an id orphans what was written against it. Adding and
+hiding questions is safe; renumbering is not. The build rejects duplicates.
+
+**`Store.stepText()` strips the leading numeral** for display — the book prints
+"1.We admitted", which is right in the reader and wrong on a page already headed
+"Step 1". The reader still shows the paragraph exactly as printed.
 
 **Notes are anchored by text, not index.** Each stores `anchor` — the first 80
 characters of its paragraph. `Store.resolveNote()` checks the stored index

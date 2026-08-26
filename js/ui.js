@@ -81,11 +81,14 @@
 
     function showScreen(name) {
         if (name !== 'reader') flushPosition();
-        ['home', 'reader', 'notes', 'search', 'settings'].forEach(function (screen) {
+        ['home', 'reader', 'steps', 'step', 'notes', 'search', 'settings'].forEach(function (screen) {
             $('screen-' + screen).classList.toggle('is-active', screen === name);
         });
+        // A step page is pushed from the Steps tab, so that tab stays lit while
+        // you are inside one.
+        var litTab = name === 'step' ? 'steps' : name;
         Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
-            tab.classList.toggle('is-active', tab.dataset.screen === name);
+            tab.classList.toggle('is-active', tab.dataset.screen === litTab);
         });
         // The reader gets the whole screen; the tab bar would only steal room.
         $('tabbar').hidden = name === 'reader';
@@ -95,6 +98,7 @@
         if (name === 'home') renderHome();
         if (name === 'notes') renderNotes();
         if (name === 'settings') renderSettings();
+        if (name === 'steps') renderSteps();
         if (name === 'search') setTimeout(function () { $('search-input').focus(); }, 60);
     }
 
@@ -408,6 +412,96 @@
 
         openSheet('note-sheet');
         setTimeout(function () { $('note-sheet-body').focus(); }, 120);
+    }
+
+    /* --------------------------------------------------------------- steps */
+
+    function renderSteps() {
+        var data = Store.state.steps || {};
+        $('steps-edition').textContent = data.edition || '';
+
+        var list = $('steplist');
+        list.innerHTML = '';
+
+        Store.allSteps().forEach(function (step) {
+            var written = Store.stepIsWritten(step);
+            var item = document.createElement('button');
+            item.className = 'step-item' + (written ? '' : ' is-stub');
+            item.innerHTML =
+                '<span class="step-num">' + step.number + '</span>' +
+                '<span class="step-body">' +
+                  '<span class="step-name">' + escapeHtml(step.shortTitle) + '</span>' +
+                  '<span class="step-line">' + escapeHtml(firstWords(Store.stepText(step), 12)) + '</span>' +
+                '</span>' +
+                (written ? '<span class="step-go">›</span>' : '<span class="step-soon">soon</span>');
+            item.addEventListener('click', function () { openStep(step.id); });
+            list.appendChild(item);
+        });
+
+        $('steps-note').textContent = data.wordingNote || '';
+    }
+
+    function openStep(stepId) {
+        var step = Store.getStep(stepId);
+        if (!step) return;
+        current.stepId = stepId;
+        renderStep(step);
+        showScreen('step');
+        $('step-body').scrollTop = 0;
+    }
+
+    function renderStep(step) {
+        var written = Store.stepIsWritten(step);
+        $('step-title').textContent = 'Step ' + step.number;
+        $('step-sub').textContent = step.shortTitle;
+        $('step-quote').textContent = Store.stepText(step);
+
+        $('step-stub').hidden = written;
+        $('step-written').hidden = !written;
+        if (!written) return;
+
+        $('step-explanation').innerHTML = step.explanation.map(function (para) {
+            return '<p>' + escapeHtml(para) + '</p>';
+        }).join('');
+
+        var refs = $('step-references');
+        refs.innerHTML = '';
+        step.references.forEach(function (ref) {
+            var index = Store.resolveStepRef(ref);
+            var section = Store.getSection(ref.sectionId);
+            var row = document.createElement('button');
+
+            if (index === null || !section) {
+                // The passage is not in the copy of the text now loaded. Say so
+                // rather than opening the wrong paragraph.
+                row.className = 'ref-item is-missing';
+                row.disabled = true;
+                row.innerHTML =
+                    '<span class="ref-label">' + escapeHtml(ref.label) + '</span>' +
+                    '<span class="ref-why">Not found in the text now loaded.</span>';
+            } else {
+                row.className = 'ref-item';
+                row.innerHTML =
+                    '<span class="ref-label">' + escapeHtml(ref.label) + '</span>' +
+                    '<span class="ref-where">' + escapeHtml(section.title) + '</span>' +
+                    (ref.why ? '<span class="ref-why">' + escapeHtml(ref.why) + '</span>' : '') +
+                    '<span class="ref-quote">' +
+                        escapeHtml(firstWords(section.paragraphs[index], 20)) + '</span>';
+                row.addEventListener('click', function () {
+                    UI.openReader(ref.sectionId, { paraIndex: index, highlight: true });
+                });
+            }
+            refs.appendChild(row);
+        });
+
+        var questions = $('step-questions');
+        questions.innerHTML = '';
+        (step.questions || []).forEach(function (q) {
+            var li = document.createElement('li');
+            li.className = 'question';
+            li.textContent = q.text;
+            questions.appendChild(li);
+        });
     }
 
     /* -------------------------------------------------------------- notes */
@@ -766,6 +860,7 @@
         });
 
         $('reader-back').addEventListener('click', function () { showScreen('home'); });
+        $('step-back').addEventListener('click', function () { showScreen('steps'); });
         $('reader-type').addEventListener('click', function () {
             var settings = Store.state.settings;
             $('type-fontsize').value = settings.fontSize;
@@ -982,6 +1077,8 @@
         applySettings: applySettings,
         openReader: openReader,
         renderHome: renderHome,
+        renderSteps: renderSteps,
+        openStep: openStep,
         renderNotes: renderNotes,
         renderSettings: renderSettings,
         toast: toast

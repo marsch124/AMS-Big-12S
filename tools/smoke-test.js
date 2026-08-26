@@ -149,6 +149,51 @@ async function shot(page, name) {
     check('search result opens the passage', true);
     await page.click('#reader-back');
 
+    // ── the twelve steps ──────────────────────────────────────────────────
+    await page.click('.tab[data-screen="steps"]');
+    await page.waitForSelector('#screen-steps.is-active');
+    const stepRows = await page.$$eval('.step-item', (e) => e.length);
+    check('all twelve steps listed', stepRows === 12, stepRows + ' rows');
+    check('unwritten steps marked as such',
+        (await page.$$eval('.step-item.is-stub', (e) => e.length)) === 11);
+    check('every step shows its wording from the book',
+        (await page.$$eval('.step-line', (e) => e.map((x) => x.textContent.trim())))
+            .every((t) => t.length > 8));
+
+    await page.click('.step-item >> nth=0');
+    await page.waitForSelector('#screen-step.is-active');
+    check('step page opens', (await page.textContent('#step-title')) === 'Step 1');
+    const quote = await page.textContent('#step-quote');
+    check('step quote drops the redundant numeral',
+        quote.startsWith('We admitted we were powerless'), JSON.stringify(quote.slice(0, 34)));
+    check('Steps tab stays lit inside a step',
+        await page.$eval('.tab[data-screen="steps"]', (e) => e.classList.contains('is-active')));
+    check('references and questions render',
+        (await page.$$eval('.ref-item', (e) => e.length)) === 7 &&
+        (await page.$$eval('.question', (e) => e.length)) === 8);
+    check('no reference failed to resolve',
+        (await page.$$eval('.ref-item.is-missing', (e) => e.length)) === 0);
+
+    // a reference must open the reader on the paragraph it names
+    await page.click('.ref-item >> nth=1');
+    await page.waitForSelector('#screen-reader.is-active');
+    check('a reference opens its chapter',
+        (await page.textContent('#reader-title')) === 'More About Alcoholism');
+    const targeted = await page.$eval('.para.is-target', (e) => e.textContent).catch(() => '');
+    check('and lands on the right paragraph',
+        targeted.startsWith('We learned that we had to fully concede'),
+        JSON.stringify(targeted.slice(0, 40)));
+    await page.click('#reader-back');
+
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=3');
+    await page.waitForSelector('#screen-step.is-active');
+    check('a step awaiting content says so, but still shows its wording',
+        await page.isVisible('#step-stub') &&
+        (await page.textContent('#step-quote')).startsWith('Made a searching and fearless'));
+    await page.click('#step-back');
+    await page.waitForSelector('#screen-steps.is-active');
+
     // ── backup round trip ─────────────────────────────────────────────────
     const slim = JSON.parse(await page.evaluate(() => Backup.serialize({ includeBookText: false })));
     check('backup carries notes, bookmarks, position, settings',

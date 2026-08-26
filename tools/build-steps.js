@@ -143,17 +143,25 @@ function main(argv) {
         fs.writeFileSync(OUT, JSON.stringify(built, null, 1) + '\n', 'utf8');
     }
 
+    // A stub carries its step text so the list can show it, but no explanation
+    // yet. Counting those as "written" would flatter the build.
+    const isWritten = (s) => (s.explanation || []).length > 0;
+    const written = steps.filter(isWritten);
+
     console.log(checkOnly ? 'Checked ' + path.relative(ROOT, SOURCE)
                           : 'Wrote ' + path.relative(ROOT, OUT));
-    console.log('  steps:      ' + steps.length + ' of 12 written');
+    console.log('  steps:      ' + steps.length + ' present, ' + written.length + ' written, ' +
+        (steps.length - written.length) + ' still stubs');
     console.log('  references: ' + resolvedCount + ' resolved, all unambiguous');
     console.log('  questions:  ' + steps.reduce((n, s) => n + (s.questions || []).length, 0));
     console.log('');
     steps.forEach((step) => {
-        console.log('   ' + String(step.number).padStart(2) + '. ' + step.shortTitle.padEnd(12) +
-            step.references.length + ' refs   ' +
-            (step.questions || []).length + ' questions   work: ' +
-            (step.work ? step.work.kind : 'none'));
+        console.log('   ' + String(step.number).padStart(2) + '. ' +
+            step.shortTitle.padEnd(22) +
+            (isWritten(step)
+                ? step.references.length + ' refs, ' + (step.questions || []).length +
+                  ' questions, work: ' + (step.work ? step.work.kind : 'none')
+                : 'stub — text only'));
         step.references.forEach((ref) => {
             console.log('        → ' + (ref.sectionId + ' ¶' + ref.paraIndex).padEnd(16) + ref.label);
         });
@@ -161,7 +169,9 @@ function main(argv) {
 
     const missing = [];
     for (let n = 1; n <= 12; n++) if (numbers.indexOf(n) === -1) missing.push(n);
-    if (missing.length) console.log('\n  Not yet written: step ' + missing.join(', '));
+    if (missing.length) console.log('\n  Absent entirely: step ' + missing.join(', '));
+    const stubs = steps.filter((s) => !isWritten(s)).map((s) => s.number);
+    if (stubs.length) console.log('\n  Awaiting content: step ' + stubs.join(', '));
 }
 
 main(process.argv);

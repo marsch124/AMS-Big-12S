@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/style.css?v=6">
 </head>
 <body>
 
@@ -103,6 +103,52 @@
       <input class="field" type="search" id="search-input" placeholder="Search the full text" autocomplete="off">
       <p class="hint" id="search-status"></p>
       <div id="search-results" class="card-list"></div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════ Steps ── -->
+  <section class="screen" id="screen-steps">
+    <header class="topbar">
+      <div class="topbar-titles">
+        <h1 class="topbar-title">The Twelve Steps</h1>
+        <p class="topbar-sub" id="steps-edition"></p>
+      </div>
+    </header>
+    <div class="screen-body">
+      <nav class="steplist" id="steplist"></nav>
+      <p class="hint" id="steps-note"></p>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════ A single step ── -->
+  <section class="screen" id="screen-step">
+    <header class="topbar">
+      <button class="icon-btn" id="step-back" aria-label="Back to the twelve steps">‹</button>
+      <div class="topbar-titles">
+        <h1 class="topbar-title" id="step-title"></h1>
+        <p class="topbar-sub" id="step-sub"></p>
+      </div>
+    </header>
+    <div class="screen-body" id="step-body">
+      <blockquote class="step-quote" id="step-quote"></blockquote>
+
+      <div id="step-stub" hidden>
+        <p class="empty">This step has not been written up yet. Its wording is above, and the
+           rest is coming.</p>
+      </div>
+
+      <div id="step-written" hidden>
+        <h2 class="section-heading">What it asks of you</h2>
+        <div class="step-prose" id="step-explanation"></div>
+
+        <h2 class="section-heading">In the book</h2>
+        <div class="reflist" id="step-references"></div>
+
+        <h2 class="section-heading">Questions to work through</h2>
+        <p class="hint">Prompts to take to your sponsor — not official A.A. material, and yours
+           to disagree with.</p>
+        <ol class="questionlist" id="step-questions"></ol>
+      </div>
     </div>
   </section>
 
@@ -325,6 +371,27 @@
       <div class="panel panel-flush">
 
         <details class="disclosure">
+          <summary><span>The twelve steps arrive</span><span class="ver-tag">1.5</span></summary>
+          <div class="disclosure-body">
+            <p>A fifth tab, and the beginning of a section for working the steps.</p>
+            <ul>
+              <li>All twelve are listed, each showing its wording as the 1939 edition prints it.
+                  <strong>Step one is written up</strong>; the rest show their wording and are
+                  marked as still to come.</li>
+              <li>A step page carries a plain explanation of what the step asks, links into the
+                  book, and questions to take to a sponsor. Step one has seven links — the book
+                  makes its case for this one across three different chapters.</li>
+              <li>Every link is stored by the opening words of the passage, not by a paragraph
+                  number, so it still opens the right place if you ever load a different copy of
+                  the text. A passage that genuinely cannot be found says so instead of opening
+                  the wrong one.</li>
+              <li>The explanations and questions were written for this app. They are not official
+                  A.A. material, and they are meant to be disagreed with.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="disclosure">
           <summary><span>Things to talk about</span><span class="ver-tag">1.4</span></summary>
           <div class="disclosure-body">
             <p>The Notes tab now holds more than notes on passages.</p>
@@ -467,6 +534,12 @@
         <path d="M12 7.5v11.9"/>
       </svg></span><span>Read</span>
     </button>
+    <button class="tab" data-screen="steps">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3.2 20.4h4.4v-5.1h4.4v-5.1h4.4V5.1h4.4"/>
+        <path d="M7.6 20.4v-5.1M12 15.3v-5.1M16.4 10.2V5.1"/>
+      </svg></span><span>Steps</span>
+    </button>
     <button class="tab" data-screen="notes">
       <span class="tab-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M3.8 20.4 8.6 15.4"/>
@@ -575,9 +648,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=1"></script>
-<script src="js/store.js?v=3"></script>
+<script src="js/store.js?v=4"></script>
 <script src="js/backup.js?v=1"></script>
-<script src="js/ui.js?v=3"></script>
-<script src="js/app.js?v=3"></script>
+<script src="js/ui.js?v=4"></script>
+<script src="js/app.js?v=4"></script>
 </body>
 </html>

@@ -4,23 +4,21 @@
   "edition": "First Edition (1939)",
   "wordingNote": "The steps are quoted from the 1939 first edition. The wording differs in places from later editions — step twelve here reads 'spiritual experience' where later editions read 'spiritual awakening'.",
   "authorNote": "Explanations and questions are written for this app. They are not official A.A. material, not from the 1952 book Twelve Steps and Twelve Traditions, and are meant to be edited. Only the quoted step text and the linked passages come from the book.",
-
   "steps": [
     {
       "id": "step01",
       "number": 1,
       "shortTitle": "Powerless",
-      "theme": "Honesty",
-
-      "text": { "sectionId": "ch05", "anchor": "1.We admitted we were powerless" },
-
+      "text": {
+        "sectionId": "ch05",
+        "anchor": "1.We admitted we were powerless"
+      },
       "explanation": [
         "Step one asks for two admissions, not one, and they are about different things. Powerless over alcohol is about what happens once you start drinking. That our lives had become unmanageable is about how things were going the rest of the time — whether or not there was a drink in your hand.",
         "The book is blunt about the first. It says the delusion that we are like other people has to be smashed. Not managed, not worked around. Smashed. The chapter that carries most of this argument is More About Alcoholism, and it is worth reading before you write anything here.",
         "Nothing in this step asks you to feel differently, or to have hope yet — hope is step two's business. The word the book uses is concede: to fully concede to your innermost self. That is a quieter thing than surrender, and a harder one to fake.",
         "People come back to step one for years, usually to the second half of it. The first half tends to settle. The unmanageable part keeps finding new evidence."
       ],
-
       "references": [
         {
           "sectionId": "ch05",
@@ -65,18 +63,40 @@
           "why": "If the second half of the step feels abstract, this is it made concrete."
         }
       ],
-
       "questions": [
-        { "id": "s1-q1", "text": "What happens to you once you take the first drink? Not what you intend to happen — what actually happens, going on the evidence." },
-        { "id": "s1-q2", "text": "List the ways you have tried to control it: rules, switches, breaks, geography. What did each one prove?" },
-        { "id": "s1-q3", "text": "The book says the delusion that we are like other people has to be smashed. Where do you still quietly believe you are like other people?" },
-        { "id": "s1-q4", "text": "Set drinking aside entirely. Where was your life unmanageable — money, work, health, promises, the people who live with you?" },
-        { "id": "s1-q5", "text": "Who has been carrying something for you that you should have been carrying yourself?" },
-        { "id": "s1-q6", "text": "What is the thing you would least like written down here? What makes it hard to write?" },
-        { "id": "s1-q7", "text": "The word the book uses is concede, not admit. Is there a difference for you, and which one have you actually done?" },
-        { "id": "s1-q8", "text": "If you are coming back to this step rather than taking it for the first time, what has changed since last time — and what has not?" }
+        {
+          "id": "s1-q1",
+          "text": "What happens to you once you take the first drink? Not what you intend to happen — what actually happens, going on the evidence."
+        },
+        {
+          "id": "s1-q2",
+          "text": "List the ways you have tried to control it: rules, switches, breaks, geography. What did each one prove?"
+        },
+        {
+          "id": "s1-q3",
+          "text": "The book says the delusion that we are like other people has to be smashed. Where do you still quietly believe you are like other people?"
+        },
+        {
+          "id": "s1-q4",
+          "text": "Set drinking aside entirely. Where was your life unmanageable — money, work, health, promises, the people who live with you?"
+        },
+        {
+          "id": "s1-q5",
+          "text": "Who has been carrying something for you that you should have been carrying yourself?"
+        },
+        {
+          "id": "s1-q6",
+          "text": "What is the thing you would least like written down here? What makes it hard to write?"
+        },
+        {
+          "id": "s1-q7",
+          "text": "The word the book uses is concede, not admit. Is there a difference for you, and which one have you actually done?"
+        },
+        {
+          "id": "s1-q8",
+          "text": "If you are coming back to this step rather than taking it for the first time, what has changed since last time — and what has not?"
+        }
       ],
-
       "work": {
         "kind": "two-lists",
         "intro": "Evidence, not conclusions. Add to these over time rather than filling them in once — the second half in particular tends to keep producing examples.",
@@ -93,6 +113,138 @@
           }
         ]
       }
+    },
+    {
+      "id": "step02",
+      "number": 2,
+      "shortTitle": "Came to believe",
+      "text": {
+        "sectionId": "ch05",
+        "anchor": "2.Came to believe"
+      },
+      "explanation": [],
+      "references": [],
+      "questions": []
+    },
+    {
+      "id": "step03",
+      "number": 3,
+      "shortTitle": "Turned it over",
+      "text": {
+        "sectionId": "ch05",
+        "anchor": "3.Made a decision"
+      },
+      "explanation": [],
+      "references": [],
+      "questions": []
+    },
+    {
+      "id": "step04",
+      "number": 4,
+      "shortTitle": "Inventory",
+      "text": {
+        "sectionId": "ch05",
+        "anchor": "4.Made a searching"
+      },
+      "explanation": [],
+      "references": [],
+      "questions": []
+    },
+    {
+      "id": "step05",
+      "number": 5,
+      "shortTitle": "Admitted",
+      "text": {
+        "sectionId": "ch05",
+        "anchor": "5.Admitted to God"
+      },
+      "explanation": [],
+      "references": [],
+      "questions": []
+    },
+    {
+      "id": "step06",
+      "number": 6,
+      "shortTitle": "Entirely ready",
+      "text": {
+        "sectionId": "ch05",
+        "anchor": "6.Were entirely ready"
+      },
+      "explanation": [],
+      "references": [],
+      "questions": []
+    },
+    {
+      "id": "step07",
+      "number": 7,
+      "shortTitle": "Humbly asked",
+      "text": {
+        "sectionId": "ch05",
+        "anchor": "7.Humbly asked"
+      },
+      "explanation": [],
+      "references": [],
+      "questions": []
+    },
+    {
+      "id": "step08",
+      "number": 8,
+      "shortTitle": "The list",
+      "text": {
+        "sectionId": "ch05",
+        "anchor": "8.Made a list"
+      },
+      "explanation": [],
+      "references": [],
+      "questions": []
+    },
+    {
+      "id": "step09",
+      "number": 9,
+      "shortTitle": "Amends",
+      "text": {
+        "sectionId": "ch05",
+        "anchor": "9.Made direct amends"
+      },
+      "explanation": [],
+      "references": [],
+      "questions": []
+    },
+    {
+      "id": "step10",
+      "number": 10,
+      "shortTitle": "Continued",
+      "text": {
+        "sectionId": "ch05",
+        "anchor": "10.Continued to take personal inventory"
+      },
+      "explanation": [],
+      "references": [],
+      "questions": []
+    },
+    {
+      "id": "step11",
+      "number": 11,
+      "shortTitle": "Prayer and meditation",
+      "text": {
+        "sectionId": "ch05",
+        "anchor": "11.Sought through prayer"
+      },
+      "explanation": [],
+      "references": [],
+      "questions": []
+    },
+    {
+      "id": "step12",
+      "number": 12,
+      "shortTitle": "Carried the message",
+      "text": {
+        "sectionId": "ch05",
+        "anchor": "12.Having had a spiritual experience"
+      },
+      "explanation": [],
+      "references": [],
+      "questions": []
     }
   ]
 }

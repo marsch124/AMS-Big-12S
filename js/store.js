@@ -22,7 +22,8 @@
         settings: Object.assign({}, DEFAULT_SETTINGS),
         position: null,          // { sectionId, paraIndex, ratio, updatedAt }
         notes: [],
-        bookmarks: []
+        bookmarks: [],
+        steps: null            // { title, edition, steps: [] } from data/steps.json
     };
 
     function uid(prefix) {
@@ -131,6 +132,85 @@
 
     function readableSections() {
         return state.book.sections.filter(function (s) { return s.paragraphs.length > 0; });
+    }
+
+    /* --------------------------------------------------------------- steps */
+
+    // Must match flatten() in tools/build-steps.js — the build resolves anchors
+    // one way and the app re-resolves them the other, so they have to agree.
+    function flattenAnchor(text) {
+        return String(text || '')
+            .replace(/[‘’ʼ]/g, "'")
+            .replace(/[“”]/g, '"')
+            .replace(/[–—]/g, '-')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLowerCase();
+    }
+
+    function loadSteps() {
+        return fetch('data/steps.json', { cache: 'no-cache' })
+            .then(function (response) {
+                if (!response.ok) throw new Error('steps.json: HTTP ' + response.status);
+                return response.json();
+            })
+            .then(function (data) { state.steps = data; return data; })
+            .catch(function (error) {
+                console.warn('Could not load data/steps.json', error);
+                state.steps = { steps: [] };
+                return state.steps;
+            });
+    }
+
+    function allSteps() {
+        return (state.steps && state.steps.steps) || [];
+    }
+
+    function getStep(id) {
+        return allSteps().filter(function (s) { return s.id === id; })[0] || null;
+    }
+
+    function stepIsWritten(step) {
+        return !!(step && step.explanation && step.explanation.length);
+    }
+
+    /*
+     * The build resolved every reference against the bundled text, but the
+     * reader may have imported their own copy since. Trust the anchor over the
+     * stored index, exactly as notes do, and report an unfindable passage
+     * rather than opening the wrong one.
+     */
+    function resolveStepRef(ref) {
+        if (!ref) return null;
+        var section = getSection(ref.sectionId);
+        if (!section) return null;
+
+        var needle = flattenAnchor(ref.anchor);
+        if (!needle) return null;
+
+        var atIndex = section.paragraphs[ref.paraIndex];
+        if (atIndex && flattenAnchor(atIndex).indexOf(needle) === 0) return ref.paraIndex;
+
+        for (var i = 0; i < section.paragraphs.length; i++) {
+            if (flattenAnchor(section.paragraphs[i]).indexOf(needle) === 0) return i;
+        }
+        return null;
+    }
+
+    /*
+     * The step's own wording, taken from the book rather than stored twice.
+     *
+     * The book runs the numeral into the first word — "1.We admitted" — which is
+     * faithful in the reader but wrong on a page already headed "Step 1", so the
+     * leading numeral is dropped here. Only for display; the reader still shows
+     * the paragraph exactly as printed.
+     */
+    function stepText(step) {
+        var index = resolveStepRef(step && step.text);
+        if (index === null) return '';
+        var section = getSection(step.text.sectionId);
+        var text = (section && section.paragraphs[index]) || '';
+        return text.replace(/^\s*\d{1,2}\s*\.\s*/, '');
     }
 
     /* ------------------------------------------------------------ settings */
@@ -353,6 +433,7 @@
     function init() {
         return loadSettings()
             .then(loadBook)
+            .then(loadSteps)
             .then(loadNotes)
             .then(loadBookmarks)
             .then(loadPosition)
@@ -373,6 +454,13 @@
         getSection: getSection,
         sectionIndex: sectionIndex,
         readableSections: readableSections,
+
+        loadSteps: loadSteps,
+        allSteps: allSteps,
+        getStep: getStep,
+        stepIsWritten: stepIsWritten,
+        resolveStepRef: resolveStepRef,
+        stepText: stepText,
 
         loadSettings: loadSettings,
         saveSettings: saveSettings,
