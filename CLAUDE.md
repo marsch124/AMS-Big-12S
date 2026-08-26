@@ -215,6 +215,21 @@ repositories** (403) and there is no Pages API tool; Martin does those in the
 browser. He uses **GitHub Desktop on a Mac**, so explain git work in those terms
 rather than as CLI commands.
 
+## Writing the step material
+
+**Register: keep the edge.** Martin chose this deliberately over two plainer
+alternatives. The explanations mostly describe, but turn and address the reader
+directly where the step warrants it — closer to how a sponsor talks than how a
+manual reads. Steps 1–3 are the reference: "The delusion that we are like other
+people has to be smashed. Not managed, not worked around. Smashed."; "It asks you
+to stop insisting you already know."; "What is the part you are quietly keeping
+back? There usually is one." Do not sand this down.
+
+Four short paragraphs of explanation, five to seven verified references, eight
+questions. Never assert what the book says without checking it — quote or link
+instead. The material is not official A.A. text and must never be presented as
+though it were.
+
 ## Style
 
 Martin wants finished work, not options to choose between. Write plain, warm
