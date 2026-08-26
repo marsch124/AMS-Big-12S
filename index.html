@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=3">
+<link rel="stylesheet" href="css/style.css?v=4">
 </head>
 <body>
 
@@ -291,6 +291,27 @@
       <div class="panel panel-flush">
 
         <details class="disclosure">
+          <summary><span>Explaining itself</span><span class="ver-tag">1.3</span></summary>
+          <div class="disclosure-body">
+            <p>Two new sections in Settings, and the fix that writing them uncovered.</p>
+            <ul>
+              <li><strong>How this works</strong> — what the app does that you cannot see:
+                  that your place is saved at four separate moments, that notes find their
+                  passage by the words they were written against rather than by position,
+                  what a backup actually contains, and that clearing this site's data erases
+                  everything because nothing is stored anywhere else.</li>
+              <li><strong>Version history</strong> — this list, recording the faults found
+                  along the way as well as the features added.</li>
+              <li>The Book text panel had been offering to <em>remove imported text</em> even
+                  when the text was the copy that came with the app and nothing had been
+                  imported. Harmless if tapped, but alarming to read. That button now appears
+                  only for a copy you supplied yourself, and the panel leads with the fact
+                  that nothing needs doing there.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="disclosure">
           <summary><span>Hand-drawn icons</span><span class="ver-tag">1.2</span></summary>
           <div class="disclosure-body">
             <p>All eight icons in the tab bar and the passage menu were redrawn by hand.</p>
@@ -497,6 +518,6 @@
 <script src="js/store.js?v=2"></script>
 <script src="js/backup.js?v=1"></script>
 <script src="js/ui.js?v=2"></script>
-<script src="js/app.js?v=1"></script>
+<script src="js/app.js?v=2"></script>
 </body>
 </html>

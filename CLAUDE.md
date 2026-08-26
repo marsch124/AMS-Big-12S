@@ -7,7 +7,7 @@ a sibling to his `AMS-Instructions` app.
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.2 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.3 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Non-negotiables
 
