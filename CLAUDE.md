@@ -197,9 +197,8 @@ wrappers that call through.
 **Two shortcut tiles are placeholders, on purpose.** *I have cravings* and *I'm
 going to a meeting* carry `is-soon`, are dashed rather than greyed, and say "Not
 built yet" when tapped. Martin asked for placeholders explicitly. Do not quietly
-wire them to something approximate — ask him what should happen. (*I have
-cravings* is read from "I have crazy wings" in his message; if that was a
-mishearing, the label is the only thing to change.)
+wire them to something approximate — ask him what should happen. The wording of
+*I have cravings* is confirmed and settled; do not re-ask.
 
 **The clock ticks on the minute and only while home is on screen.** `startClock()`
 waits out the remainder of the current minute and then goes hourly-honest at
