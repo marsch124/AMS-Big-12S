@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=22">
+<link rel="stylesheet" href="css/style.css?v=23">
 </head>
 <body>
 
@@ -687,6 +687,16 @@
         <div class="disclosure-list">
 
         <details class="disclosure">
+          <summary><span>A 24-hour clock, and the version on the tab</span><span class="ver-tag">2.5</span></summary>
+          <div class="disclosure-body">
+            <p>No a.m. or p.m. anywhere any more — the clock on the home screen, the time a
+               craving started, the date on a note. All of it reads 18:35.</p>
+            <p>And the version you are running now sits under the <strong>Settings</strong>
+               tab, small enough to ignore until you go looking for it.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
           <summary><span>The version history folds away</span><span class="ver-tag">2.4</span></summary>
           <div class="disclosure-body">
             <p>Twenty-seven releases is a lot of screen to scroll past on the way to anything
@@ -1315,6 +1325,8 @@
         <path d="M3.4 15.8h9.3M17.3 15.8h3.3"/>
         <circle cx="15" cy="15.8" r="2.4"/>
       </svg></span><span>Settings</span>
+      <!-- Small enough to ignore, there when you go looking for it. -->
+      <span class="tab-ver" id="tab-version"></span>
     </button>
   </nav>
 
@@ -1477,7 +1489,7 @@
 <script src="js/db.js?v=4"></script>
 <script src="js/store.js?v=11"></script>
 <script src="js/backup.js?v=5"></script>
-<script src="js/ui.js?v=21"></script>
-<script src="js/app.js?v=9"></script>
+<script src="js/ui.js?v=22"></script>
+<script src="js/app.js?v=10"></script>
 </body>
 </html>

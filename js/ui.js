@@ -32,12 +32,25 @@
         el._timer = setTimeout(function () { el.hidden = true; }, ms || 2600);
     }
 
+    /*
+     * Twenty-four hours, everywhere a time appears. Built by hand rather than
+     * left to the device's locale: toLocaleTimeString with hour12 off still
+     * says "24:00" at midnight in some locales, and the point of this is that
+     * there is no a.m. or p.m. anywhere in the app.
+     */
+    function clockTime(date) {
+        var d = date instanceof Date ? date : new Date(date);
+        if (isNaN(d)) return '';
+        return String(d.getHours()).padStart(2, '0') + ':' +
+            String(d.getMinutes()).padStart(2, '0');
+    }
+
     function formatDate(iso) {
         if (!iso) return '';
         var date = new Date(iso);
         if (isNaN(date)) return '';
         return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) +
-            ' · ' + date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+            ' · ' + clockTime(date);
     }
 
     function firstWords(text, count) {
@@ -132,8 +145,7 @@
 
     function paintClock() {
         var now = new Date();
-        $('home-clock').textContent =
-            now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        $('home-clock').textContent = clockTime(now);
         $('home-greeting').textContent = greetingFor(now.getHours());
         $('home-date').textContent = now.toLocaleDateString(undefined,
             { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -306,7 +318,7 @@
     var cravingEditing = null;   // the record the sheet is open on
 
     function timeOfDay(iso) {
-        return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        return clockTime(iso);
     }
 
     function lengthOfTime(minutes) {
@@ -3251,6 +3263,8 @@
     /* ---------------------------------------------------------------- wire */
 
     function bind() {
+        $('tab-version').textContent = 'v' + (global.APP_VERSION || '1.0');
+
         Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
             tab.addEventListener('click', function () { showScreen(tab.dataset.screen); });
         });

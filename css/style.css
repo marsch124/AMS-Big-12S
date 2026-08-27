@@ -149,6 +149,7 @@ button { cursor: pointer; }
 .tab {
   flex: 1;
   min-width: 0;
+  position: relative;
   border: 0;
   background: transparent;
   color: var(--text-dim);
@@ -163,6 +164,23 @@ button { cursor: pointer; }
   justify-content: center;
   gap: 3px;
 }
+/* The running version, on the Settings tab. Deliberately tiny and deliberately
+   not the accent colour, so it stays quiet when that tab is the lit one. Out of
+   flow, so it cannot push the icon or the label about. */
+.tab-ver {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  text-align: center;
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--text-dim);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .tab-icon { display: inline-flex; line-height: 1; }
 .tab-icon svg {
   width: 23px;

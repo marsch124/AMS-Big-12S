@@ -60,7 +60,12 @@ async function openContents(page) {
     check('app boots to the home screen, not into the book', true);
 
     const clock = await page.textContent('#home-clock');
-    check('the clock shows a time', /\d{1,2}[:.]\d{2}/.test(clock), JSON.stringify(clock));
+    check('the clock shows a 24-hour time, with no a.m. or p.m.',
+        /^\d{2}:\d{2}$/.test(clock.trim()), JSON.stringify(clock));
+    check('the running version is on the Settings tab',
+        (await page.textContent('#tab-version')) ===
+            'v' + (await page.evaluate(() => APP_VERSION)),
+        await page.textContent('#tab-version'));
     check('the date is spelled out', (await page.textContent('#home-date')).length > 8,
         await page.textContent('#home-date'));
     check('there is a word for the hour', (await page.textContent('#home-greeting')).length > 3,
@@ -1553,6 +1558,19 @@ async function openContents(page) {
     await page.selectOption('#set-theme', 'sepia');
     check('settings shows what text is loaded',
         (await page.textContent('#book-status')).includes('First Edition (1939)'));
+
+    // A morning time reads the same either way, so prove it on an evening one.
+    const evening = await page.evaluate(async () => {
+        const at = new Date();
+        at.setHours(18, 35, 0, 0);
+        const row = await Store.saveCraving({ startedAt: at.toISOString() });
+        UI.showScreen('craving');
+        const shown = document.getElementById('craving-since').textContent;
+        await Store.deleteCraving(row.id);
+        UI.showScreen('settings');
+        return shown;
+    });
+    check('half past six in the evening reads 18:35', evening === '18:35', evening);
 
     // The whole version history is one row until it is asked for, and carries
     // the version actually running rather than a number typed into the markup.
