@@ -129,6 +129,10 @@ function main(argv) {
         (work.columns || []).forEach((c) => out.push(c.id));
         (work.fields || []).forEach((f) => out.push(f.id));
         (work.tables || []).forEach((t) => (t.columns || []).forEach((c) => out.push(c.id)));
+        // step ten's watchwords and step eleven's parts are written into values
+        // under their own ids, so they can collide just as a column can
+        (work.watch || []).forEach((w) => out.push(w.id));
+        (work.parts || []).forEach((part) => out.push(part.id));
         return out;
     }
 

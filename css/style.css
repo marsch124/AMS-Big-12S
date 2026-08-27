@@ -1146,3 +1146,49 @@ button { cursor: pointer; }
 .inv-states { margin-bottom: .9rem; }
 .inv-states .chip-row { margin-bottom: .2rem; flex-wrap: wrap; }
 .inv-states .hint { margin: .1rem 0 0; }
+
+/* ───────────────────────────────────────────── steps ten and eleven ──
+   A practice, not a list. The strip shows the last fortnight; a day that was
+   not written is left plain rather than marked as missed, because this is a
+   record of what was done and not a chart of what was not. */
+
+.day-strip {
+  display: flex;
+  gap: .25rem;
+  margin: .7rem 0;
+}
+
+.day-cell {
+  flex: 1;
+  font: inherit;
+  font-size: .68rem;
+  line-height: 1;
+  padding: .5rem .1rem;
+  border: 1px solid var(--rule);
+  background: var(--bg-raised);
+  color: var(--text-dim);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.day-cell.is-done {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-on);
+  font-weight: 600;
+}
+
+.day-cell.is-today { box-shadow: inset 0 0 0 2px var(--rule); }
+.day-cell.is-today.is-done { box-shadow: inset 0 0 0 2px var(--bg); }
+
+.day-card { padding-left: .9rem; }
+
+.flag-row { display: flex; flex-wrap: wrap; gap: .3rem; }
+
+.flag {
+  font-size: .72rem;
+  padding: .1rem .45rem;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  color: var(--text-dim);
+}

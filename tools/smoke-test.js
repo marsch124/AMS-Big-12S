@@ -480,6 +480,97 @@ async function shot(page, name) {
     await page.click('#step-back');
     await page.waitForSelector('#screen-steps.is-active');
 
+    // ── steps ten and eleven: a practice, not a list ──────────────────────
+    const dayBack = (n) => {
+        const d = new Date();
+        d.setDate(d.getDate() - n);
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+            '-' + String(d.getDate()).padStart(2, '0');
+    };
+
+    await toStep(9);
+    check('step ten shows the last fortnight',
+        (await page.$$eval('.day-cell', (e) => e.length)) === 14 &&
+        (await page.textContent('#step-work-body')).indexOf('Nothing written yet') !== -1);
+
+    await page.click('.btn:has-text("Today")');
+    await page.waitForSelector('#inv-sheet:not([hidden])');
+    check('the four watchwords are offered',
+        (await page.$$eval('#inv-sheet-fields .chip', (e) => e.map((x) => x.textContent)))
+            .join('/') === 'Selfish/Dishonest/Resentful/Afraid');
+
+    // more than one can be true on the same day, which is why these are not a
+    // state — a state holds one answer
+    await page.click('.chip:has-text("Resentful")');
+    await page.click('.chip:has-text("Afraid")');
+    let dayBoxes = await page.$$('#inv-sheet-fields textarea');
+    await dayBoxes[0].fill('Snapped at the man in the car park.');
+    await page.click('#inv-save');
+    await page.waitForSelector('#inv-sheet', { state: 'hidden' });
+    check('a day keeps more than one watchword at once',
+        (await page.$$eval('.flag', (e) => e.map((x) => x.textContent))).join('+') ===
+        'Resentful+Afraid');
+    check('and the day is marked done in the strip',
+        (await page.$$eval('.day-cell.is-done', (e) => e.length)) === 1);
+    check('a run of one reads as one',
+        (await page.textContent('.inv-prompt')).indexOf('1 day running') !== -1,
+        await page.textContent('.inv-prompt'));
+
+    // writing a past day through the strip
+    await page.click('.day-cell[title="' + dayBack(1) + '"]');
+    await page.waitForSelector('#inv-sheet:not([hidden])');
+    dayBoxes = await page.$$('#inv-sheet-fields textarea');
+    await dayBoxes[0].fill('Quiet one.');
+    await page.click('#inv-save');
+    await page.waitForSelector('#inv-sheet', { state: 'hidden' });
+    check('a past day can be filled in from the strip, and extends the run',
+        (await page.textContent('.inv-prompt')).indexOf('2 days running') !== -1,
+        await page.textContent('.inv-prompt'));
+
+    // the run must not collapse to nothing simply because today is not written
+    // yet — that would make the record a reprimand every morning
+    await page.evaluate(async (today) => {
+        const row = Store.state.inventory.filter((r) => r.stepId === 'step10' && r.on === today)[0];
+        if (row) await Store.deleteInventoryRow(row.id);
+    }, dayBack(0));
+    await toStep(9);
+    check('yesterday still counts as a run before today is written',
+        (await page.textContent('.inv-prompt')).indexOf('1 day running') !== -1,
+        await page.textContent('.inv-prompt'));
+
+    await toStep(10);
+    await page.click('.btn:has-text("Today")');
+    await page.waitForSelector('#inv-sheet:not([hidden])');
+    check('step eleven offers its three parts, and no watchwords',
+        (await page.$$eval('#inv-sheet-fields .sheet-label', (e) => e.map((x) => x.textContent)))
+            .join('/') === 'Morning/The pause/Evening' &&
+        (await page.$$eval('#inv-sheet-fields .chip', (e) => e.length)) === 0);
+
+    const parts = await page.$$('#inv-sheet-fields textarea');
+    await parts[0].fill('Asked to be free of the meeting at eleven.');
+    await parts[2].fill('Resentful about it. Could have listened.');
+    await page.click('#inv-save');
+    await page.waitForSelector('#inv-sheet', { state: 'hidden' });
+    check('a part-filled day saves, without demanding all three',
+        (await page.$$eval('.day-card', (e) => e.length)) === 1);
+
+    check('ten and eleven keep their own days apart',
+        await page.evaluate(() =>
+            Store.state.inventory.filter((r) => r.stepId === 'step10').length === 1 &&
+            Store.state.inventory.filter((r) => r.stepId === 'step11').length === 1));
+
+    const dailyBackup = JSON.parse(await page.evaluate(() =>
+        Backup.serialize({ includeBookText: false })));
+    check('a backup carries the daily entries with their dates',
+        dailyBackup.inventory.filter((r) => r.stepId === 'step11' && r.on).length === 1);
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await toStep(10);
+    check('the practice survives a reload',
+        (await page.$$eval('.day-card', (e) => e.length)) === 1);
+    await page.click('#step-back');
+    await page.waitForSelector('#screen-steps.is-active');
+
     // ── things to talk about ──────────────────────────────────────────────
     // A point for the sponsor that came from nowhere in particular: written
     // straight onto the Notes tab, with no passage behind it.

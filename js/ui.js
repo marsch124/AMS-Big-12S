@@ -550,7 +550,8 @@
         // Only step four's tables are built. The other kinds are declared in the
         // data and still have no renderer, so their steps show no work section
         // rather than an empty one.
-        var kinds = ['inventory-tables', 'amends-list', 'amends-progress'];
+        var kinds = ['inventory-tables', 'amends-list', 'amends-progress',
+            'daily-entries', 'daily-practice'];
         if (!work || kinds.indexOf(work.kind) === -1) {
             holder.hidden = true;
             body.innerHTML = '';
@@ -567,9 +568,229 @@
             });
         } else if (work.kind === 'amends-list') {
             body.appendChild(renderAmendsList(step, work));
-        } else {
+        } else if (work.kind === 'amends-progress') {
             body.appendChild(renderAmendsProgress(step, work));
+        } else {
+            body.appendChild(renderDaily(step, work));
         }
+    }
+
+    /* --------------------------------------------------- steps ten and eleven */
+
+    // Local date, not UTC: at 23:00 in London a UTC date would already be
+    // tomorrow, and "today" has to mean the reader's today.
+    function dayISO(date) {
+        var d = date || new Date();
+        return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+    }
+
+    function shiftDay(iso, days) {
+        var d = new Date(iso + 'T00:00:00');
+        d.setDate(d.getDate() + days);
+        return dayISO(d);
+    }
+
+    /*
+     * Counted back from today, and from yesterday when today is not written yet.
+     * Otherwise every streak would read zero each morning until you had done it,
+     * which turns a record of practice into a reprimand.
+     */
+    function streakOf(byDay) {
+        var today = dayISO();
+        var cursor = byDay[today] ? today : shiftDay(today, -1);
+        var run = 0;
+        while (byDay[cursor]) { run++; cursor = shiftDay(cursor, -1); }
+        return run;
+    }
+
+    function renderDaily(step, work) {
+        var rows = Store.rowsForWork(step);
+        var byDay = {};
+        rows.forEach(function (r) { if (r.on) byDay[r.on] = r; });
+
+        var box = document.createElement('div');
+        var today = dayISO();
+        var run = streakOf(byDay);
+
+        var line = document.createElement('p');
+        line.className = 'inv-prompt';
+        line.textContent = rows.length
+            ? (run ? run + ' day' + (run === 1 ? '' : 's') + ' running \u00b7 ' : '') +
+              rows.length + ' entr' + (rows.length === 1 ? 'y' : 'ies') + ' in all'
+            : 'Nothing written yet.';
+        box.appendChild(line);
+
+        // The last fourteen days at a glance. A day you did not write is left
+        // plain rather than marked missed.
+        var strip = document.createElement('div');
+        strip.className = 'day-strip';
+        for (var i = 13; i >= 0; i--) {
+            var iso = shiftDay(today, -i);
+            var cell = document.createElement('button');
+            cell.className = 'day-cell' + (byDay[iso] ? ' is-done' : '') +
+                (iso === today ? ' is-today' : '');
+            cell.title = iso;
+            cell.textContent = new Date(iso + 'T00:00:00')
+                .toLocaleDateString(undefined, { weekday: 'narrow' });
+            (function (dayIso) {
+                cell.addEventListener('click', function () {
+                    openDailySheet(step, work, byDay[dayIso] || null, dayIso);
+                });
+            })(iso);
+            strip.appendChild(cell);
+        }
+        box.appendChild(strip);
+
+        var actions = document.createElement('div');
+        actions.className = 'btn-row';
+        var todayBtn = document.createElement('button');
+        todayBtn.className = 'btn btn-quiet btn-small';
+        todayBtn.textContent = byDay[today] ? 'Edit today' : (work.promptLabel || 'Today');
+        todayBtn.addEventListener('click', function () {
+            openDailySheet(step, work, byDay[today] || null, today);
+        });
+        actions.appendChild(todayBtn);
+        box.appendChild(actions);
+
+        // Most recent first here: a practice log is read backwards from now.
+        var recent = rows.slice().sort(function (a, b) {
+            return String(b.on || '').localeCompare(String(a.on || ''));
+        }).slice(0, 5);
+
+        var list = document.createElement('div');
+        list.className = 'inv-cards';
+        recent.forEach(function (row) {
+            var card = document.createElement('button');
+            card.className = 'inv-card day-card';
+            var parts = ['<span class="inv-label">' +
+                escapeHtml(row.on ? formatDay(row.on) : 'Undated') + '</span>'];
+
+            var flags = (work.watch || []).filter(function (w) {
+                return row.values && row.values[w.id];
+            });
+            if (flags.length) {
+                parts.push('<span class="flag-row">' + flags.map(function (f) {
+                    return '<span class="flag">' + escapeHtml(f.label) + '</span>';
+                }).join('') + '</span>');
+            }
+
+            (work.fields || work.parts || []).forEach(function (f) {
+                var value = (row.values && row.values[f.id]) || '';
+                if (!value) return;
+                parts.push(
+                    '<span class="inv-field">' +
+                        '<span class="inv-label">' + escapeHtml(f.label) + '</span>' +
+                        '<span class="inv-value">' + escapeHtml(value) + '</span>' +
+                    '</span>');
+            });
+            card.innerHTML = parts.join('');
+            card.addEventListener('click', function () {
+                openDailySheet(step, work, row, row.on);
+            });
+            list.appendChild(card);
+        });
+        box.appendChild(list);
+
+        if (rows.length > recent.length) {
+            var more = document.createElement('p');
+            more.className = 'hint';
+            more.textContent = 'Showing the last ' + recent.length + ' of ' + rows.length + '.';
+            box.appendChild(more);
+        }
+        return box;
+    }
+
+    function openDailySheet(step, work, existing, dayIso) {
+        $('inv-sheet-title').textContent = formatDay(dayIso);
+        $('inv-sheet-prompt').textContent = work.intro || '';
+
+        var fields = $('inv-sheet-fields');
+        fields.innerHTML = '';
+        var flags = {};
+
+        // Step ten's four watchwords. More than one can be true at once, so
+        // these are not a state — a state holds a single answer.
+        if (work.watch && work.watch.length) {
+            var wl = document.createElement('span');
+            wl.className = 'sheet-label';
+            wl.textContent = 'Any of these today?';
+            fields.appendChild(wl);
+            var row = document.createElement('div');
+            row.className = 'chip-row';
+            work.watch.forEach(function (w) {
+                var on = !!(existing && existing.values && existing.values[w.id]);
+                flags[w.id] = on;
+                var chip = document.createElement('button');
+                chip.className = 'chip' + (on ? ' is-on' : '');
+                chip.textContent = w.label;
+                chip.addEventListener('click', function () {
+                    flags[w.id] = !flags[w.id];
+                    chip.classList.toggle('is-on', flags[w.id]);
+                });
+                row.appendChild(chip);
+            });
+            fields.appendChild(row);
+        }
+
+        var inputs = {};
+        (work.fields || work.parts || []).forEach(function (f) {
+            var wrap = document.createElement('label');
+            wrap.className = 'inv-input';
+            wrap.innerHTML = '<span class="sheet-label">' + escapeHtml(f.label) + '</span>';
+            if (f.prompt) {
+                var h = document.createElement('span');
+                h.className = 'hint';
+                h.textContent = f.prompt;
+                wrap.appendChild(h);
+            }
+            var input = document.createElement('textarea');
+            input.className = 'note-input';
+            input.rows = 2;
+            input.value = (existing && existing.values && existing.values[f.id]) || '';
+            wrap.appendChild(input);
+            inputs[f.id] = input;
+            fields.appendChild(wrap);
+        });
+
+        var del = $('inv-delete');
+        del.hidden = !existing;
+        del.onclick = function () {
+            if (!existing) return;
+            Store.deleteInventoryRow(existing.id).then(function () {
+                closeSheets();
+                renderStepWork(step);
+                toast('Entry deleted');
+            });
+        };
+
+        $('inv-save').onclick = function () {
+            var values = {};
+            Object.keys(flags).forEach(function (k) { if (flags[k]) values[k] = '1'; });
+            Object.keys(inputs).forEach(function (k) { values[k] = inputs[k].value; });
+
+            if (Store.rowIsEmpty(values)) {
+                if (existing) { closeSheets(); return; }
+                toast('Nothing to save yet');
+                return;
+            }
+            Store.saveInventoryRow({
+                id: existing ? existing.id : null,
+                createdAt: existing ? existing.createdAt : null,
+                stepId: step.id,
+                tableId: work.tableId || work.kind,
+                values: values,
+                states: existing ? existing.states : {},
+                on: dayIso
+            }).then(function () {
+                closeSheets();
+                renderStepWork(step);
+                toast('Saved');
+            });
+        };
+        $('inv-cancel').onclick = closeSheets;
+        openSheet('inv-sheet');
     }
 
     /* ------------------------------------------------ steps eight and nine */
