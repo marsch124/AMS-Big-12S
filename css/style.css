@@ -304,6 +304,101 @@ button { cursor: pointer; }
 .stat-note { display: block; margin-top: 2px; font-size: 11.5px; color: var(--text-dim); }
 .stat-note:empty { display: none; }
 
+/* ═══════════════════════════════════════════════════════════════ craving ══ */
+
+.craving-live {
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  background: var(--bg-raised);
+  padding: 14px 16px 12px;
+  margin-bottom: 14px;
+}
+.craving-live[hidden] { display: none; }
+.craving-live-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.craving-live-since {
+  display: block;
+  margin-top: 5px;
+  font-size: 27px;
+  font-weight: 300;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.craving-live-for { display: block; margin-top: 4px; font-size: 13px; color: var(--text-dim); }
+.craving-live .btn-row { margin-bottom: 2px; }
+
+#craving-start[hidden] { display: none; }
+#craving-start-hint[hidden] { display: none; }
+
+/* A row you act on: an icon, what it does, and where it goes. */
+.do-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 13px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: transparent;
+  color: var(--text);
+  text-decoration: none;
+}
+.do-row:last-child { border-bottom: 0; }
+.do-row:active { background: var(--bg-sunken); }
+.do-icon { flex: none; display: inline-flex; line-height: 1; color: var(--accent); }
+.do-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.do-text { flex: 1; min-width: 0; }
+.do-label { display: block; font-size: 15px; font-weight: 500; }
+.do-note { display: block; margin-top: 2px; font-size: 12px; color: var(--text-dim); }
+.do-go { flex: none; color: var(--accent); font-size: 20px; }
+
+.craving-card { border-left: 3px solid var(--accent); }
+/* One that ended in a drink is marked, not scolded — a different colour on the
+   edge, the same card otherwise. */
+.craving-card.is-drank { border-left-color: var(--danger); }
+.craving-when { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.craving-date { font-size: 15px; font-weight: 600; }
+.craving-lasted { font-size: 12.5px; color: var(--text-dim); }
+.craving-outcome {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.craving-card.is-drank .craving-outcome { color: var(--danger); }
+.craving-what { margin: 7px 0 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+
+.row-input {
+  flex: none;
+  width: 52%;
+  padding: 9px 10px;
+  font-size: 15px;
+  border: 1px solid var(--rule);
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--text);
+  text-align: right;
+}
+
 /* ═══════════════════════════════════════════════════════════════ library ══ */
 
 .section-heading {

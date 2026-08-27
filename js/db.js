@@ -8,7 +8,7 @@
     'use strict';
 
     var DB_NAME = 'ams-big-12s';
-    var DB_VERSION = 2;
+    var DB_VERSION = 3;
 
     var STORE_META = 'meta';
     var STORE_BOOK = 'book';
@@ -17,6 +17,9 @@
     // Step four's inventory rows. Structured records rather than prose, so they
     // are kept apart from the note store instead of being bent into its shape.
     var STORE_INVENTORY = 'inventory';
+    // Cravings: when one started, when it ended, how. Structured for the same
+    // reason, and kept out of the inventory store because it belongs to no step.
+    var STORE_CRAVINGS = 'cravings';
 
     var dbPromise = null;
 
@@ -48,6 +51,11 @@
                 if (!db.objectStoreNames.contains(STORE_INVENTORY)) {
                     var inventory = db.createObjectStore(STORE_INVENTORY, { keyPath: 'id' });
                     inventory.createIndex('stepId', 'stepId', { unique: false });
+                }
+                // Added in DB_VERSION 3, guarded the same way.
+                if (!db.objectStoreNames.contains(STORE_CRAVINGS)) {
+                    var cravings = db.createObjectStore(STORE_CRAVINGS, { keyPath: 'id' });
+                    cravings.createIndex('startedAt', 'startedAt', { unique: false });
                 }
             };
 
@@ -138,6 +146,7 @@
         STORE_NOTES: STORE_NOTES,
         STORE_BOOKMARKS: STORE_BOOKMARKS,
         STORE_INVENTORY: STORE_INVENTORY,
+        STORE_CRAVINGS: STORE_CRAVINGS,
         open: open,
         get: get,
         getAll: getAll,

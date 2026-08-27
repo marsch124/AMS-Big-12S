@@ -12,7 +12,12 @@
         fontSize: 19,            // px
         lineHeight: 1.65,
         typeface: 'serif',       // serif | sans
-        keepAwake: false
+        keepAwake: false,
+        // Who to ring when it is bad. Kept in settings rather than a store of
+        // its own because it is one person and one number, and settings already
+        // ride the backup.
+        sponsorName: '',
+        sponsorPhone: ''
     };
 
     var POSITION_MIRROR_KEY = 'ams-big-12s:position';
@@ -26,7 +31,8 @@
         steps: null,           // { title, edition, steps: [] } from data/steps.json
         daily: null,             // { passages: [] } from data/daily.json
         stepPrefs: { hidden: {}, custom: {} },  // questions hidden, questions added
-        inventory: []            // step four's rows: { id, stepId, tableId, values, ... }
+        inventory: [],           // step four's rows: { id, stepId, tableId, values, ... }
+        cravings: []             // { id, startedAt, endedAt, outcome, what }
     };
 
     function uid(prefix) {
@@ -1144,13 +1150,8 @@
      * you can think about all day is worth more than a fresh one every time the
      * app opens.
      */
-    function passageForDay(date) {
-        var passages = (state.daily && state.daily.passages) || [];
-        if (!passages.length) return null;
-
-        var passage = passages[dayNumber(date) % passages.length];
+    function resolvePassage(passage) {
         var section = getSection(passage.sectionId);
-
         return {
             text: passage.text,
             sectionId: passage.sectionId,
@@ -1162,6 +1163,32 @@
             // Null means this copy of the text has not got it.
             paraIndex: resolveStepRef(passage)
         };
+    }
+
+    function passageForDay(date) {
+        var passages = (state.daily && state.daily.passages) || [];
+        if (!passages.length) return null;
+        return resolvePassage(passages[dayNumber(date) % passages.length]);
+    }
+
+    /*
+     * A passage for the craving screen — drawn at random rather than by the
+     * day, because this one is not read once a day at a set time, and the same
+     * words on the third bad evening running would be wallpaper. Never the one
+     * shown last.
+     */
+    var lastCraving = '';
+
+    function passageForCraving() {
+        var list = (state.daily && state.daily.craving) || [];
+        if (!list.length) return null;
+
+        var choices = list.filter(function (p) { return p.text !== lastCraving; });
+        if (!choices.length) choices = list;
+
+        var passage = choices[Math.floor(Math.random() * choices.length)];
+        lastCraving = passage.text;
+        return resolvePassage(passage);
     }
 
     /*
@@ -1196,6 +1223,106 @@
         return best || { run: 0, step: null };
     }
 
+    /* ------------------------------------------------------------ cravings */
+
+    /*
+     * A craving, from the moment it is named to the moment it is over.
+     *
+     * The record is the point of the thing. In the middle of one it is not
+     * obvious that it will end, and the only convincing argument that it will
+     * is a list of the other ones that did. So a row is written when it starts,
+     * not when it is safely over, and it can be closed with one tap.
+     *
+     * `outcome` is 'passed' or 'drank'. The second is there on purpose: a list
+     * that can only record victories is not a record, and step ten asks for
+     * the other kind too.
+     */
+    function loadCravings() {
+        return DB.getAll(DB.STORE_CRAVINGS).then(function (rows) {
+            state.cravings = (rows || []).sort(function (a, b) {
+                return String(b.startedAt || '').localeCompare(String(a.startedAt || ''));
+            });
+            return state.cravings;
+        }).catch(function () {
+            state.cravings = [];
+            return state.cravings;
+        });
+    }
+
+    // At most one is open at a time. If two ever were — two tabs, a restore —
+    // the newest is the one being lived through.
+    function openCraving() {
+        return state.cravings.filter(function (row) { return !row.endedAt; })[0] || null;
+    }
+
+    function saveCraving(row) {
+        var now = new Date().toISOString();
+        var record = {
+            id: row.id || uid('crav'),
+            startedAt: row.startedAt || now,
+            endedAt: row.endedAt || null,
+            outcome: row.outcome || null,
+            what: String(row.what || '').trim(),
+            createdAt: row.createdAt || now,
+            updatedAt: now
+        };
+        return DB.put(DB.STORE_CRAVINGS, record).then(loadCravings).then(function () {
+            return record;
+        });
+    }
+
+    // Starting one twice by accident would break the run of records, so an open
+    // one is handed back rather than a second one being written.
+    function startCraving() {
+        var already = openCraving();
+        if (already) return Promise.resolve(already);
+        return saveCraving({ startedAt: new Date().toISOString() });
+    }
+
+    function endCraving(id, patch) {
+        var existing = state.cravings.filter(function (row) { return row.id === id; })[0];
+        if (!existing) return Promise.resolve(null);
+        patch = patch || {};
+        return saveCraving(Object.assign({}, existing, {
+            endedAt: patch.endedAt || existing.endedAt || new Date().toISOString(),
+            outcome: patch.outcome || existing.outcome || 'passed',
+            what: patch.what !== undefined ? patch.what : existing.what
+        }));
+    }
+
+    function deleteCraving(id) {
+        return DB.remove(DB.STORE_CRAVINGS, id).then(loadCravings);
+    }
+
+    function cravingMinutes(row) {
+        if (!row || !row.startedAt || !row.endedAt) return null;
+        var minutes = (new Date(row.endedAt) - new Date(row.startedAt)) / 60000;
+        return minutes >= 0 ? Math.round(minutes) : null;
+    }
+
+    /*
+     * What the list adds up to. `passed` counts only what is closed and did
+     * pass, so the screen can say "every one of them passed" and be telling the
+     * truth — and stop saying it the moment one did not.
+     */
+    function cravingSummary() {
+        var closed = state.cravings.filter(function (row) { return !!row.endedAt; });
+        var passed = closed.filter(function (row) { return row.outcome !== 'drank'; });
+        var longest = 0;
+        closed.forEach(function (row) {
+            var minutes = cravingMinutes(row);
+            if (minutes !== null && minutes > longest) longest = minutes;
+        });
+        return {
+            total: state.cravings.length,
+            closed: closed.length,
+            passed: passed.length,
+            longest: longest,
+            open: openCraving(),
+            lastEndedAt: closed.length ? closed[0].endedAt : null
+        };
+    }
+
     /* --------------------------------------------------------------- boot */
 
     function init() {
@@ -1205,6 +1332,7 @@
             .then(loadDaily)
             .then(loadStepPrefs)
             .then(loadInventory)
+            .then(loadCravings)
             .then(loadNotes)
             .then(loadBookmarks)
             .then(loadPosition)
@@ -1231,6 +1359,7 @@
 
         loadDaily: loadDaily,
         passageForDay: passageForDay,
+        passageForCraving: passageForCraving,
         dayNumber: dayNumber,
         stepStreak: stepStreak,
         dailyRun: dailyRun,
@@ -1290,6 +1419,15 @@
         setNoteDiscussed: setNoteDiscussed,
         waitingFor: waitingFor,
         deleteNote: deleteNote,
+
+        loadCravings: loadCravings,
+        openCraving: openCraving,
+        saveCraving: saveCraving,
+        startCraving: startCraving,
+        endCraving: endCraving,
+        deleteCraving: deleteCraving,
+        cravingMinutes: cravingMinutes,
+        cravingSummary: cravingSummary,
 
         loadBookmarks: loadBookmarks,
         findBookmark: findBookmark,

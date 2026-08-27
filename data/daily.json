@@ -2,7 +2,7 @@
  "schema": 1,
  "title": "A passage a day",
  "edition": "Alcoholics Anonymous, first edition, 1939",
- "builtAt": "2026-08-27T06:05:52.500Z",
+ "builtAt": "2026-08-27T06:27:46.891Z",
  "passages": [
   {
    "text": "The only requirement for membership is an honest desire to stop drinking.",
@@ -661,6 +661,85 @@
    "sectionTitle": "A Vision For You",
    "paraIndex": 54,
    "anchor": "Abandon yourself to God as you understand God. Admit your faults to him and your"
+  }
+ ],
+ "craving": [
+  {
+   "text": "All these, and many others, have one symptom in common: they cannot start drinking without developing the phenomenon of craving.",
+   "sectionId": "doctors-op",
+   "sectionTitle": "The Doctor's Opinion",
+   "paraIndex": 33,
+   "anchor": "All these, and many others, have one symptom in common: they cannot start drinki"
+  },
+  {
+   "text": "These men were not drinking to escape; they were drinking to overcome a craving beyond their mental control.",
+   "sectionId": "doctors-op",
+   "sectionTitle": "The Doctor's Opinion",
+   "paraIndex": 28,
+   "anchor": "I do not hold with those who believe that alcoholism is entirely a problem of me"
+  },
+  {
+   "text": "There is a complete failure of the kind of defense that keeps one from putting his hand on a hot stove.",
+   "sectionId": "ch02",
+   "sectionTitle": "There Is A Solution",
+   "paraIndex": 29,
+   "anchor": "The almost certain consequences that follow taking even a glass of beer do not c"
+  },
+  {
+   "text": "But there was always the curious mental phenomenon, that parallel with our sound reasoning there inevitably ran some insanely trivial excuse for taking the first drink.",
+   "sectionId": "ch03",
+   "sectionTitle": "More About Alcoholism",
+   "paraIndex": 22,
+   "anchor": "You may think this an extreme case. To us it is not far-fetched, for this kind o"
+  },
+  {
+   "text": "Once more: the alcoholic at certain times has no effective mental defense against the first drink. Except in a few rare cases, neither he nor any other human being can provide such a defense. His defense must come from a higher Power.",
+   "sectionId": "ch03",
+   "sectionTitle": "More About Alcoholism",
+   "paraIndex": 40,
+   "anchor": "Once more: the alcoholic at certain times has no effective mental defense agains"
+  },
+  {
+   "text": "As we go through the day, we pause when agitated or doubtful, and ask for the right thought or action.",
+   "sectionId": "ch06",
+   "sectionTitle": "Into Action",
+   "paraIndex": 48,
+   "anchor": "As we go through the day, we pause when agitated or doubtful, and ask for the ri"
+  },
+  {
+   "text": "Do not think of what you will get out of the occasion. Think of what you can bring to it. But if you are shaky, you had better work with another alcoholic instead!",
+   "sectionId": "ch07",
+   "sectionTitle": "Working With Others",
+   "paraIndex": 41,
+   "anchor": "You will note that we made an important qualification. Therefore, ask yourself o"
+  },
+  {
+   "text": "Many times I have gone to my old hospital in despair. On talking to a man there, I would be amazingly lifted up and set on my feet. It is a design for living that works in rough going.",
+   "sectionId": "ch01",
+   "sectionTitle": "Bill's Story",
+   "paraIndex": 69,
+   "anchor": "My wife and I abandoned ourselves with enthusiasm to the idea of helping other a"
+  },
+  {
+   "text": "We ask Him to remove our fear and direct our attention to what He would have us be. At once, we commence to outgrow fear.",
+   "sectionId": "ch05",
+   "sectionTitle": "How It Works",
+   "paraIndex": 71,
+   "anchor": "We never apologize to anyone for depending upon our Creator. We can laugh at tho"
+  },
+  {
+   "text": "Practical experience shows that nothing will so much insure immunity from drinking as intensive work with other alcoholics.",
+   "sectionId": "ch07",
+   "sectionTitle": "Working With Others",
+   "paraIndex": 0,
+   "anchor": "Practical experience shows that nothing will so much insure immunity from drinki"
+  },
+  {
+   "text": "What we really have is a daily reprieve contingent on the maintenance of our spiritual condition.",
+   "sectionId": "ch06",
+   "sectionTitle": "Into Action",
+   "paraIndex": 40,
+   "anchor": "It is easy to let up on the spiritual program of action and rest on our laurels."
   }
  ]
 }

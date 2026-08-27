@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=19">
+<link rel="stylesheet" href="css/style.css?v=20">
 </head>
 <body>
 
@@ -61,14 +61,14 @@
           <span class="shortcut-note" id="shortcut-read-note"></span>
         </button>
 
-        <button class="shortcut is-soon" data-shortcut="craving">
+        <button class="shortcut" data-shortcut="craving">
           <span class="shortcut-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M2.6 8.4c1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0 1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0"/>
             <path d="M2.6 13.2c1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0 1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0"/>
             <path d="M2.6 18c1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0 1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0"/>
           </svg></span>
           <span class="shortcut-label">I have cravings</span>
-          <span class="shortcut-note">Not built yet</span>
+          <span class="shortcut-note" id="shortcut-craving-note"></span>
         </button>
 
         <button class="shortcut is-soon" data-shortcut="meeting">
@@ -282,6 +282,85 @@
     </div>
   </section>
 
+  <!-- ═════════════════════════════════════════════════════════ A craving ── -->
+  <!-- Reached from the home screen. Three things, in the order they are wanted:
+       something to do this minute, something from the book, and the record —
+       which is the whole point of it. Nothing here tells you a craving is
+       nothing, and nothing here congratulates you. -->
+  <section class="screen" id="screen-craving">
+    <header class="topbar">
+      <button class="icon-btn" id="craving-back" aria-label="Back">‹</button>
+      <div class="topbar-titles">
+        <h1 class="topbar-title">Right now</h1>
+        <p class="topbar-sub" id="craving-sub"></p>
+      </div>
+    </header>
+
+    <div class="screen-body">
+      <div class="craving-live" id="craving-live" hidden>
+        <span class="craving-live-label">Going since</span>
+        <span class="craving-live-since" id="craving-since"></span>
+        <span class="craving-live-for" id="craving-elapsed"></span>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="craving-passed">It has passed</button>
+          <button class="btn btn-quiet" id="craving-how">Say how it ended</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="craving-start">I am having one now</button>
+      <p class="hint" id="craving-start-hint">
+        Writing it down starts a clock, and gives you one more of these to look back on.
+      </p>
+
+      <button class="passage-card" id="craving-passage">
+        <span class="passage-label">From the book</span>
+        <span class="passage-text" id="craving-passage-text"></span>
+        <span class="passage-where" id="craving-passage-where"></span>
+      </button>
+
+      <h2 class="section-heading">What helps</h2>
+      <div class="panel panel-flush">
+        <a class="do-row" id="craving-ring" href="#">
+          <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8.1 3.9c.9 1.3 1.7 2.6 2.4 4l-1.9 2c.7 1.9 2 3.4 3.7 4.4l2.1-1.7c1.4.8 2.7 1.7 3.9 2.7-.5 1.6-1.6 2.7-3.2 3.1-5.3-.5-9.7-4.9-10.2-10.2.4-1.7 1.5-2.8 3.2-4.3z"/>
+          </svg></span>
+          <span class="do-text">
+            <span class="do-label" id="craving-ring-label">Ring your sponsor</span>
+            <span class="do-note" id="craving-ring-note"></span>
+          </span>
+          <span class="do-go">›</span>
+        </a>
+        <button class="do-row" id="craving-write">
+          <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3.8 20.4 8.6 15.4"/>
+            <path d="M20.4 3.6C11.6 4.9 6.4 10.1 8.6 15.4c5.6 2.2 10.8-3 11.8-11.8z"/>
+            <path d="M17.5 6.5C14.1 8.7 11.2 11.6 9.2 15"/>
+          </svg></span>
+          <span class="do-text">
+            <span class="do-label">Write down what is going on</span>
+            <span class="do-note">It goes on the list for your sponsor</span>
+          </span>
+          <span class="do-go">›</span>
+        </button>
+        <button class="do-row" id="craving-chapter">
+          <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2.9 5.6c3.1-.5 6.1 0 9.1 1.9 3-1.9 6-2.4 9.1-1.9v11.9c-3.1-.5-6.1 0-9.1 1.9-3-1.9-6-2.4-9.1-1.9z"/>
+            <path d="M12 7.5v11.9"/>
+          </svg></span>
+          <span class="do-text">
+            <span class="do-label">More About Alcoholism</span>
+            <span class="do-note">The chapter on exactly this</span>
+          </span>
+          <span class="do-go">›</span>
+        </button>
+      </div>
+
+      <h2 class="section-heading">The ones before this</h2>
+      <p class="hint" id="craving-summary"></p>
+      <div id="craving-list" class="card-list"></div>
+    </div>
+  </section>
+
   <!-- ═════════════════════════════════════════════════════════ Settings ── -->
   <section class="screen" id="screen-settings">
     <header class="topbar">
@@ -318,6 +397,25 @@
         <label class="row">
           <span>Keep screen awake while reading</span>
           <input type="checkbox" id="set-keepawake">
+        </label>
+      </div>
+
+      <h2 class="section-heading" id="settings-sponsor">Your sponsor</h2>
+      <div class="panel">
+        <p class="panel-note">
+          Kept on this device like everything else, and used for one thing: the
+          <strong>Ring your sponsor</strong> button on the craving screen. Leave it empty and
+          that button offers to bring you back here instead.
+        </p>
+        <label class="row">
+          <span>Name</span>
+          <input type="text" id="set-sponsor-name" class="row-input" autocomplete="off"
+                 placeholder="What you call them">
+        </label>
+        <label class="row">
+          <span>Number</span>
+          <input type="tel" id="set-sponsor-phone" class="row-input" autocomplete="off"
+                 placeholder="+43 …">
         </label>
       </div>
 
@@ -547,6 +645,33 @@
 
       <h2 class="section-heading">Version history</h2>
       <div class="panel panel-flush">
+
+        <details class="disclosure">
+          <summary><span>The craving screen</span><span class="ver-tag">2.2</span></summary>
+          <div class="disclosure-body">
+            <p><strong>I have cravings</strong> on the home screen was a place held open. It has
+               something behind it now.</p>
+            <ul>
+              <li><strong>A record, kept while it is happening.</strong> One tap starts a clock;
+                  one tap closes it. In the middle of a craving it is not obvious that it will
+                  end, and the only convincing argument that it will is the list of the ones that
+                  did — so the list leads with how many, and how long the longest ran.</li>
+              <li><strong>It can say you drank.</strong> A list that only records victories is
+                  not a record, and step ten asks for the other kind too. The count then stops
+                  claiming every one passed, because it would not be true.</li>
+              <li><strong>Ring your sponsor</strong>, if you have put their number in Settings —
+                  it stays on this phone like everything else, and is used for nothing but that
+                  button. <strong>Write down what is going on</strong> puts a note on the list
+                  for them. And <em>More About Alcoholism</em> is one tap away, being the chapter
+                  on exactly this.</li>
+              <li><strong>A passage from the book</strong>, drawn from eleven chosen for this
+                  moment and weighted towards what to do rather than what is wrong with you.
+                  Verified word for word, the same as the daily one.</li>
+              <li>The home tile carries where things stand — <em>None for six days</em>, which is
+                  the number that grows while nothing is happening.</li>
+            </ul>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>A front page</span><span class="ver-tag">2.1</span></summary>
@@ -1126,6 +1251,23 @@
 <!-- ═══════════════════════════════════════════════════════════════ Sheets ── -->
 <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
 
+<div class="sheet" id="craving-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title" id="craving-sheet-title">How did it end?</h2>
+  <p class="sheet-quote" id="craving-sheet-when"></p>
+  <div class="chip-row" id="craving-outcome">
+    <button class="chip is-active" data-outcome="passed">It passed</button>
+    <button class="chip" data-outcome="drank">I drank</button>
+  </div>
+  <textarea id="craving-sheet-what" class="note-input" rows="4"
+            placeholder="What was going on? A line is enough."></textarea>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="craving-sheet-save">Save</button>
+    <button class="btn btn-danger" id="craving-sheet-delete">Delete</button>
+    <button class="btn btn-quiet" id="craving-sheet-cancel">Cancel</button>
+  </div>
+</div>
+
 <div class="sheet" id="para-sheet" hidden>
   <div class="sheet-handle"></div>
   <p class="sheet-quote" id="para-sheet-quote"></p>
@@ -1231,10 +1373,10 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="js/parser.js?v=1"></script>
-<script src="js/db.js?v=2"></script>
-<script src="js/store.js?v=9"></script>
-<script src="js/backup.js?v=3"></script>
-<script src="js/ui.js?v=18"></script>
-<script src="js/app.js?v=6"></script>
+<script src="js/db.js?v=3"></script>
+<script src="js/store.js?v=10"></script>
+<script src="js/backup.js?v=4"></script>
+<script src="js/ui.js?v=19"></script>
+<script src="js/app.js?v=7"></script>
 </body>
 </html>

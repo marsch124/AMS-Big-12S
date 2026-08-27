@@ -81,13 +81,13 @@
 
     function showScreen(name) {
         if (name !== 'reader') flushPosition();
-        ['home', 'library', 'reader', 'steps', 'step', 'notes', 'search', 'settings']
+        ['home', 'library', 'reader', 'steps', 'step', 'notes', 'search', 'settings', 'craving']
             .forEach(function (screen) {
                 $('screen-' + screen).classList.toggle('is-active', screen === name);
             });
-        // A step page is pushed from the Steps tab, so that tab stays lit while
-        // you are inside one.
-        var litTab = name === 'step' ? 'steps' : name;
+        // A step page is pushed from the Steps tab, and the craving screen from
+        // the home screen, so those tabs stay lit while you are inside one.
+        var litTab = name === 'step' ? 'steps' : (name === 'craving' ? 'home' : name);
         Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
             tab.classList.toggle('is-active', tab.dataset.screen === litTab);
         });
@@ -99,12 +99,21 @@
         // The clock ticks only while it is on screen. Nothing else on the home
         // screen has to keep time, and a timer running behind the reader is a
         // wake-up a minute for a screen nobody is looking at.
-        if (name === 'home') renderHome(); else stopClock();
+        if (name === 'home') renderHome();
+        else if (name === 'craving') renderCraving();
+        else stopClock();
         if (name === 'library') renderLibrary();
         if (name === 'notes') renderNotes();
         if (name === 'settings') renderSettings();
         if (name === 'steps') renderSteps();
         if (name === 'search') setTimeout(function () { $('search-input').focus(); }, 60);
+    }
+
+    function showSettingsAt(anchorId) {
+        showScreen('settings');
+        setTimeout(function () {
+            $(anchorId).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 80);
     }
 
     /* --------------------------------------------------------------- home */
@@ -128,19 +137,25 @@
     }
 
     /*
-     * On the minute, not on the second. The clock shows minutes, so a timer
-     * sixty times as busy would spend sixty times the battery drawing the same
-     * two digits. The first wait is short — however long is left of this minute
-     * — so the change lands when the minute actually turns.
+     * On the minute, not on the second. Both things that keep time here — the
+     * clock on the home screen and how long a craving has been going — are
+     * measured in minutes, so a timer sixty times as busy would spend sixty
+     * times the battery drawing the same digits. The first wait is short —
+     * however much is left of this minute — so the change lands when the minute
+     * actually turns.
      */
-    function startClock() {
+    function tickOnTheMinute(paint) {
         stopClock();
-        paintClock();
+        paint();
         var now = new Date();
         clockTimer = setTimeout(function () {
-            paintClock();
-            clockTimer = setInterval(paintClock, 60000);
+            paint();
+            clockTimer = setInterval(paint, 60000);
         }, (60 - now.getSeconds()) * 1000 - now.getMilliseconds());
+    }
+
+    function startClock() {
+        tickOnTheMinute(paintClock);
     }
 
     function stopClock() {
@@ -193,6 +208,8 @@
         var section = position && Store.getSection(position.sectionId);
         $('shortcut-read-note').textContent = section ? section.title : 'From the beginning';
 
+        $('shortcut-craving-note').textContent = cravingStateLine();
+
         [['sponsor', 'shortcut-sponsor-note'], ['sponsee', 'shortcut-sponsee-note']].forEach(function (pair) {
             var waiting = Store.waitingFor(pair[0]);
             var note = $(pair[1]);
@@ -217,6 +234,7 @@
             }
             return;
         }
+        if (name === 'craving') { showScreen('craving'); return; }
         if (name === 'sponsor') { openNotesWith('sponsor'); return; }
         if (name === 'sponsee') { openNotesWith('sponsee'); return; }
         if (name === 'write') { openNoteSheet(null, null, null, { tag: '' }); return; }
@@ -275,6 +293,194 @@
                 '<span class="stat-note">' + escapeHtml(stat.note || '') + '</span>';
             tile.addEventListener('click', stat.go);
             box.appendChild(tile);
+        });
+    }
+
+    /* ------------------------------------------------------------ craving */
+
+    var cravingEditing = null;   // the record the sheet is open on
+
+    function timeOfDay(iso) {
+        return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function lengthOfTime(minutes) {
+        if (minutes < 1) return 'under a minute';
+        if (minutes === 1) return 'one minute';
+        if (minutes < 60) return minutes + ' minutes';
+        var hours = Math.floor(minutes / 60);
+        var rest = minutes % 60;
+        return (hours === 1 ? 'an hour' : hours + ' hours') +
+            (rest ? ' and ' + lengthOfTime(rest) : '');
+    }
+
+    function daysSince(iso) {
+        return Store.dayNumber(new Date()) - Store.dayNumber(new Date(iso));
+    }
+
+    /*
+     * Where the cravings stand, in one line — on the home tile and at the top of
+     * the screen itself. "None for six days" is the number worth having in front
+     * of you; it is the one that grows while nothing is happening.
+     */
+    function cravingStateLine() {
+        var summary = Store.cravingSummary();
+        if (summary.open) return 'One open, since ' + timeOfDay(summary.open.startedAt);
+        if (!summary.lastEndedAt) return '';
+        var days = daysSince(summary.lastEndedAt);
+        if (days < 1) return 'One earlier today';
+        if (days === 1) return 'None since yesterday';
+        return 'None for ' + days + ' days';
+    }
+
+    function cravingSummaryLine() {
+        var summary = Store.cravingSummary();
+        if (!summary.total) {
+            return 'Nothing written down yet. The first one you sit through is worth having on this list.';
+        }
+        if (!summary.closed) return 'This is the first one written down.';
+
+        var line;
+        if (summary.closed === 1) {
+            line = summary.passed === 1 ? 'One written down, and it passed.' : 'One written down.';
+        } else if (summary.passed === summary.closed) {
+            line = summary.closed + ' written down, and every one of them passed.';
+        } else {
+            line = summary.closed + ' written down, ' + summary.passed + ' of them passed.';
+        }
+        if (summary.longest >= 1) line += ' The longest ran ' + lengthOfTime(summary.longest) + '.';
+        return line;
+    }
+
+    function paintCravingElapsed() {
+        var open = Store.openCraving();
+        if (!open) return;
+        var minutes = Math.max(0, Math.round((Date.now() - new Date(open.startedAt)) / 60000));
+        $('craving-elapsed').textContent = lengthOfTime(minutes) + ' so far';
+    }
+
+    function renderCraving() {
+        var open = Store.openCraving();
+
+        $('craving-live').hidden = !open;
+        $('craving-start').hidden = !!open;
+        $('craving-start-hint').hidden = !!open;
+        $('craving-sub').textContent = cravingStateLine();
+
+        if (open) {
+            $('craving-since').textContent = timeOfDay(open.startedAt);
+            // Keeps counting while the screen is open, so sitting through it has
+            // something to watch that is not the craving.
+            tickOnTheMinute(paintCravingElapsed);
+        } else {
+            stopClock();
+        }
+
+        renderCravingPassage();
+        renderCravingActions();
+        renderCravingList();
+    }
+
+    function renderCravingPassage() {
+        var card = $('craving-passage');
+        var passage = Store.passageForCraving();
+        if (!passage) { card.hidden = true; return; }
+
+        card.hidden = false;
+        $('craving-passage-text').textContent = passage.text;
+        card.disabled = passage.paraIndex === null;
+        $('craving-passage-where').textContent = passage.paraIndex === null
+            ? passage.sectionTitle + ' — not in the text now loaded'
+            : passage.sectionTitle + ' · tap to read it in place';
+        card.onclick = function () {
+            if (passage.paraIndex === null) return;
+            openReader(passage.sectionId, { paraIndex: passage.paraIndex, highlight: true });
+        };
+    }
+
+    function renderCravingActions() {
+        var settings = Store.state.settings;
+        var phone = String(settings.sponsorPhone || '').trim();
+        var name = String(settings.sponsorName || '').trim();
+        var ring = $('craving-ring');
+
+        if (phone) {
+            // Spaces and brackets are for reading, not for dialling.
+            ring.href = 'tel:' + phone.replace(/[^+0-9]/g, '');
+            $('craving-ring-label').textContent = 'Ring ' + (name || 'your sponsor');
+            $('craving-ring-note').textContent = phone;
+        } else {
+            ring.href = '#';
+            $('craving-ring-label').textContent = 'Add your sponsor\u2019s number';
+            $('craving-ring-note').textContent = 'It stays on this device, like everything else';
+        }
+
+        // The chapter is only offered if this copy of the text has it.
+        var chapter = Store.getSection('ch03');
+        $('craving-chapter').hidden = !chapter || !chapter.paragraphs.length;
+    }
+
+    function renderCravingList() {
+        var box = $('craving-list');
+        box.innerHTML = '';
+        $('craving-summary').textContent = cravingSummaryLine();
+
+        // Newest first, and only the last ten: this is a list you glance at for
+        // its length, not one you read through.
+        var closed = Store.state.cravings.filter(function (row) { return !!row.endedAt; });
+        closed.slice(0, 10).forEach(function (row) {
+            var minutes = Store.cravingMinutes(row);
+            var drank = row.outcome === 'drank';
+
+            var card = document.createElement('button');
+            card.className = 'card craving-card' + (drank ? ' is-drank' : '');
+            card.innerHTML =
+                '<span class="craving-when">' +
+                    '<span class="craving-date">' + escapeHtml(shortDate(row.startedAt)) + '</span>' +
+                    '<span class="craving-lasted">' + escapeHtml(timeOfDay(row.startedAt) +
+                        (minutes === null ? '' : ' · ' + lengthOfTime(minutes))) + '</span>' +
+                    '<span class="craving-outcome">' + (drank ? 'Drank' : 'Passed') + '</span>' +
+                '</span>' +
+                (row.what ? '<p class="craving-what">' + escapeHtml(row.what) + '</p>' : '');
+            card.addEventListener('click', function () { openCravingSheet(row); });
+            box.appendChild(card);
+        });
+
+        if (closed.length > 10) {
+            var more = document.createElement('p');
+            more.className = 'hint';
+            more.textContent = 'Showing the last 10 of ' + closed.length + '.';
+            box.appendChild(more);
+        }
+    }
+
+    function setCravingOutcome(outcome) {
+        Array.prototype.forEach.call(document.querySelectorAll('#craving-outcome .chip'), function (chip) {
+            chip.classList.toggle('is-active', chip.dataset.outcome === outcome);
+        });
+    }
+
+    function openCravingSheet(row) {
+        cravingEditing = row;
+        $('craving-sheet-title').textContent = row.endedAt ? 'This one' : 'How did it end?';
+        $('craving-sheet-when').textContent = 'Started ' + shortDate(row.startedAt) + ', ' +
+            timeOfDay(row.startedAt) +
+            (row.endedAt ? ' · ended ' + timeOfDay(row.endedAt) : '');
+        setCravingOutcome(row.outcome || 'passed');
+        $('craving-sheet-what').value = row.what || '';
+        openSheet('craving-sheet');
+    }
+
+    function saveCravingSheet() {
+        if (!cravingEditing) return;
+        var lit = document.querySelector('#craving-outcome .chip.is-active');
+        Store.endCraving(cravingEditing.id, {
+            outcome: lit ? lit.dataset.outcome : 'passed',
+            what: $('craving-sheet-what').value
+        }).then(function () {
+            cravingEditing = null;
+            closeSheets();
+            renderCraving();
         });
     }
 
@@ -623,6 +829,7 @@
             var step = Store.getStep(current.stepId);
             if (step) renderStep(step);
         } else {
+            if (current.screen === 'craving') renderCraving();
             renderNotes();
         }
     }
@@ -2759,6 +2966,8 @@
         $('set-lineheight').value = Math.round(settings.lineHeight * 100);
         $('set-lineheight-value').textContent = settings.lineHeight.toFixed(2);
         $('set-keepawake').checked = !!settings.keepAwake;
+        $('set-sponsor-name').value = settings.sponsorName || '';
+        $('set-sponsor-phone').value = settings.sponsorPhone || '';
         $('about-version').textContent = 'v' + (global.APP_VERSION || '1.0');
 
         var book = Store.state.book;
@@ -2895,11 +3104,63 @@
             tile.addEventListener('click', function () { runShortcut(tile.dataset.shortcut); });
         });
         Array.prototype.forEach.call(document.querySelectorAll('[data-goto="settings-import"]'), function (btn) {
-            btn.addEventListener('click', function () {
-                showScreen('settings');
-                setTimeout(function () {
-                    $('settings-import').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 80);
+            btn.addEventListener('click', function () { showSettingsAt('settings-import'); });
+        });
+
+        // ── a craving ──────────────────────────────────────────────────────
+        $('craving-back').addEventListener('click', function () { showScreen('home'); });
+
+        $('craving-start').addEventListener('click', function () {
+            Store.startCraving().then(renderCraving);
+        });
+
+        // One tap for the usual ending, because in the middle of one nobody
+        // wants a form. The sheet is there for when there is more to say.
+        $('craving-passed').addEventListener('click', function () {
+            var open = Store.openCraving();
+            if (!open) return;
+            Store.endCraving(open.id, { outcome: 'passed' }).then(function () {
+                renderCraving();
+                toast('That is one more that passed.');
+            });
+        });
+
+        $('craving-how').addEventListener('click', function () {
+            var open = Store.openCraving();
+            if (open) openCravingSheet(open);
+        });
+
+        $('craving-write').addEventListener('click', function () {
+            openNoteSheet(null, null, null, { tag: 'sponsor' });
+        });
+
+        $('craving-chapter').addEventListener('click', function () {
+            openReader('ch03', { paraIndex: 0 });
+        });
+
+        $('craving-ring').addEventListener('click', function (event) {
+            // With no number saved there is nothing to dial, so the button does
+            // the next useful thing rather than nothing at all.
+            if (String(Store.state.settings.sponsorPhone || '').trim()) return;
+            event.preventDefault();
+            showSettingsAt('settings-sponsor');
+        });
+
+        Array.prototype.forEach.call(document.querySelectorAll('#craving-outcome .chip'), function (chip) {
+            chip.addEventListener('click', function () { setCravingOutcome(chip.dataset.outcome); });
+        });
+        $('craving-sheet-save').addEventListener('click', saveCravingSheet);
+        $('craving-sheet-cancel').addEventListener('click', function () {
+            cravingEditing = null;
+            closeSheets();
+        });
+        $('craving-sheet-delete').addEventListener('click', function () {
+            if (!cravingEditing) return;
+            if (!confirm('Delete this record? The list is worth more whole than tidy.')) return;
+            Store.deleteCraving(cravingEditing.id).then(function () {
+                cravingEditing = null;
+                closeSheets();
+                renderCraving();
             });
         });
 
@@ -2991,6 +3252,12 @@
             Store.saveSettings({ keepAwake: this.checked }).then(function () {
                 if (!Store.state.settings.keepAwake) releaseWakeLock();
             });
+        });
+        $('set-sponsor-name').addEventListener('change', function () {
+            Store.saveSettings({ sponsorName: this.value.trim() });
+        });
+        $('set-sponsor-phone').addEventListener('change', function () {
+            Store.saveSettings({ sponsorPhone: this.value.trim() });
         });
 
         // Settings — backup

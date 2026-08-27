@@ -38,7 +38,11 @@
             // Step four's rows. Years of work can sit in here, so it travels
             // with everything else rather than being something you export
             // separately and forget.
-            inventory: state.inventory
+            inventory: state.inventory,
+            // Every craving written down, and how each one ended. The value of
+            // that list is entirely in its length, so it must survive a new
+            // phone like anything else.
+            cravings: state.cravings
         };
 
         if (options.includeBookText && state.book && state.book.textIncluded) {
@@ -150,13 +154,15 @@
      */
     function restoreBackup(payload, mode) {
         mode = mode || 'merge';
-        var summary = { notes: 0, bookmarks: 0, inventory: 0, bookText: false, mode: mode };
+        var summary = { notes: 0, bookmarks: 0, inventory: 0, cravings: 0,
+                        bookText: false, mode: mode };
 
         var prepare = mode === 'replace'
             ? Promise.all([
                 DB.clear(DB.STORE_NOTES),
                 DB.clear(DB.STORE_BOOKMARKS),
-                DB.clear(DB.STORE_INVENTORY)
+                DB.clear(DB.STORE_INVENTORY),
+                DB.clear(DB.STORE_CRAVINGS)
             ])
             : Promise.resolve();
 
@@ -188,10 +194,23 @@
             });
             summary.inventory = inventory.length;
 
+            // Absent from backups written before the craving screen existed —
+            // same rule, and the same reason: restoring an older file must not
+            // empty a list that is only worth anything whole.
+            var existingCravings = {};
+            if (mode === 'merge') {
+                Store.state.cravings.forEach(function (row) { existingCravings[row.id] = row; });
+            }
+            var cravings = (payload.cravings || []).map(function (row) {
+                return newerOf(row, existingCravings[row.id]);
+            });
+            summary.cravings = cravings.length;
+
             return Promise.all([
                 DB.putMany(DB.STORE_NOTES, notes),
                 DB.putMany(DB.STORE_BOOKMARKS, bookmarks),
-                DB.putMany(DB.STORE_INVENTORY, inventory)
+                DB.putMany(DB.STORE_INVENTORY, inventory),
+                DB.putMany(DB.STORE_CRAVINGS, cravings)
             ]);
         }).then(function () {
             if (payload.book && payload.book.sections && payload.book.sections.length) {

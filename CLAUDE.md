@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 2.1 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.2 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -194,11 +194,56 @@ store.** The home screen and the step page were both counting days; two
 implementations of "what day is it" would eventually disagree. `ui.js` keeps thin
 wrappers that call through.
 
-**Two shortcut tiles are placeholders, on purpose.** *I have cravings* and *I'm
-going to a meeting* carry `is-soon`, are dashed rather than greyed, and say "Not
-built yet" when tapped. Martin asked for placeholders explicitly. Do not quietly
-wire them to something approximate — ask him what should happen. The wording of
-*I have cravings* is confirmed and settled; do not re-ask.
+**One shortcut tile is still a placeholder, on purpose.** *I'm going to a
+meeting* carries `is-soon`, is dashed rather than greyed, and says "Not built
+yet" when tapped. Martin asked for placeholders explicitly. Do not quietly wire
+it to something approximate — ask him what it should do. (*I have cravings* was
+the other one; it was built in 2.2.)
+
+## The craving screen (2.2)
+
+**The record is the feature.** `#screen-craving` shows a passage and three
+things to do, but the reason it exists is the list at the bottom: in the middle
+of a craving it is not obvious that it will end, and the only convincing
+argument that it will is the run of ones that did. So a row is written when it
+*starts*, closable in one tap, and the summary leads with the count and the
+longest. Do not turn this into a mood tracker or a scoring system — no streaks
+of "clean days", no congratulation.
+
+**`outcome: 'drank'` is not an oversight.** A list that can only record
+victories is not a record, and step ten asks for the other kind too. The summary
+says "every one of them passed" only while that is true, and switches to "n of m
+passed" the moment it is not. Never quietly hide or exclude a drank row.
+
+**Cravings have a store of their own (`DB_VERSION` 3).** Structured records, so
+they follow step four's pattern rather than being bent into a note: their own
+IndexedDB store guarded by `objectStoreNames.contains`, carried explicitly by
+`backup.js` in both directions, and a smoke check that a backup written *before*
+the store existed restores without emptying it. They are deliberately **not** in
+the inventory store — they belong to no step, and `rowsForWork()` /
+`workCount()` filter by `stepId`.
+
+**At most one craving is open.** `Store.startCraving()` hands back the open one
+rather than writing a second; `Store.openCraving()` takes the newest unclosed row
+if two ever exist (two tabs, a restore).
+
+**The sponsor's number lives in settings**, as `sponsorName` / `sponsorPhone`,
+because it is one person and one number and settings already ride the backup. It
+is used for exactly one thing — the `tel:` link on this screen — and the button
+offers to take you to Settings when it is empty rather than doing nothing.
+Non-dialling characters are stripped for the href only; the row shows the number
+as it was typed.
+
+**`tickOnTheMinute(paint)` is shared** by the home clock and the "so far" line
+here. One timer, one painter at a time, stopped by `showScreen` for every screen
+that does not keep time.
+
+**The craving passages are a second verified list in the same file.**
+`daily.source.json` carries `passages` and `craving`; `build-daily.js` verifies
+both with the same unforgiving rules and dedupes *within* a list only — a quote
+may legitimately serve both, since the book only says a thing once. The craving
+set is picked at random rather than by the day (never the same one twice
+running), because it is not read once a day at a set time.
 
 **The clock ticks on the minute and only while home is on screen.** `startClock()`
 waits out the remainder of the current minute and then goes hourly-honest at
@@ -247,7 +292,7 @@ manifest.json       PWA metadata — paths are RELATIVE ("./"), see below
 sw.js               Service worker: offline shell + book cache
 css/style.css       Themes (sepia/light/dark/auto), reader typography
 js/parser.js        Plain text → sections. Shared with tools/build-book.js
-js/db.js            IndexedDB wrapper (meta, book, notes, bookmarks, inventory)
+js/db.js            IndexedDB wrapper (meta, book, notes, bookmarks, inventory, cravings)
 js/store.js         Book, settings, position, notes, bookmarks, search
 js/backup.js        Export / restore
 js/ui.js            Screens, rendering, all event wiring
@@ -262,7 +307,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    207 end-to-end browser checks
+tools/smoke-test.js    228 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -274,7 +319,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 207 checks, expect 207/207
+node tools/smoke-test.js                  # 228 checks, expect 228/228
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

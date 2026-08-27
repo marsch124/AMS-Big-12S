@@ -98,8 +98,8 @@ async function openContents(page) {
 
     check('six shortcuts, in the first person',
         (await page.$$eval('#shortcuts .shortcut', (e) => e.length)) === 6);
-    check('the ones with nothing behind them say so',
-        (await page.$$eval('#shortcuts .shortcut.is-soon', (e) => e.length)) === 2);
+    check('the one still to be built says so',
+        (await page.$$eval('#shortcuts .shortcut.is-soon', (e) => e.length)) === 1);
     check('four counts', (await page.$$eval('#stats .stat', (e) => e.length)) === 4);
     check('a fresh install counts nothing rather than flattering you',
         (await page.textContent('#stats .stat')).includes('0%'));
@@ -286,11 +286,118 @@ async function openContents(page) {
     await page.click('#step-back');
     await page.waitForSelector('#screen-steps.is-active');
 
+    // ── a craving ─────────────────────────────────────────────────────────
+    await page.click('.tab[data-screen="home"]');
+    await page.click('.shortcut[data-shortcut="craving"]');
+    await page.waitForSelector('#screen-craving.is-active');
+    check('the craving shortcut opens a screen of its own', true);
+    check('the Home tab stays lit inside it',
+        await page.$eval('.tab[data-screen="home"]', (e) => e.classList.contains('is-active')));
+
+    // The same rule as the daily passage: the book's own words, where it says.
+    const cravingIsInTheBook = await page.evaluate(() => {
+        const flat = (t) => String(t).replace(/[\u2018\u2019\u02bc]/g, "'")
+            .replace(/[\u201c\u201d]/g, '"').replace(/[\u2013\u2014]/g, '-')
+            .replace(/\s+/g, ' ').trim().toLowerCase();
+        const shown = flat(document.getElementById('craving-passage-text').textContent);
+        const listed = (Store.state.daily.craving || []).filter((p) => flat(p.text) === shown)[0];
+        if (!listed) return false;
+        const section = Store.getSection(listed.sectionId);
+        return !!section && flat(section.paragraphs[listed.paraIndex]).includes(shown);
+    });
+    check('its passage is one of the craving passages, and is in the book', cravingIsInTheBook);
+
+    check('with no number saved, ringing your sponsor offers to fix that',
+        (await page.textContent('#craving-ring-label')).includes('number'));
+    await page.click('#craving-ring');
+    await page.waitForSelector('#screen-settings.is-active');
+    check('and takes you where the number goes', true);
+    await page.fill('#set-sponsor-name', 'Karl');
+    await page.fill('#set-sponsor-phone', '+43 660 123 4567');
+    await page.dispatchEvent('#set-sponsor-phone', 'change');
+    await page.waitForTimeout(120);
+
+    await page.click('.tab[data-screen="home"]');
+    await page.click('.shortcut[data-shortcut="craving"]');
+    await page.waitForSelector('#screen-craving.is-active');
+    check('with a number saved it offers to ring them by name',
+        (await page.textContent('#craving-ring-label')) === 'Ring Karl');
+    check('and the number is dialled without the spaces in it',
+        (await page.getAttribute('#craving-ring', 'href')) === 'tel:+436601234567');
+
+    check('nothing recorded yet says so plainly',
+        (await page.textContent('#craving-summary')).includes('Nothing written down yet'));
+
+    await page.click('#craving-start');
+    await page.waitForSelector('#craving-live:not([hidden])');
+    check('starting one puts a clock on it', !(await page.isVisible('#craving-start')));
+    check('and counts from the moment it started',
+        (await page.textContent('#craving-elapsed')).includes('so far'));
+
+    // Back-dated so there is a duration to record rather than nought minutes.
+    await page.evaluate(async () => {
+        const open = Store.openCraving();
+        await Store.saveCraving(Object.assign({}, open,
+            { startedAt: new Date(Date.now() - 22 * 60000).toISOString() }));
+        UI.showScreen('craving');
+    });
+    await page.click('#craving-passed');
+    await page.waitForTimeout(200);
+    check('one tap closes it', await page.isVisible('#craving-start'));
+    check('and it joins the list with how long it ran',
+        (await page.textContent('.craving-card')).includes('22 minutes'),
+        await page.textContent('.craving-card'));
+    check('the count says what happened to it',
+        (await page.textContent('#craving-summary')).includes('it passed'),
+        await page.textContent('#craving-summary'));
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('#screen-home.is-active');
+    check('the home tile carries how the cravings stand',
+        (await page.textContent('#shortcut-craving-note')).length > 0,
+        await page.textContent('#shortcut-craving-note'));
+    await page.click('.shortcut[data-shortcut="craving"]');
+    await page.waitForSelector('#screen-craving.is-active');
+    check('the record survives a reload',
+        (await page.$$eval('.craving-card', (e) => e.length)) === 1);
+
+    // The other outcome, which the list has to be able to hold.
+    await page.click('#craving-start');
+    await page.waitForSelector('#craving-live:not([hidden])');
+    await page.click('#craving-how');
+    await page.waitForSelector('#craving-sheet:not([hidden])');
+    await page.click('#craving-outcome .chip[data-outcome="drank"]');
+    await page.fill('#craving-sheet-what', 'Went to the shop.');
+    await page.click('#craving-sheet-save');
+    await page.waitForSelector('#craving-sheet', { state: 'hidden' });
+    check('a craving that ended in a drink is recorded as one',
+        (await page.textContent('.craving-card')).includes('Drank'),
+        await page.textContent('.craving-card'));
+    check('and the count stops claiming every one passed',
+        (await page.textContent('#craving-summary')).includes('1 of them passed'),
+        await page.textContent('#craving-summary'));
+    check('what was going on is kept with it',
+        (await page.textContent('.craving-card')).includes('Went to the shop.'));
+
     // ── backup round trip ─────────────────────────────────────────────────
     const slim = JSON.parse(await page.evaluate(() => Backup.serialize({ includeBookText: false })));
     check('backup carries notes, bookmarks, position, settings',
         slim.notes.length === 1 && slim.bookmarks.length === 1 &&
         !!slim.position.sectionId && !!slim.settings);
+    check('backup carries the cravings and the sponsor', slim.cravings.length === 2 &&
+        slim.settings.sponsorPhone === '+43 660 123 4567',
+        (slim.cravings || []).length + ' cravings');
+
+    // A backup written before the craving screen existed has no such key, and
+    // must restore without emptying a list that is only worth anything whole.
+    const older = JSON.parse(JSON.stringify(slim));
+    delete older.cravings;
+    const keptThrough = await page.evaluate(async (json) => {
+        await Backup.restoreBackup(Backup.parseBackup(json), 'merge');
+        return Store.state.cravings.length;
+    }, JSON.stringify(older));
+    check('an older backup restores without wiping the cravings', keptThrough === 2,
+        keptThrough + ' still there');
     check('backup stays small when the text is not included',
         !slim.includesBookText && JSON.stringify(slim).length < 4000,
         JSON.stringify(slim).length + ' bytes');
@@ -315,6 +422,9 @@ async function openContents(page) {
     const summary = await page.evaluate(async (json) =>
         Backup.restoreBackup(Backup.parseBackup(json), 'replace'), JSON.stringify(slim));
     check('restore reports what it did', summary.notes === 1 && summary.bookmarks === 1,
+        JSON.stringify(summary));
+    check('and brings the cravings back with everything else',
+        await page.evaluate(() => Store.state.cravings.length === 2),
         JSON.stringify(summary));
 
     await page.reload({ waitUntil: 'networkidle' });

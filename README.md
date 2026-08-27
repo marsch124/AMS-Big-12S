@@ -12,6 +12,8 @@ without a signal.
 
 - 🏠 **A home screen** — the time and the date, a passage from the book for today, where you
   stopped, the reasons you might have opened the app, and an honest count of what you have done
+- 🌊 **A craving screen** — start a clock on one, close it when it goes, and keep the list of
+  the ones that passed; your sponsor a tap away
 - 📖 **Distraction-free reader** — serif or sans, four themes, adjustable size and spacing
 - 🔖 **Remembers where you stopped** — down to the paragraph, restored on every launch
 - ✎ **Notes on any passage** — tap a paragraph, write a note; it stays attached to those words
@@ -59,14 +61,39 @@ node tools/build-daily.js --check  # validate only, write nothing
 because that is how the reason arrives — not "notes" but *I want to write
 something down*. Meeting your sponsor or your sponsee opens the list of points
 still waiting for that conversation, with the count on the tile beforehand.
-Two of them — *I have cravings*, *I'm going to a meeting* — have nothing behind
-them yet and say so when tapped. A place held open is more honest than a button
-that quietly does nothing.
+*I'm going to a meeting* has nothing behind it yet and says so when tapped. A
+place held open is more honest than a button that quietly does nothing.
 
 **Where you have got to** is four counts: how far through the book, what you have
 written, how many of the twelve steps you have worked on, and how many days you
 are running on a daily step. Each is of exactly what its own screen shows, and a
 morning with nothing written says so.
+
+## When you have a craving
+
+*I have cravings* opens a screen with three things on it, in the order they tend
+to be wanted.
+
+**Something to do this minute.** Ring your sponsor — put their number in
+**Settings → Your sponsor** and the button dials it; leave it empty and the
+button offers to take you there instead. It is kept on the device like
+everything else and is used for nothing but that. Or write down what is going
+on, which puts a note on the list for them. Or open *More About Alcoholism*,
+which is the chapter on exactly this.
+
+**Something from the book**, drawn from eleven passages chosen for this moment
+and weighted towards what to do rather than what is wrong with you. Verified
+word for word, the same as the daily passage.
+
+**A record of this one.** One tap starts a clock, one tap closes it. That is the
+part worth having: in the middle of a craving it is not obvious that it will
+end, and the only convincing argument that it will is the list of the ones that
+did — so the screen leads with how many there have been and how long the longest
+ran.
+
+The record can also say that you drank. A list that only holds victories is not
+a record, and the count stops claiming every one passed the moment one did not.
+Cravings ride the normal backup, like everything else.
 
 ## Notes, and things to talk about
 
@@ -277,6 +304,9 @@ The backup is plain JSON, readable without this app:
                "body": "Ask how much detail step four really needs.",
                "tag": "sponsor", "discussedAt": "2026-08-24T18:30:00.000Z" } ],
   "bookmarks": [ … ],
+  "cravings": [ { "id": "crav-…", "startedAt": "2026-08-25T19:04:00.000Z",
+                  "endedAt": "2026-08-25T19:16:00.000Z", "outcome": "passed",
+                  "what": "Rowed with Anna about nothing." } ],
   "stepPrefs": { "hidden": { "s4-q3": true },
                  "custom": { "step01": [ { "id": "s1-own-…", "text": "…" } ] } },
   "inventory": [ { "id": "inv-…", "stepId": "step08", "tableId": "amends-list",
@@ -335,7 +365,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 207 checks
+node tools/smoke-test.js      # 228 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that
