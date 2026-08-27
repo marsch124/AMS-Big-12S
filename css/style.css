@@ -191,6 +191,14 @@
 [data-hue="search"]   { --accent: var(--hue-search); }
 [data-hue="settings"] { --accent: var(--hue-settings); }
 
+/* Two screens belong to a person rather than to a tab, and take that person's
+   colour over the tab's: talking to your sponsor is violet all the way down,
+   your sponsee green. Set on the screen itself, so it beats [data-hue] on the
+   root without touching the tab that is lit. */
+#screen-checkin[data-who="sponsor"] { --accent: var(--who-sponsor); --accent-on: #ffffff; }
+#screen-checkin[data-who="sponsee"] { --accent: var(--who-sponsee); --accent-on: #ffffff; }
+#screen-checkin[data-who] .topbar { border-bottom: 3px solid var(--accent); }
+
 [data-typeface="sans"] {
   --reader-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
@@ -660,10 +668,14 @@ button { cursor: pointer; }
 .do-note { display: block; margin-top: 2px; font-size: 12px; color: var(--text-dim); }
 .do-go { flex: none; color: var(--accent); font-size: 20px; }
 
-.craving-card { border-left: 3px solid var(--accent); }
+/* Written .card.craving-card on purpose. These cards carry both classes, and
+   .card sets the `border` shorthand further down this file — at equal
+   specificity it was quietly winning, so neither this edge nor the red one
+   below it has ever actually been on screen. Same fault as .do-row-urgent. */
+.card.craving-card { border-left: 3px solid var(--accent); }
 /* One that ended in a drink is marked, not scolded — a different colour on the
    edge, the same card otherwise. */
-.craving-card.is-drank { border-left-color: var(--danger); }
+.card.craving-card.is-drank { border-left-color: var(--danger); }
 .craving-when { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .craving-date { font-size: 15px; font-weight: 600; }
 .craving-lasted { font-size: 12.5px; color: var(--text-dim); }
@@ -691,16 +703,32 @@ button { cursor: pointer; }
 
 /* ═══════════════════════════════════════════════════════════════ meeting ══ */
 
-.meeting-card { border-left: 3px solid var(--accent); }
-.meeting-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.meeting-date { font-size: 15px; font-weight: 600; }
-.meeting-where { font-size: 14px; color: var(--text-dim); }
+.card.meeting-card { border-left: 3px solid var(--accent); }
+/* A meeting you spoke at is filled, the same way a worked step and the chapter
+   you left off in are filled. Turning up is the thing being counted, so this
+   is a mark rather than a score — there is no target and nothing goes red. */
+.card.meeting-card.is-shared { border-left-width: 5px; }
+.meeting-head { display: flex; align-items: baseline; gap: 8px; }
+.meeting-date { flex: none; font-size: 15px; font-weight: 600; }
+.meeting-where {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .meeting-shared {
   margin-left: auto;
-  font-size: 11px;
-  font-weight: 600;
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 700;
   letter-spacing: 0.04em;
-  color: var(--accent);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-on);
 }
 .meeting-what { margin: 7px 0 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
 

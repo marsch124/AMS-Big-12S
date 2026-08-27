@@ -1188,6 +1188,9 @@
     function openCheckin(who, on) {
         current.checkinWho = who;
         current.checkinOn = on || Store.todayISO();
+        // The screen belongs to a person, not to a tab, so it takes their
+        // colour: the same violet or green as their notes and their tile.
+        $('screen-checkin').dataset.who = who;
         showScreen('checkin');
     }
 
@@ -1508,7 +1511,7 @@
 
         Store.state.meetings.slice(0, 12).forEach(function (row) {
             var card = document.createElement('button');
-            card.className = 'card meeting-card';
+            card.className = 'card meeting-card' + (row.shared ? ' is-shared' : '');
             card.innerHTML =
                 '<span class="meeting-head">' +
                     '<span class="meeting-date">' + escapeHtml(Store.meetingDayText(row.on)) + '</span>' +

@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.26 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.27 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,37 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## The meeting and check-in screens (2.27)
+
+**A screen can belong to a person instead of a tab.** `#screen-checkin[data-who]`
+overrides `--accent` with `--who-sponsor` / `--who-sponsee`, set by
+`openCheckin()`, plus a 3px band under the topbar so it is legible at a glance.
+It beats `[data-hue]` on the root without disturbing which tab is lit — the Home
+tab stays lit inside it, and there is still a check for that.
+
+**A meeting you spoke at gets a heavier edge and a filled badge.** Same "filled
+means you have been here" language as a worked step and the chapter you left off
+in. It is a mark, not a score: `CLAUDE.md`'s rule that the app sets nobody a
+quota still holds, and nothing on this screen goes red.
+
+**Three accent edges had never once rendered.** `.craving-card`,
+`.craving-card.is-drank` and `.meeting-card` each set `border-left`, and `.card`
+— declared far below them — sets the `border` shorthand at equal specificity, so
+`.card` won every time. A craving that ended in a drink had never shown its red
+edge. All three are now written `.card.craving-card` / `.card.meeting-card` and
+each has a test.
+
+**This is the third time this fault has appeared** (after `.do-row-urgent` in
+2.23). The pattern is always the same: a component rule sets one side of a
+border, a generic rule further down the file sets the shorthand, and nothing
+tells you. **When a rule sets `border-left` on something that also carries a
+generic class, check the computed style, not the rule you wrote** — and prefer
+writing it with both classes from the start.
+
+**One flaky check exists:** "a backup carries the inventory" failed once in this
+session's runs and passed on a clean re-run, with an empty serialize result. It
+is a timing race in the test, not in the app; worth fixing if it recurs.
 
 ## The page, the contents and the search (2.26)
 
@@ -1011,7 +1042,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    476 end-to-end browser checks
+tools/smoke-test.js    480 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -1023,7 +1054,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 476 checks, expect 476/476
+node tools/smoke-test.js                  # 480 checks, expect 480/480
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

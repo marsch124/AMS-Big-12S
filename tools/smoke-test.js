@@ -802,6 +802,23 @@ async function openContents(page) {
     check('what was going on is kept with it',
         (await page.textContent('.craving-card')).includes('Went to the shop.'));
 
+    // .card sets the `border` shorthand and is declared after .craving-card,
+    // so at equal specificity this red edge lost — a craving that ended in a
+    // drink has never actually been marked as one. Fixed in 2.27 by writing it
+    // .card.craving-card; this check is here so it cannot come undone.
+    const drankEdge = await page.$eval('.craving-card',
+        (n) => getComputedStyle(n).borderLeftWidth + ' ' + getComputedStyle(n).borderLeftColor);
+    const dangerColour = await page.evaluate(() => {
+        const probe = document.createElement('span');
+        document.body.appendChild(probe);
+        probe.style.color = 'var(--danger)';
+        const c = getComputedStyle(probe).color;
+        probe.remove();
+        return c;
+    });
+    check('and it draws the red edge its rule has always claimed',
+        drankEdge === '3px ' + dangerColour, drankEdge + ' vs --danger ' + dangerColour);
+
     // The one place the two logs meet. Nobody wants to go hunting for the page
     // at that moment, so it is put in front of him — once, and it takes a no.
     await page.waitForSelector('#drank-sheet:not([hidden])');
@@ -826,6 +843,24 @@ async function openContents(page) {
         (await page.textContent('#checkin-sub')) === 'Today');
     check('the Home tab stays lit inside it',
         await page.$eval('.tab[data-screen="home"]', (e) => e.classList.contains('is-active')));
+
+    // The screen belongs to a person rather than to a tab, so it takes their
+    // colour over the tab's — the same violet as their notes and their tile.
+    const checkinLook = await page.$eval('#screen-checkin', (n) => ({
+        who: n.dataset.who,
+        strip: getComputedStyle(n.querySelector('.topbar')).borderBottomColor,
+    }));
+    const sponsorTileColour = await page.evaluate(() => {
+        const probe = document.createElement('span');
+        document.body.appendChild(probe);
+        probe.style.color = 'var(--tile-sponsor)';
+        const c = getComputedStyle(probe).color;
+        probe.remove();
+        return c;
+    });
+    check('and it wears your sponsor\'s colour, not the tab\'s',
+        checkinLook.who === 'sponsor' && checkinLook.strip === sponsorTileColour,
+        checkinLook.who + ' strip ' + checkinLook.strip + ' vs tile ' + sponsorTileColour);
 
     const asked = await page.$$eval('#checkin-fields .checkin-label', (e) => e.map((x) => x.textContent));
     check('with the questions about me, and the meeting notes last',
@@ -982,6 +1017,19 @@ async function openContents(page) {
     check('it joins the list with where it was and that you spoke',
         meetingCard.includes('Tuesday, Kolpinghaus') && meetingCard.includes('Shared'),
         meetingCard);
+
+    // Same fault as the craving card, same fix. A meeting you spoke at is
+    // marked more heavily than one you sat through — a mark, not a score.
+    const meetEdge = await page.$eval('.meeting-card', (n) => ({
+        shared: n.classList.contains('is-shared'),
+        width: getComputedStyle(n).borderLeftWidth,
+        colour: getComputedStyle(n).borderLeftColor,
+    }));
+    check('a meeting card draws the accent edge its rule claims',
+        meetEdge.colour !== 'rgba(0, 0, 0, 0)' && parseInt(meetEdge.width, 10) >= 3,
+        meetEdge.width + ' ' + meetEdge.colour);
+    check('and one you spoke at is marked more heavily than one you sat through',
+        meetEdge.shared && parseInt(meetEdge.width, 10) === 5, meetEdge.width);
     check('the count says how many and how recently',
         (await page.textContent('#meeting-summary')).includes('in the last thirty days'),
         await page.textContent('#meeting-summary'));
