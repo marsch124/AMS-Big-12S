@@ -1762,6 +1762,61 @@ async function openContents(page) {
 
     // Put a place back, so what follows sees the app as it normally is.
     await page.evaluate(() => Store.savePosition({ sectionId: 'ch05', paraIndex: 12, ratio: 0.2 }));
+
+    // ── reading without keeping your place ────────────────────────────────
+    await page.click('.tab[data-screen="home"]');
+    await page.click('#home-continue [data-adjust]');
+    await page.waitForSelector('#continue-sheet:not([hidden])');
+    check('the card offers reading without keeping your place',
+        (await page.textContent('#continue-browse')) === 'Read without keeping my place');
+    await page.click('#continue-browse');
+    await page.waitForSelector('#screen-library.is-active');
+    check('and puts you in the contents, since somewhere is the point of it', true);
+
+    const before = await page.evaluate(() => JSON.stringify(Store.state.position));
+    await page.click('.toc-item:not([disabled]) >> nth=2');   // Bill's Story
+    await page.waitForSelector('#screen-reader.is-active');
+    check('the reader says so, the whole time it is on', await page.isVisible('#browsing'));
+    await page.evaluate(() => {
+        const b = document.getElementById('reader-body');
+        b.scrollTop = Math.floor(b.scrollHeight * 0.6);
+    });
+    await page.waitForTimeout(900);
+    await page.click('#reader-back');
+    await page.waitForTimeout(300);
+    const after = JSON.parse(await page.evaluate(() => JSON.stringify(Store.state.position)));
+    const was = JSON.parse(before);
+    check('a chapter opened, scrolled and left changes nothing',
+        after.sectionId === was.sectionId && after.paraIndex === was.paraIndex,
+        after.sectionId + ' ¶' + after.paraIndex + ', was ' + was.sectionId + ' ¶' + was.paraIndex);
+
+    // Leaving the reader lands back on the contents it was opened from.
+    await page.click('.tab[data-screen="home"]');
+    await page.waitForSelector('#screen-home.is-active');
+    await page.click('#home-continue [data-adjust]');
+    await page.waitForSelector('#continue-sheet:not([hidden])');
+    check('and the sheet offers the way back out',
+        (await page.textContent('#continue-browse')) === 'Keep my place again');
+    await page.click('#continue-sheet-cancel');
+
+    // Turning it off standing on a page keeps that page, not the one you left.
+    await page.click('.tab[data-screen="library"]');
+    await page.click('.toc-item:not([disabled]) >> nth=3');   // There Is A Solution
+    await page.waitForSelector('#screen-reader.is-active');
+    await page.evaluate(() => {
+        const b = document.getElementById('reader-body');
+        b.scrollTop = Math.floor(b.scrollHeight * 0.5);
+    });
+    await page.waitForTimeout(400);
+    await page.click('#browsing-off');
+    await page.waitForTimeout(400);
+    check('keeping it again keeps where you have actually got to',
+        (await page.evaluate(() => Store.state.position.sectionId)) === 'ch02',
+        await page.evaluate(() => Store.state.position.sectionId + ' ¶' + Store.state.position.paraIndex));
+    check('and the reader stops saying it', await page.$eval('#browsing', (e) => e.hasAttribute('hidden')));
+
+    await page.click('#reader-back');
+    await page.evaluate(() => Store.savePosition({ sectionId: 'ch05', paraIndex: 12, ratio: 0.2 }));
     await page.click('.tab[data-screen="settings"]');
 
     // A morning time reads the same either way, so prove it on an evening one.

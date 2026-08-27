@@ -13,6 +13,7 @@
     var notesFilter = 'all';   // all | sponsor | sponsee | steps | own
     var noteTag = '';          // the chip currently lit in the note sheet
     var noteOnPassage = false; // whether that sheet has a passage behind it
+    var browsing = false;      // reading without keeping your place
 
     /* ------------------------------------------------------------ helpers */
 
@@ -777,10 +778,11 @@
     }
 
     /*
-     * Adjusting what the card points at. Two things are wanted and neither was
-     * possible before: taking a chapter from the top again, and saying that you
-     * are not anywhere in the book just now. Moving it somewhere else entirely
-     * is already a matter of opening that chapter from the contents.
+     * Adjusting what the card points at. Three things are wanted and none was
+     * possible before: taking a chapter from the top again, saying that you are
+     * not anywhere in the book just now, and reading somewhere without that
+     * counting as where you are up to. Moving it somewhere else entirely is
+     * already a matter of opening that chapter from the contents.
      */
     function openContinueSheet() {
         var position = Store.state.position;
@@ -788,7 +790,21 @@
         $('continue-sheet-where').textContent = section
             ? section.title + ' · ' + Store.progressPercent() + '% through the book'
             : '';
+        $('continue-browse').textContent = browsing
+            ? 'Keep my place again'
+            : 'Read without keeping my place';
         openSheet('continue-sheet');
+    }
+
+    /*
+     * Turning it off from inside the reader keeps the place you have actually
+     * reached, not the one you left an hour ago — that is what "keep it again"
+     * means standing on a page.
+     */
+    function setBrowsing(on, keepHere) {
+        browsing = !!on;
+        $('browsing').hidden = !browsing;
+        if (!browsing && keepHere) recordPosition();
     }
 
     function refreshContinueCards() {
@@ -918,7 +934,10 @@
     }
 
     function recordPosition() {
-        if (!current.sectionId) return;
+        // Every save of a reading position comes through here — on opening a
+        // chapter, on scroll, on leaving the reader, on pagehide. One guard, so
+        // browsing cannot leave a trail through some other door.
+        if (browsing || !current.sectionId) return;
         var body = $('reader-body');
         var scrollable = body.scrollHeight - body.clientHeight;
         Store.savePosition({
@@ -3465,6 +3484,25 @@
                     refreshContinueCards();
                     toast('Back to the top of the chapter');
                 });
+        });
+        $('continue-browse').addEventListener('click', function () {
+            if (browsing) {
+                setBrowsing(false, current.screen === 'reader');
+                closeSheets();
+                refreshContinueCards();
+                toast('Keeping your place again.');
+                return;
+            }
+            setBrowsing(true);
+            closeSheets();
+            // Somewhere is the point of it, so the contents is where this goes.
+            if (current.screen !== 'reader') showScreen('library');
+            toast('Nothing will be saved while you read.');
+        });
+        $('browsing-off').addEventListener('click', function () {
+            setBrowsing(false, true);
+            refreshContinueCards();
+            toast('Keeping your place again.');
         });
         $('continue-forget').addEventListener('click', function () {
             Store.clearPosition().then(function () {

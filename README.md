@@ -18,7 +18,8 @@ without a signal.
 - 👥 **Meetings** — what you meant to bring up, and the record of the ones you got to
 - 📖 **Distraction-free reader** — serif or sans, four themes, adjustable size and spacing
 - 🔖 **Remembers where you stopped** — down to the paragraph, restored on every launch, and
-  adjustable: start the chapter again, or forget where you are altogether
+  adjustable: start the chapter again, forget where you are, or read somewhere without it
+  counting
 - 📋 **The rules as they stand** — two lists, what you keep and what you have asked of a
   sponsee, in Settings
 - ✎ **Notes on any passage** — tap a paragraph, write a note; it stays attached to those words
@@ -112,6 +113,18 @@ ran.
 The record can also say that you drank. A list that only holds victories is not
 a record, and the count stops claiming every one passed the moment one did not.
 Cravings ride the normal backup, like everything else.
+
+## Reading somewhere without it counting
+
+The three dots on **Continue reading** offer a third thing: *read without
+keeping my place*. For an hour spent somewhere in the book that is not where you
+are up to.
+
+Nothing is written while it is on — not on opening a chapter, not as you scroll,
+not on leaving. The card stays exactly where it was. The reader says **Not
+keeping your place** at the top the whole time, and one tap there goes back to
+keeping it, from wherever you have actually got to. It also switches itself off
+when the app is next started, so it cannot quietly stay on for a fortnight.
 
 ## The rules
 
@@ -412,7 +425,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 277 checks
+node tools/smoke-test.js      # 284 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that

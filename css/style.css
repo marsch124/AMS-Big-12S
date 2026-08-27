@@ -634,6 +634,32 @@ button { cursor: pointer; }
 
 /* ════════════════════════════════════════════════════════════════ reader ══ */
 
+/* Reading without keeping your place. Quiet, but never out of sight while it
+   is on — the whole risk of the thing is forgetting it is on. */
+.browsing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--rule);
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.browsing[hidden] { display: none; }
+.browsing span { flex: 1; }
+.browsing-off {
+  flex: none;
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  background: var(--bg-raised);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 12px;
+}
+.browsing-off:active { background: var(--bg-sunken); }
+
 .reader-body { padding-left: 20px; padding-right: 20px; }
 .reader {
   font-family: var(--reader-family);

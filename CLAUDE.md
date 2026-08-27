@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.9 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.10 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -286,6 +286,19 @@ screen without being asked. `loadSettings()` migrates the old single `rules`
 key onto the sponsor list; leave that migration in place, it costs nothing and
 an install that skipped 2.9 would otherwise lose what was written.
 
+**Browsing is guarded in one place (2.10).** `recordPosition()` is the only
+route by which a reading position is ever written — opening a chapter, the
+debounced scroll, leaving the reader, `pagehide` — so the `browsing` flag is
+checked there and nowhere else. Any new save path must go through it too, or
+browsing will leave a trail through the new door.
+
+**Browsing is in memory only, on purpose.** It dies when the app is next
+started, because a mode that quietly persisted for a fortnight would lose weeks
+of position tracking without anyone noticing. It is also never invisible: the
+reader carries the `#browsing` strip the whole time it is on, and turning it off
+from inside the reader records where you have actually got to, since that is
+what "keep it again" means standing on a page.
+
 **The continue card is a card with a button in it.** `.continue-card` is a div
 holding `.continue-main` (the whole face, which resumes) and `.continue-adjust`
 (the corner control, which opens the sheet). A button inside a button is invalid
@@ -426,7 +439,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    277 end-to-end browser checks
+tools/smoke-test.js    284 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -438,7 +451,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 277 checks, expect 277/277
+node tools/smoke-test.js                  # 284 checks, expect 284/284
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

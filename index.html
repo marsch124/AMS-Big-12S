@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=27">
+<link rel="stylesheet" href="css/style.css?v=28">
 </head>
 <body>
 
@@ -183,6 +183,14 @@
       </div>
       <button class="icon-btn" id="reader-type" aria-label="Text options">Aa</button>
     </header>
+
+    <!-- Reading without keeping your place. Unmissable on purpose: an hour's
+         reading that quietly saved nothing would be a nasty surprise, and so
+         would an hour that quietly saved something you were only browsing. -->
+    <div class="browsing" id="browsing" hidden>
+      <span>Not keeping your place</span>
+      <button class="browsing-off" id="browsing-off">Keep it again</button>
+    </div>
 
     <div class="screen-body reader-body" id="reader-body">
       <article class="reader" id="reader-content"></article>
@@ -751,6 +759,21 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Reading without keeping your place</span><span class="ver-tag">2.10</span></summary>
+          <div class="disclosure-body">
+            <p>A third thing behind the three dots on <strong>Continue reading</strong>: read
+               without keeping your place. For when you want to spend an hour somewhere in the
+               book without the app deciding that is where you are up to.</p>
+            <p>Nothing is written while it is on — not on opening a chapter, not as you
+               scroll, not on leaving. The card stays exactly where it was, however far you
+               wander. The reader says so at the top the whole time, and one tap there puts
+               you back to keeping your place, from wherever you have got to.</p>
+            <p>It also switches itself off when the app is next started, so it cannot quietly
+               stay on for a fortnight.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Two lists of rules, in Settings</span><span class="ver-tag">2.9</span></summary>
@@ -1497,9 +1520,16 @@
     <button class="btn" id="continue-restart">Start this chapter again</button>
   </div>
   <div class="btn-row">
+    <button class="btn" id="continue-browse">Read without keeping my place</button>
+  </div>
+  <div class="btn-row">
     <button class="btn btn-danger" id="continue-forget">Forget where I am</button>
     <button class="btn btn-quiet" id="continue-sheet-cancel">Cancel</button>
   </div>
+  <p class="hint">
+    Reading without keeping your place leaves the card exactly where it is, however far you
+    wander. It lasts until you say otherwise, or until the app is next started.
+  </p>
   <p class="hint">
     Forgetting it takes the card away and offers the book from the beginning again. It does
     not touch your notes or your bookmarks.
@@ -1645,7 +1675,7 @@
 <script src="js/db.js?v=4"></script>
 <script src="js/store.js?v=15"></script>
 <script src="js/backup.js?v=5"></script>
-<script src="js/ui.js?v=26"></script>
-<script src="js/app.js?v=14"></script>
+<script src="js/ui.js?v=27"></script>
+<script src="js/app.js?v=15"></script>
 </body>
 </html>
