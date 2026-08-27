@@ -101,8 +101,8 @@ async function openContents(page) {
     });
     check('a different day brings a different passage', movesOn);
 
-    check('six shortcuts, in the first person',
-        (await page.$$eval('#shortcuts .shortcut', (e) => e.length)) === 6);
+    check('seven shortcuts, in the first person',
+        (await page.$$eval('#shortcuts .shortcut', (e) => e.length)) === 7);
     check('every shortcut now goes somewhere',
         (await page.$$eval('#shortcuts .shortcut.is-soon', (e) => e.length)) === 0);
     check('four counts', (await page.$$eval('#stats .stat', (e) => e.length)) === 4);
@@ -1027,6 +1027,148 @@ async function openContents(page) {
         'offer shown: ' + (await page.isVisible('#craving-offer')));
     await page.click('.tab[data-screen="home"]');
 
+    // ── saying something to them ──────────────────────────────────────────
+    await page.click('.tab[data-screen="home"]');
+    await page.click('.shortcut[data-shortcut="message"]');
+    await page.waitForSelector('#screen-message.is-active');
+    check('the message shortcut opens a screen of its own', true);
+    check('the home tab stays lit while you are on it',
+        await page.evaluate(() => document.querySelector('.tab[data-screen="home"]')
+            .classList.contains('is-active')));
+
+    const writeTo = await page.$$eval('#message-who .chip', (c) => c.map((x) => x.textContent));
+    check('everyone you could write to is offered, sponsor first',
+        writeTo.length === 3 && writeTo[0] === 'Karl' && writeTo[1] === 'Tobias' &&
+        writeTo[2] === 'Anna', writeTo.join(', '));
+
+    check('nothing is recorded before anything has been sent',
+        (await page.textContent('#message-summary')).includes('Nothing sent'),
+        await page.textContent('#message-summary'));
+
+    // The box is the whole point of the screen, so it is tall before a word is
+    // in it rather than a three-line window onto a dictated paragraph.
+    check('the box is big enough to talk into',
+        (await page.$eval('#message-text', (el) => el.getBoundingClientRect().height)) >= 150);
+
+    const opener = await page.textContent('#message-openers .chip >> nth=0');
+    await page.click('#message-openers .chip >> nth=0');
+    check('an opener goes into the box rather than being sent as it stands',
+        (await page.inputValue('#message-text')).trim() === opener.trim(),
+        await page.inputValue('#message-text'));
+
+    await page.fill('#message-text', 'Rough night. Can we talk in the morning?');
+    await page.waitForTimeout(600);
+    check('the count follows what is in the box',
+        (await page.textContent('#message-hint')).startsWith('8 words'),
+        await page.textContent('#message-hint'));
+    check('a text message carries the words, and dials without the spaces in it',
+        (await page.getAttribute('#message-sms', 'href')) ===
+        'sms:+436601234567?body=' + encodeURIComponent('Rough night. Can we talk in the morning?'),
+        await page.getAttribute('#message-sms', 'href'));
+
+    // Changing your mind about who to tell is not a reason to lose what you said.
+    await page.click('#message-who .chip >> nth=1');
+    check('changing who it is for keeps the words',
+        (await page.inputValue('#message-text')) === 'Rough night. Can we talk in the morning?');
+    const forTobias = await page.$$eval('#message-send .do-row',
+        (rows) => rows.map((r) => r.querySelector('.do-label').textContent));
+    check('and the ways out follow the person, not the last one looked at',
+        forTobias.some((label) => label.includes('Tobias')),
+        forTobias.join(' / '));
+    await page.click('#message-who .chip >> nth=0');
+
+    // A message half worked out at eleven at night must survive the phone
+    // locking, so the draft is written as it is typed rather than on leaving.
+    const draft = await page.evaluate(() => localStorage.getItem('ams-big-12s:message-draft'));
+    check('what is in the box is saved as it is typed', !!draft && JSON.parse(draft).text ===
+        'Rough night. Can we talk in the morning?', String(draft));
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('#screen-home.is-active');
+    await page.click('.shortcut[data-shortcut="message"]');
+    await page.waitForSelector('#screen-message.is-active');
+    check('and is still there after the app has been shut',
+        (await page.inputValue('#message-text')) === 'Rough night. Can we talk in the morning?',
+        await page.inputValue('#message-text'));
+
+    // Copying is one of the three doors out, and the only one a headless
+    // browser can be walked through: there is no share sheet and no Messages.
+    await page.evaluate(() => {
+        navigator.clipboard.writeText = () => Promise.resolve();
+    });
+    const copyRow = (await page.$$eval('#message-send .do-row',
+        (rows) => rows.map((r) => r.querySelector('.do-label').textContent)))
+        .findIndex((label) => label === 'Copy it');
+    await page.click('#message-send .do-row >> nth=' + copyRow);
+    await page.waitForTimeout(400);
+    check('sending it empties the box', (await page.inputValue('#message-text')) === '');
+    check('and clears the draft, which is not a record of anything',
+        (await page.evaluate(() => localStorage.getItem('ams-big-12s:message-draft'))) === null);
+
+    const sent = await page.evaluate(() => Store.state.messages.map((m) => ({
+        who: m.who, how: m.how, text: m.text })));
+    check('what was sent is kept, with who to and which way it went',
+        sent.length === 1 && sent[0].who === 'sponsor' && sent[0].how === 'copied' &&
+        sent[0].text === 'Rough night. Can we talk in the morning?', JSON.stringify(sent));
+    check('the record says how it left rather than that it arrived',
+        (await page.textContent('.message-card .message-how')) === 'Copied',
+        await page.textContent('.message-card .message-how'));
+    check('and the summary counts it',
+        (await page.textContent('#message-summary')).includes('One sent from here'),
+        await page.textContent('#message-summary'));
+
+    // An empty box has nothing to send, and must not write an empty record.
+    await page.click('#message-send .do-row >> nth=' + copyRow);
+    await page.waitForTimeout(300);
+    check('an empty box is not recorded as a message',
+        (await page.evaluate(() => Store.state.messages.length)) === 1);
+
+    await page.click('.message-card >> nth=0');
+    await page.waitForSelector('#message-past-sheet:not([hidden])');
+    check('one already sent opens whole, however long it was',
+        (await page.inputValue('#message-past-text')) === 'Rough night. Can we talk in the morning?');
+    await page.click('#message-past-again');
+    await page.waitForTimeout(200);
+    check('and can be said again', (await page.inputValue('#message-text'))
+        .includes('Rough night.'), await page.inputValue('#message-text'));
+    await page.fill('#message-text', '');
+    await page.waitForTimeout(500);
+
+    await page.click('.tab[data-screen="home"]');
+    check('the home tile carries when you last wrote to somebody',
+        (await page.textContent('#shortcut-message-note')).length > 0,
+        await page.textContent('#shortcut-message-note'));
+
+    // Ringing is not always in you; the row sits beside the numbers for exactly
+    // the evening when it is not.
+    await page.click('.shortcut[data-shortcut="craving"]');
+    await page.waitForSelector('#screen-craving.is-active');
+    await page.click('#craving-message');
+    await page.waitForSelector('#screen-message.is-active');
+    check('the craving screen offers it beside the numbers to ring', true);
+
+    // With nobody in Settings there is nobody to write to, and a box addressed
+    // to no one is worse than saying so.
+    const savedPeople = await page.evaluate(() => ({
+        sponsorName: Store.state.settings.sponsorName,
+        sponseeName: Store.state.settings.sponseeName,
+        spouseName: Store.state.settings.spouseName,
+        sponsorPhone: Store.state.settings.sponsorPhone,
+        sponseePhone: Store.state.settings.sponseePhone,
+        spousePhone: Store.state.settings.spousePhone
+    }));
+    await page.evaluate(() => Store.saveSettings({
+        sponsorName: '', sponsorPhone: '', sponseeName: '', sponseePhone: '',
+        spouseName: '', spousePhone: '' }));
+    await page.evaluate(() => UI.showScreen('home'));
+    await page.evaluate(() => UI.showScreen('message'));
+    await page.waitForTimeout(120);
+    check('with nobody set up it offers Settings rather than a box to nowhere',
+        (await page.isVisible('#message-nobody')) && !(await page.isVisible('#message-compose')));
+    check('and what has already been sent is still shown',
+        (await page.$$eval('.message-card', (e) => e.length)) === 1);
+    await page.evaluate((saved) => Store.saveSettings(saved), savedPeople);
+    await page.evaluate(() => UI.showScreen('home'));
+
     // ── backup round trip ─────────────────────────────────────────────────
     const slim = JSON.parse(await page.evaluate(() => Backup.serialize({ includeBookText: false })));
     check('backup carries notes, bookmarks, position, settings',
@@ -1041,6 +1183,12 @@ async function openContents(page) {
         slim.checkins.length === 2, (slim.checkins || []).length + ' check-ins');
     check('and the times abstinence broke', slim.breaks.length === 2,
         (slim.breaks || []).length + ' breaks');
+    check('and what has been said to a sponsor, a sponsee or a spouse',
+        slim.messages.length === 1 && slim.messages[0].who === 'sponsor',
+        (slim.messages || []).length + ' messages');
+    // A draft has been said to nobody. It is not a record, and it does not
+    // belong in a file that moves to a new phone.
+    check('but not an unsent draft', slim.messageDraft === undefined);
     check('including which craving entry one of them came from',
         slim.breaks.filter((row) => row.cravingId === drank.id).length === 1);
 
@@ -1051,14 +1199,17 @@ async function openContents(page) {
     delete older.meetings;
     delete older.checkins;
     delete older.breaks;
+    delete older.messages;
     const keptThrough = await page.evaluate(async (json) => {
         await Backup.restoreBackup(Backup.parseBackup(json), 'merge');
         return { cravings: Store.state.cravings.length, meetings: Store.state.meetings.length,
-                 checkins: Store.state.checkins.length, breaks: Store.state.breaks.length };
+                 checkins: Store.state.checkins.length, breaks: Store.state.breaks.length,
+                 messages: Store.state.messages.length };
     }, JSON.stringify(older));
     check('an older backup restores without wiping any of them',
         keptThrough.cravings === 2 && keptThrough.meetings === 1 &&
-        keptThrough.checkins === 2 && keptThrough.breaks === 2,
+        keptThrough.checkins === 2 && keptThrough.breaks === 2 &&
+        keptThrough.messages === 1,
         JSON.stringify(keptThrough));
     check('backup stays small when the text is not included',
         !slim.includesBookText && JSON.stringify(slim).length < 4000,
@@ -1085,9 +1236,9 @@ async function openContents(page) {
         Backup.restoreBackup(Backup.parseBackup(json), 'replace'), JSON.stringify(slim));
     check('restore reports what it did', summary.notes === 1 && summary.bookmarks === 1,
         JSON.stringify(summary));
-    check('and brings the cravings and meetings back with everything else',
+    check('and brings the cravings, meetings and messages back with everything else',
         await page.evaluate(() => Store.state.cravings.length === 2 &&
-            Store.state.meetings.length === 1),
+            Store.state.meetings.length === 1 && Store.state.messages.length === 1),
         JSON.stringify(summary));
 
     await page.reload({ waitUntil: 'networkidle' });

@@ -112,11 +112,12 @@
 
     function showScreen(name) {
         if (name !== 'reader') flushPosition();
+        if (current.screen === 'message' && name !== 'message') flushMessageDraft();
         // A passing look is over the moment you leave the reader. Browsing, set
         // by hand, is not.
         if (name !== 'reader' && looking) { looking = false; showBrowsingStrip(); }
         ['home', 'library', 'reader', 'steps', 'step', 'notes', 'search', 'settings',
-         'craving', 'meeting', 'checkin', 'bounce']
+         'craving', 'meeting', 'checkin', 'bounce', 'message']
             .forEach(function (screen) {
                 $('screen-' + screen).classList.toggle('is-active', screen === name);
             });
@@ -125,7 +126,7 @@
         // inside one.
         var litTab = name === 'step' ? 'steps'
             : (name === 'craving' || name === 'meeting' || name === 'checkin' ||
-               name === 'bounce') ? 'home' : name;
+               name === 'bounce' || name === 'message') ? 'home' : name;
         Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
             tab.classList.toggle('is-active', tab.dataset.screen === litTab);
         });
@@ -144,6 +145,7 @@
             if (name === 'meeting') renderMeeting();
             if (name === 'checkin') renderCheckin();
             if (name === 'bounce') renderBounce();
+            if (name === 'message') renderMessage();
         }
         if (name === 'library') renderLibrary();
         if (name === 'notes') renderNotes();
@@ -287,10 +289,10 @@
     }
 
     /*
-     * Six ways in, written in the first person, because that is how the reason
-     * arrives: not "notes" but "I want to write something down". Two of them
-     * have nothing behind them yet and say so when tapped — a place held open
-     * is more honest than a button that quietly does nothing.
+     * Seven ways in, written in the first person, because that is how the
+     * reason arrives: not "notes" but "I want to write something down". A tile
+     * whose name runShortcut() does not know says so when tapped — a place held
+     * open is more honest than a button that quietly does nothing.
      */
     function renderShortcuts() {
         var position = Store.state.position;
@@ -299,6 +301,7 @@
 
         $('shortcut-craving-note').textContent = cravingStateLine();
         $('shortcut-meeting-note').textContent = meetingStateLine();
+        $('shortcut-message-note').textContent = messageStateLine();
 
         var broken = Store.openBreak();
         $('broken-note').textContent = broken
@@ -332,6 +335,7 @@
         }
         if (name === 'craving') { showScreen('craving'); return; }
         if (name === 'meeting') { showScreen('meeting'); return; }
+        if (name === 'message') { openMessage(); return; }
         if (name === 'sponsor') { openCheckin('sponsor'); return; }
         if (name === 'sponsee') { openCheckin('sponsee'); return; }
         if (name === 'write') { openNoteSheet(null, null, null, { tag: '' }); return; }
@@ -1258,6 +1262,336 @@
             closeSheets();
             renderMeeting();
         });
+    }
+
+    /* ------------------------------------------------------------ message */
+
+    /*
+     * Saying something to a sponsor, a sponsee or a spouse. One box, big enough
+     * to talk into: on a phone the microphone key is a tap away and the whole
+     * point of this screen is that at the moment it is wanted, typing is the
+     * hard way.
+     *
+     * The app sends nothing itself. It hands the words to the phone — a text
+     * message, the share sheet, the clipboard — and records which of those
+     * doors they went out of. It never learns whether the message arrived, and
+     * nothing on this screen pretends otherwise.
+     */
+
+    var BUBBLE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M20.4 13.1c0 3.4-3.8 6.2-8.4 6.2-.9 0-1.8-.1-2.6-.3l-5.8 1.4 1.8-3.6c-1.2-1-1.8-2.3-' +
+        '1.8-3.7 0-3.4 3.8-6.2 8.4-6.2s8.4 2.8 8.4 6.2z"/></svg>';
+
+    var SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M12 15.2V3.9"/><path d="M8.2 7.4 12 3.6l3.8 3.8"/>' +
+        '<path d="M6.6 11.2H4.9v9.2h14.2v-9.2h-1.7"/></svg>';
+
+    var COPY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<rect x="8.6" y="8.6" width="11.8" height="11.8" rx="2"/>' +
+        '<path d="M15.4 5.4V4.6a1 1 0 0 0-1-1H4.6a1 1 0 0 0-1 1v9.8a1 1 0 0 0 1 1h.8"/></svg>';
+
+    // Who the box is addressed to. Held here rather than read off the chips, so
+    // the draft and the send buttons cannot disagree about it.
+    var messageWho = 'sponsor';
+    var messageSaveTimer = null;
+    var messagePast = null;
+
+    function messageStateLine() {
+        var summary = Store.messageSummary();
+        if (!summary.last) return 'Nothing sent yet';
+        var days = daysSince(summary.last.sentAt);
+        var who = Store.messageWhoText(summary.last.who);
+        if (days < 1) return 'You wrote to ' + who + ' today';
+        if (days === 1) return 'The last was yesterday';
+        return 'The last was ' + days + ' days ago';
+    }
+
+    /*
+     * The draft is saved as it is typed, not on leaving the box. A message
+     * worked out in the middle of a bad evening must not be losable by the
+     * phone locking — the same reasoning as the check-in questions, which have
+     * no Save button either.
+     */
+    function saveMessageDraftSoon() {
+        if (messageSaveTimer) clearTimeout(messageSaveTimer);
+        messageSaveTimer = setTimeout(function () {
+            messageSaveTimer = null;
+            Store.saveMessageDraft(messageWho, $('message-text').value);
+        }, 400);
+    }
+
+    function flushMessageDraft() {
+        if (!messageSaveTimer) return;
+        clearTimeout(messageSaveTimer);
+        messageSaveTimer = null;
+        Store.saveMessageDraft(messageWho, $('message-text').value);
+    }
+
+    function renderMessage() {
+        var people = Store.messagePeople();
+
+        // Somebody may have been deleted from settings since the draft was
+        // written, so the chosen role is checked against who is actually there.
+        if (!people.some(function (person) { return person.role === messageWho; })) {
+            messageWho = people.length ? people[0].role : 'sponsor';
+        }
+
+        $('message-sub').textContent = messageStateLine();
+        $('message-nobody').hidden = people.length > 0;
+        $('message-compose').hidden = people.length === 0;
+
+        if (people.length) {
+            renderMessageWho(people);
+            renderMessageOpeners();
+            renderMessageSend();
+        }
+        renderMessageList();
+    }
+
+    function renderMessageWho(people) {
+        var box = $('message-who');
+        box.innerHTML = '';
+        people.forEach(function (person) {
+            var chip = document.createElement('button');
+            chip.className = 'chip' + (person.role === messageWho ? ' is-active' : '');
+            chip.dataset.who = person.role;
+            chip.textContent = person.name || person.label;
+            chip.addEventListener('click', function () {
+                if (messageWho === person.role) return;
+                messageWho = person.role;
+                // The words already in the box are kept: changing your mind
+                // about who to tell is not a reason to lose what you said.
+                flushMessageDraft();
+                Store.saveMessageDraft(messageWho, $('message-text').value);
+                renderMessage();
+            });
+            box.appendChild(chip);
+        });
+    }
+
+    function renderMessageOpeners() {
+        var box = $('message-openers');
+        box.innerHTML = '';
+        Store.MESSAGE_OPENERS.forEach(function (opener) {
+            var chip = document.createElement('button');
+            chip.className = 'chip';
+            chip.textContent = opener;
+            chip.addEventListener('click', function () {
+                var field = $('message-text');
+                var existing = field.value.replace(/\s+$/, '');
+                field.value = existing ? existing + '\n' + opener + ' ' : opener + ' ';
+                field.focus();
+                field.setSelectionRange(field.value.length, field.value.length);
+                growMessageBox();
+                saveMessageDraftSoon();
+                updateMessageSendState();
+            });
+            box.appendChild(chip);
+        });
+    }
+
+    /*
+     * Cheap enough to run on every keystroke: the word count and the text-message
+     * link both follow what is in the box, but rebuilding the rows under the
+     * reader's finger would be both wasteful and rude.
+     */
+    function updateMessageSendState() {
+        var text = $('message-text').value.trim();
+        $('message-hint').textContent = text
+            ? wordCount(text) + ' · it saves as you go'
+            : 'Nothing is sent by the app itself. You choose which way it leaves, ' +
+              'and it saves as you go.';
+        var sms = $('message-sms');
+        if (sms) sms.href = Store.messageSmsHref(messageWho, text);
+    }
+
+    /*
+     * The ways out, built rather than written into the markup: a text message
+     * only exists if there is a number, and the share sheet only if the browser
+     * has one. A button that cannot do anything is worse than no button.
+     */
+    function renderMessageSend() {
+        var box = $('message-send');
+        var text = $('message-text').value.trim();
+        var person = Store.messagePerson(messageWho);
+        var who = Store.messageWhoText(messageWho);
+
+        box.innerHTML = '';
+
+        if (person && person.phone) {
+            var sms = document.createElement('a');
+            sms.className = 'do-row';
+            sms.id = 'message-sms';
+            sms.href = Store.messageSmsHref(messageWho, text);
+            sms.innerHTML = doRowHtml(BUBBLE_ICON,
+                'Send it to ' + who + ' as a text', person.phone);
+            sms.addEventListener('click', function (event) {
+                // An empty message would open Messages with a blank body, which
+                // is not what the tap meant.
+                if (!$('message-text').value.trim()) {
+                    event.preventDefault();
+                    toast('There is nothing in the box yet.');
+                    return;
+                }
+                recordMessage('text');
+            });
+            box.appendChild(sms);
+        }
+
+        if (navigator.share) {
+            box.appendChild(messageSendRow(SHARE_ICON, 'Send it another way',
+                'WhatsApp, Signal, mail — whatever you use', function () {
+                    var body = $('message-text').value.trim();
+                    if (!body) { toast('There is nothing in the box yet.'); return; }
+                    navigator.share({ text: body })
+                        .then(function () { recordMessage('shared'); })
+                        .catch(function () { /* they backed out; nothing is recorded */ });
+                }));
+        }
+
+        box.appendChild(messageSendRow(COPY_ICON, 'Copy it',
+            'To paste wherever you like', function () {
+                var body = $('message-text').value.trim();
+                if (!body) { toast('There is nothing in the box yet.'); return; }
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(body)
+                        .then(function () { recordMessage('copied'); })
+                        .catch(function () { toast('Could not copy'); });
+                } else {
+                    toast('Select the text above and copy it');
+                }
+            }));
+
+        if (person && !person.phone) {
+            box.appendChild(messageSendRow(PHONE_ICON, 'No number for ' + who,
+                'Add one and you can text them from here', function () {
+                    showSettingsAt('settings-people');
+                }));
+        }
+
+        updateMessageSendState();
+    }
+
+    function doRowHtml(icon, label, note) {
+        return '<span class="do-icon">' + icon + '</span>' +
+            '<span class="do-text">' +
+                '<span class="do-label">' + escapeHtml(label) + '</span>' +
+                '<span class="do-note">' + escapeHtml(note) + '</span>' +
+            '</span>' +
+            '<span class="do-go">\u203a</span>';
+    }
+
+    function messageSendRow(icon, label, note, go) {
+        var row = document.createElement('button');
+        row.className = 'do-row';
+        row.innerHTML = doRowHtml(icon, label, note);
+        row.addEventListener('click', go);
+        return row;
+    }
+
+    /*
+     * A text message leaves through the phone's own app, so the tap is the last
+     * thing this screen sees. It is recorded then — which is why the list says
+     * how the message left rather than claiming it arrived.
+     */
+    function recordMessage(how) {
+        var body = $('message-text').value.trim();
+        if (!body) return;
+        if (messageSaveTimer) { clearTimeout(messageSaveTimer); messageSaveTimer = null; }
+
+        Store.saveMessage({ who: messageWho, text: body, how: how })
+            .then(function () { return Store.clearMessageDraft(); })
+            .then(function () {
+                $('message-text').value = '';
+                growMessageBox();
+                renderMessage();
+                renderHomeIfShowing();
+                toast(how === 'text'
+                    ? 'On its way to your texts, and kept here.'
+                    : 'Kept here as well.');
+            })
+            .catch(function (error) { toast(error.message); });
+    }
+
+    function renderMessageList() {
+        var box = $('message-list');
+        box.innerHTML = '';
+        $('message-summary').textContent = Store.messageSummaryLine();
+
+        // The last ten. This is a list you glance back over, not one you read
+        // through, and the whole of it is in the backup either way.
+        Store.state.messages.slice(0, 10).forEach(function (row) {
+            var card = document.createElement('button');
+            card.className = 'card message-card';
+            card.innerHTML =
+                '<span class="message-head">' +
+                    '<span class="message-who">' +
+                        escapeHtml(Store.messageWhoText(row.who)) + '</span>' +
+                    '<span class="message-when">' +
+                        escapeHtml(shortDate(row.sentAt) + ' · ' + timeOfDay(row.sentAt)) +
+                    '</span>' +
+                    '<span class="message-how">' +
+                        escapeHtml(Store.messageHowText(row.how)) + '</span>' +
+                '</span>' +
+                '<p class="message-text">' + escapeHtml(row.text) + '</p>';
+            card.addEventListener('click', function () { openMessagePast(row); });
+            box.appendChild(card);
+        });
+
+        if (Store.state.messages.length > 10) {
+            var more = document.createElement('p');
+            more.className = 'hint';
+            more.textContent = 'Showing the last 10 of ' + Store.state.messages.length + '.';
+            box.appendChild(more);
+        }
+    }
+
+    function openMessagePast(row) {
+        // Whatever is in the box may be newer than the saved draft, and this
+        // sheet can put it back — so it is written down before it is covered.
+        flushMessageDraft();
+        messagePast = row;
+        $('message-past-title').textContent = 'What you sent ' + Store.messageWhoText(row.who);
+        $('message-past-when').textContent =
+            shortDate(row.sentAt) + ' · ' + timeOfDay(row.sentAt) +
+            ' · ' + Store.messageHowText(row.how).toLowerCase();
+        $('message-past-text').value = row.text;
+        openSheet('message-past-sheet');
+    }
+
+    function growMessageBox() {
+        var field = $('message-text');
+        field.style.height = 'auto';
+        field.style.height = Math.max(field.scrollHeight, 150) + 'px';
+    }
+
+    function wordCount(text) {
+        var words = text.trim().split(/\s+/).filter(Boolean).length;
+        return words === 1 ? '1 word' : words + ' words';
+    }
+
+    // The home screen carries the last-message line, so sending from here has
+    // to leave it right if that is the screen underneath.
+    function renderHomeIfShowing() {
+        if (current.screen === 'home') renderHome();
+    }
+
+    /*
+     * Opening the screen picks up whatever was left in the box. The role comes
+     * with it, unless the caller has said who this is for — coming in from the
+     * craving screen or a tile knows the answer and should not have to guess.
+     */
+    function openMessage(who) {
+        var draft = Store.state.messageDraft;
+        if (who) messageWho = who;
+        else if (draft && draft.who) messageWho = draft.who;
+
+        // Filled before the screen is shown, so showScreen's own render sees
+        // the words rather than rendering an empty box and then being told.
+        $('message-text').value = (draft && draft.text) || '';
+        showScreen('message');
+        // Measured after: a hidden textarea has no scrollHeight to go on.
+        growMessageBox();
     }
 
     /* ------------------------------------------------------------ library */
@@ -4138,8 +4472,50 @@
             });
         });
 
+        // ── saying something ───────────────────────────────────────────────
+        $('message-back').addEventListener('click', function () { showScreen('home'); });
+        $('message-nobody').addEventListener('click', function () {
+            showSettingsAt('settings-people');
+        });
+        $('message-text').addEventListener('input', function () {
+            growMessageBox();
+            saveMessageDraftSoon();
+            updateMessageSendState();
+        });
+        $('message-past-close').addEventListener('click', function () {
+            messagePast = null;
+            closeSheets();
+        });
+        $('message-past-again').addEventListener('click', function () {
+            if (!messagePast) return;
+            var row = messagePast;
+            messagePast = null;
+            closeSheets();
+            openMessage(row.who);
+            var field = $('message-text');
+            // Whatever was half-written stays; this goes under it rather than
+            // over it, because losing the newer of the two would be the worse
+            // mistake.
+            var existing = field.value.replace(/\s+$/, '');
+            field.value = existing ? existing + '\n' + row.text : row.text;
+            growMessageBox();
+            flushMessageDraft();
+            Store.saveMessageDraft(messageWho, field.value);
+            updateMessageSendState();
+        });
+        $('message-past-delete').addEventListener('click', function () {
+            if (!messagePast) return;
+            if (!confirm('Delete this one? It comes off the record as well.')) return;
+            Store.deleteMessage(messagePast.id).then(function () {
+                messagePast = null;
+                closeSheets();
+                renderMessage();
+            });
+        });
+
         // ── a craving ──────────────────────────────────────────────────────
         $('craving-back').addEventListener('click', function () { showScreen('home'); });
+        $('craving-message').addEventListener('click', function () { openMessage(); });
 
         $('craving-start').addEventListener('click', function () {
             Store.startCraving().then(renderCraving);
@@ -4440,11 +4816,15 @@
             } else {
                 stopClock();
                 flushPosition();
+                flushMessageDraft();
             }
         });
         // iOS often kills a backgrounded PWA without a visibilitychange, so save
         // on pagehide too.
-        global.addEventListener('pagehide', flushPosition);
+        global.addEventListener('pagehide', function () {
+            flushPosition();
+            flushMessageDraft();
+        });
     }
 
     global.UI = {

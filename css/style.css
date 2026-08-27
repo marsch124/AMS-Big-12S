@@ -488,6 +488,60 @@ button { cursor: pointer; }
 #meeting-raise .card-list { margin-top: 0; }
 #meeting-raise:empty { display: none; }
 
+/* ═════════════════════════════════════════════════════════ saying something ══ */
+
+/* One box, and it wants to look like somewhere to talk rather than a form
+   field: tall before a word is in it, and growing with what is said so a
+   dictated paragraph is never read through a three-line window. */
+.message-box {
+  min-height: 150px;
+  margin-top: 4px;
+  overflow: hidden;
+  resize: none;
+}
+
+/* The openers are sentences, not labels, so they wrap and sit left rather than
+   being squeezed onto one line as the filter chips are. */
+#message-openers { gap: 7px; }
+#message-openers .chip {
+  flex: 0 1 auto;
+  max-width: 100%;
+  text-align: left;
+  font-weight: 500;
+  white-space: normal;
+}
+
+#message-who .chip { flex: 0 1 auto; }
+#message-send:empty { display: none; }
+/* Nobody set up yet: the row stands alone above the list, so it needs room
+   under it as well as over it. */
+#message-nobody { margin-bottom: 14px; }
+
+.message-card { border-left: 3px solid var(--accent); }
+.message-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.message-who { font-size: 15px; font-weight: 600; }
+.message-when { font-size: 14px; color: var(--text-dim); }
+.message-how {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.message-text {
+  margin: 7px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  /* Long enough to know which message this is, short enough that ten of them
+     are still a list you can glance down. The sheet has the whole of it. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* ═══════════════════════════════════════════════════════════════ library ══ */
 
 .section-heading {

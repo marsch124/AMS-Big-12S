@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=31">
+<link rel="stylesheet" href="css/style.css?v=32">
 </head>
 <body>
 
@@ -66,8 +66,9 @@
 
       <h2 class="section-heading">What brings you here</h2>
       <!-- Written in the first person, because that is how the reason arrives:
-           not "notes" but "I want to write something down". The ones with
-           nothing behind them yet say so when tapped rather than pretending. -->
+           not "notes" but "I want to write something down". Seven of them now.
+           The ones with nothing behind them yet say so when tapped rather than
+           pretending. -->
       <div class="shortcuts" id="shortcuts">
         <button class="shortcut" data-shortcut="read">
           <span class="shortcut-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
@@ -121,6 +122,17 @@
           </svg></span>
           <span class="shortcut-label">I’m meeting my sponsee</span>
           <span class="shortcut-note" id="shortcut-sponsee-note"></span>
+        </button>
+
+        <button class="shortcut" data-shortcut="message">
+          <span class="shortcut-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3.6a3 3 0 0 1 3 3v4.8a3 3 0 0 1-6 0V6.6a3 3 0 0 1 3-3z"/>
+            <path d="M6.3 11.4c0 3.1 2.6 5.5 5.7 5.5s5.7-2.4 5.7-5.5"/>
+            <path d="M12 16.9v3.5"/>
+            <path d="M9.2 20.4h5.6"/>
+          </svg></span>
+          <span class="shortcut-label">I want to say something to someone</span>
+          <span class="shortcut-note" id="shortcut-message-note"></span>
         </button>
 
         <button class="shortcut" data-shortcut="write">
@@ -379,6 +391,19 @@
       <h2 class="section-heading">What helps</h2>
       <div class="panel panel-flush">
         <div id="craving-rings"></div>
+        <button class="do-row" id="craving-message">
+          <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3.6a3 3 0 0 1 3 3v4.8a3 3 0 0 1-6 0V6.6a3 3 0 0 1 3-3z"/>
+            <path d="M6.3 11.4c0 3.1 2.6 5.5 5.7 5.5s5.7-2.4 5.7-5.5"/>
+            <path d="M12 16.9v3.5"/>
+            <path d="M9.2 20.4h5.6"/>
+          </svg></span>
+          <span class="do-text">
+            <span class="do-label">Say something to them</span>
+            <span class="do-note">Speak it into the phone when ringing is too much</span>
+          </span>
+          <span class="do-go">›</span>
+        </button>
         <button class="do-row" id="craving-write">
           <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3.8 20.4 8.6 15.4"/>
@@ -553,6 +578,58 @@
       <div class="btn-row">
         <button class="btn btn-quiet btn-block" id="meeting-share">Copy these out</button>
       </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════ Saying something ── -->
+  <!-- One box, big enough to talk into, because at the moment this screen is
+       wanted typing is the hard way. The app never sends anything itself: it
+       hands the words to the phone, and what is kept is which door they went
+       out of. Claiming they arrived would be claiming more than it can know. -->
+  <section class="screen" id="screen-message">
+    <header class="topbar">
+      <button class="icon-btn" id="message-back" aria-label="Back">‹</button>
+      <div class="topbar-titles">
+        <h1 class="topbar-title">Say something</h1>
+        <p class="topbar-sub" id="message-sub"></p>
+      </div>
+    </header>
+
+    <div class="screen-body">
+      <!-- Nobody set up yet. The way to fix it, rather than an empty row of
+           chips and a box addressed to no one. -->
+      <button class="do-row do-row-alone" id="message-nobody" hidden>
+        <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8.4" r="3"/>
+          <path d="M4.8 19.4c.5-3.4 3.3-5.4 7.2-5.4s6.7 2 7.2 5.4"/>
+        </svg></span>
+        <span class="do-text">
+          <span class="do-label">Add someone to write to</span>
+          <span class="do-note">Sponsor, sponsee or spouse — it stays on this device</span>
+        </span>
+        <span class="do-go">›</span>
+      </button>
+
+      <div id="message-compose" hidden>
+        <h2 class="section-heading">Who to</h2>
+        <div class="chip-row" id="message-who"></div>
+
+        <h2 class="section-heading">What to say</h2>
+        <textarea id="message-text" class="note-input message-box" rows="7"
+                  placeholder="Tap the microphone key on your keyboard and just talk."></textarea>
+        <p class="hint" id="message-hint"></p>
+
+        <p class="sheet-label">Somewhere to start</p>
+        <div class="chip-row" id="message-openers"></div>
+
+        <h2 class="section-heading">How to send it</h2>
+        <div class="panel panel-flush" id="message-send"></div>
+      </div>
+
+      <h2 class="section-heading">What you have sent</h2>
+      <p class="hint" id="message-summary"></p>
+      <div id="message-list" class="card-list"></div>
     </div>
   </section>
 
@@ -781,6 +858,32 @@
         </details>
 
         <details class="disclosure">
+          <summary>Saying something to them</summary>
+          <div class="disclosure-body">
+            <p>Some things will not keep until the next conversation, and some evenings
+               ringing somebody is more than you have in you. <strong>I want to say something
+               to someone</strong> on the front page opens one big box with your sponsor,
+               your sponsee and your spouse along the top — whoever you have put in
+               Settings.</p>
+            <p><strong>It is meant to be talked into.</strong> Tap in the box, then tap the
+               microphone key on your keyboard and say it out loud. What you say arrives as
+               text you can change before anybody sees it. If the first sentence will not
+               come, <strong>Somewhere to start</strong> offers four openers to build on.</p>
+            <p>Nothing is lost by putting the phone down. The box saves as you type, so a
+               message half worked out at eleven at night is still there in the morning.</p>
+            <p>When it is ready, you choose how it goes: as a <strong>text</strong> if you
+               have their number, through the <strong>share sheet</strong> to WhatsApp or
+               Signal or mail, or onto the <strong>clipboard</strong>. The app never sends
+               anything itself — it hands the words to your phone and stands back, which is
+               also why the record says how each message left rather than claiming it
+               arrived.</p>
+            <p><strong>What you have sent</strong> keeps the last ones, who they were to and
+               which way they went. Tap one to read it whole, to say the same thing again, or
+               to delete it.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
           <summary>Working the twelve steps</summary>
           <div class="disclosure-body">
             <p>The <strong>Steps</strong> tab holds a page for each of the twelve. Every page
@@ -900,6 +1003,36 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Saying something to them</span><span class="ver-tag">2.19</span></summary>
+          <div class="disclosure-body">
+            <p>There is now somewhere to say a thing to your sponsor, your sponsee or the
+               person you live with — <strong>I want to say something to someone</strong> on
+               the front page, and a row on the craving screen next to the numbers to ring.
+               Ringing is not always in you. A message often is.</p>
+            <ul>
+              <li><strong>One big box, meant to be talked into.</strong> Tap the microphone
+                  key on your keyboard and say it out loud; the words land in the box, where
+                  you can change them before anyone sees them.</li>
+              <li><strong>Somewhere to start.</strong> Four openers, because the hardest
+                  sentence in a message like this is the first one, and at the moment you
+                  most need to send it that is the sentence you cannot find.</li>
+              <li><strong>It saves as you go.</strong> The phone can lock, the app can be
+                  shut, and what you had written is still there when you come back.</li>
+              <li><strong>Three ways out</strong> — as a text, through the share sheet to
+                  WhatsApp or Signal or mail, or on the clipboard. The app still sends
+                  nothing itself: it hands the words to your phone, and says so.</li>
+              <li><strong>A record of what you sent</strong>, who to and which way it left.
+                  Tap one to read it whole, say it again, or delete it. It rides the backup
+                  with everything else.</li>
+            </ul>
+            <p>What is not here is the app doing the listening. Dictation on the phone's own
+               keyboard is the phone's business and mostly happens on the device; a
+               microphone button of ours would have sent your voice to somebody's server,
+               and nothing in this app leaves your phone unless you send it.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>The craving log and the three days</span><span class="ver-tag">2.18</span></summary>
@@ -1966,6 +2099,18 @@
   </div>
 </div>
 
+<div class="sheet" id="message-past-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title" id="message-past-title">What you sent</h2>
+  <p class="hint" id="message-past-when"></p>
+  <textarea id="message-past-text" class="note-input" rows="7" readonly></textarea>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="message-past-again">Say it again</button>
+    <button class="btn btn-quiet" id="message-past-delete">Delete</button>
+    <button class="btn btn-quiet" id="message-past-close">Close</button>
+  </div>
+</div>
+
 <div class="sheet sheet-tall" id="copy-sheet" hidden>
   <div class="sheet-handle"></div>
   <h2 class="sheet-title" id="copy-title">Copy this out</h2>
@@ -2012,10 +2157,10 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="js/parser.js?v=1"></script>
-<script src="js/db.js?v=6"></script>
-<script src="js/store.js?v=21"></script>
-<script src="js/backup.js?v=8"></script>
-<script src="js/ui.js?v=35"></script>
-<script src="js/app.js?v=22"></script>
+<script src="js/db.js?v=7"></script>
+<script src="js/store.js?v=22"></script>
+<script src="js/backup.js?v=9"></script>
+<script src="js/ui.js?v=36"></script>
+<script src="js/app.js?v=23"></script>
 </body>
 </html>

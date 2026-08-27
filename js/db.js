@@ -8,7 +8,7 @@
     'use strict';
 
     var DB_NAME = 'ams-big-12s';
-    var DB_VERSION = 6;
+    var DB_VERSION = 7;
 
     var STORE_META = 'meta';
     var STORE_BOOK = 'book';
@@ -27,6 +27,11 @@
     var STORE_CHECKINS = 'checkins';
     // The times abstinence broke, and the three days after each of them.
     var STORE_BREAKS = 'breaks';
+    // Messages spoken or typed to a sponsor, a sponsee or a spouse, and the way
+    // each one left the app. Structured records like the rest, so they are kept
+    // out of the note store: a note is something still waiting to be said, and
+    // one of these has been said already.
+    var STORE_MESSAGES = 'messages';
 
     var dbPromise = null;
 
@@ -78,6 +83,11 @@
                 if (!db.objectStoreNames.contains(STORE_BREAKS)) {
                     var breaks = db.createObjectStore(STORE_BREAKS, { keyPath: 'id' });
                     breaks.createIndex('on', 'on', { unique: false });
+                }
+                // Added in DB_VERSION 7, and the same again.
+                if (!db.objectStoreNames.contains(STORE_MESSAGES)) {
+                    var messages = db.createObjectStore(STORE_MESSAGES, { keyPath: 'id' });
+                    messages.createIndex('sentAt', 'sentAt', { unique: false });
                 }
             };
 
@@ -172,6 +182,7 @@
         STORE_MEETINGS: STORE_MEETINGS,
         STORE_CHECKINS: STORE_CHECKINS,
         STORE_BREAKS: STORE_BREAKS,
+        STORE_MESSAGES: STORE_MESSAGES,
         open: open,
         get: get,
         getAll: getAll,

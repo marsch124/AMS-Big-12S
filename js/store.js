@@ -39,6 +39,7 @@
     };
 
     var POSITION_MIRROR_KEY = 'ams-big-12s:position';
+    var MESSAGE_DRAFT_KEY = 'ams-big-12s:message-draft';
 
     var state = {
         book: null,              // { title, subtitle, edition, sections: [] }
@@ -54,6 +55,8 @@
         meetings: [],            // { id, on, where, shared, what }
         checkins: [],            // { id, who, on, values, notes }
         breaks: [],              // { id, on, what, days, closedAt }
+        messages: [],            // { id, who, text, how, sentAt }
+        messageDraft: null,      // { who, text, updatedAt } — never sent, never in the list
         visits: null             // the days the app has been opened, ascending
     };
 
@@ -1992,6 +1995,210 @@
         };
     }
 
+    /* ------------------------------------------------------------ messages */
+
+    /*
+     * Something said to a sponsor, a sponsee or the person you live with —
+     * spoken into the phone more often than typed, which is why the screen is
+     * one big box rather than a form.
+     *
+     * The app never sends anything itself. It hands the text to the phone, by
+     * text message, by the share sheet, or by the clipboard, and what is
+     * recorded here is which of those doors it went out of. Calling that
+     * "sent" would claim more than the app can know.
+     */
+
+    // Sponsor first, because that is who you are supposed to tell. Then the
+    // sponsee, and then the person you live with — the same order and the same
+    // three roles the craving screen rings, for the same reasons.
+    var MESSAGE_PEOPLE = [
+        { role: 'sponsor', label: 'Your sponsor' },
+        { role: 'sponsee', label: 'Your sponsee' },
+        { role: 'spouse', label: 'Your spouse' }
+    ];
+
+    /*
+     * Four ways in. The hardest sentence in a message like this is the first
+     * one, and at the moment you most need to send it that is the sentence you
+     * cannot find. They are openers rather than messages: they go in the box,
+     * where they can be changed or deleted like anything else you typed.
+     */
+    var MESSAGE_OPENERS = [
+        'Can we talk when you get a minute?',
+        'I am struggling tonight.',
+        'Just checking in.',
+        'Thank you for earlier.'
+    ];
+
+    var MESSAGE_HOW = {
+        text: 'By text',
+        shared: 'Shared',
+        copied: 'Copied'
+    };
+
+    function messageHowText(how) {
+        return MESSAGE_HOW[how] || 'Taken out of the app';
+    }
+
+    /*
+     * Who there is to say something to: the roles with a name or a number
+     * against them, in the order above. Derived from settings rather than
+     * configured twice, so adding a fourth role is a matter of extending
+     * MESSAGE_PEOPLE and nothing else.
+     */
+    function messagePeople() {
+        return MESSAGE_PEOPLE.map(function (person) {
+            var name = String(state.settings[person.role + 'Name'] || '').trim();
+            var phone = String(state.settings[person.role + 'Phone'] || '').trim();
+            return {
+                role: person.role,
+                label: person.label,
+                name: name,
+                phone: phone,
+                // A name alone is enough to write to somebody: the share sheet
+                // does not need a number, only a text message does.
+                known: !!(name || phone)
+            };
+        }).filter(function (person) { return person.known; });
+    }
+
+    function messagePerson(role) {
+        return messagePeople().filter(function (person) {
+            return person.role === role;
+        })[0] || null;
+    }
+
+    // What to call them on screen. Their name if it is known, and what they are
+    // to you if it is not — never a blank where a name should be.
+    function messageWhoText(role) {
+        var person = messagePerson(role);
+        if (person && person.name) return person.name;
+        var known = MESSAGE_PEOPLE.filter(function (p) { return p.role === role; })[0];
+        return known ? known.label.toLowerCase() : 'them';
+    }
+
+    function loadMessages() {
+        return DB.getAll(DB.STORE_MESSAGES).then(function (rows) {
+            state.messages = (rows || []).sort(function (a, b) {
+                return String(b.sentAt || '').localeCompare(String(a.sentAt || ''));
+            });
+            return state.messages;
+        }).catch(function () {
+            state.messages = [];
+            return state.messages;
+        });
+    }
+
+    /*
+     * Written only when the message actually leaves the app. A box you typed
+     * into and thought better of is a draft, and a draft is not a record —
+     * the same rule the check-ins follow with an untouched day.
+     */
+    function saveMessage(row) {
+        var text = String(row.text || '').trim();
+        if (!text) return Promise.reject(new Error('There is nothing in the message.'));
+
+        var now = new Date().toISOString();
+        var record = {
+            id: row.id || uid('msg'),
+            who: row.who || 'sponsor',
+            text: text,
+            how: row.how || 'copied',
+            sentAt: row.sentAt || now,
+            on: row.on || todayISO()
+        };
+        return DB.put(DB.STORE_MESSAGES, record).then(loadMessages).then(function () {
+            return record;
+        });
+    }
+
+    function deleteMessage(id) {
+        return DB.remove(DB.STORE_MESSAGES, id).then(loadMessages);
+    }
+
+    /*
+     * The draft, kept because a message worked out in the middle of a bad
+     * evening must not be lost by the phone locking. It has not been said to
+     * anybody, so it is not a record and it is not in the message store.
+     *
+     * localStorage rather than IndexedDB, and that is the whole point of it:
+     * writing is synchronous, so it survives iOS killing a backgrounded PWA
+     * without warning — which is exactly the moment a draft is lost. The
+     * reading position keeps a mirror here for the same reason.
+     *
+     * Deliberately not carried by the backup. A record moves to a new phone; a
+     * half-finished sentence does not need to.
+     */
+    function loadMessageDraft() {
+        state.messageDraft = null;
+        try {
+            var raw = localStorage.getItem(MESSAGE_DRAFT_KEY);
+            if (raw) {
+                var draft = JSON.parse(raw);
+                if (draft && typeof draft === 'object' && String(draft.text || '').trim()) {
+                    state.messageDraft = draft;
+                }
+            }
+        } catch (error) { /* a draft is not worth failing a boot over */ }
+        return Promise.resolve(state.messageDraft);
+    }
+
+    function saveMessageDraft(who, text) {
+        var body = String(text || '');
+        if (!body.trim()) return clearMessageDraft();
+        state.messageDraft = {
+            who: who || 'sponsor',
+            text: body,
+            updatedAt: new Date().toISOString()
+        };
+        try {
+            localStorage.setItem(MESSAGE_DRAFT_KEY, JSON.stringify(state.messageDraft));
+        } catch (error) { /* a full or blocked store; the box still has the words */ }
+        return state.messageDraft;
+    }
+
+    function clearMessageDraft() {
+        state.messageDraft = null;
+        try {
+            localStorage.removeItem(MESSAGE_DRAFT_KEY);
+        } catch (error) { /* nothing to be done, and nothing depends on it */ }
+        return null;
+    }
+
+    /*
+     * A text-message link, per RFC 5724. Spaces and brackets are for reading,
+     * not for dialling, so they come out of the number — the settings row still
+     * shows it exactly as it was typed.
+     */
+    function messageSmsHref(role, text) {
+        var person = messagePerson(role);
+        if (!person || !person.phone) return '';
+        return 'sms:' + person.phone.replace(/[^+0-9]/g, '') +
+            '?body=' + encodeURIComponent(String(text || ''));
+    }
+
+    function messageSummary() {
+        var cutoff = shiftDay(todayISO(), -29);
+        return {
+            total: state.messages.length,
+            recent: state.messages.filter(function (row) {
+                return String(row.on || '') >= cutoff;
+            }).length,
+            last: state.messages[0] || null
+        };
+    }
+
+    // One sentence, used by the home tile and by the screen, so the two cannot
+    // come to different conclusions about the same list.
+    function messageSummaryLine() {
+        var summary = messageSummary();
+        if (!summary.total) return 'Nothing sent from here yet.';
+        var line = summary.total === 1 ? 'One sent from here' : summary.total + ' sent from here';
+        line += ', ' + (summary.recent === 1 ? 'one' : summary.recent) +
+            ' in the last thirty days.';
+        return line;
+    }
+
     /* --------------------------------------------------------------- boot */
 
     function init() {
@@ -2005,6 +2212,8 @@
             .then(loadMeetings)
             .then(loadCheckins)
             .then(loadBreaks)
+            .then(loadMessages)
+            .then(loadMessageDraft)
             .then(loadVisits)
             .then(loadNotes)
             .then(loadBookmarks)
@@ -2145,6 +2354,21 @@
         meetingSummaryLine: meetingSummaryLine,
         meetingDayText: meetingDayText,
         meetingsAsText: meetingsAsText,
+
+        MESSAGE_OPENERS: MESSAGE_OPENERS,
+        loadMessages: loadMessages,
+        saveMessage: saveMessage,
+        deleteMessage: deleteMessage,
+        messagePeople: messagePeople,
+        messagePerson: messagePerson,
+        messageWhoText: messageWhoText,
+        messageHowText: messageHowText,
+        messageSmsHref: messageSmsHref,
+        messageSummary: messageSummary,
+        messageSummaryLine: messageSummaryLine,
+        loadMessageDraft: loadMessageDraft,
+        saveMessageDraft: saveMessageDraft,
+        clearMessageDraft: clearMessageDraft,
 
         loadBookmarks: loadBookmarks,
         findBookmark: findBookmark,

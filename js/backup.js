@@ -51,6 +51,10 @@
             // The times abstinence broke, and the three days after. Losing these
             // on a new phone would lose the only record of what came before one.
             breaks: state.breaks,
+            // What has been said to a sponsor, a sponsee or a spouse from this
+            // app. The unsent draft is deliberately not here: a record moves to
+            // a new phone, a half-finished sentence does not need to.
+            messages: state.messages,
             // The days the app has been opened. A run of them is worth nothing
             // if it starts again on a new phone.
             visits: state.visits || []
@@ -166,7 +170,7 @@
     function restoreBackup(payload, mode) {
         mode = mode || 'merge';
         var summary = { notes: 0, bookmarks: 0, inventory: 0, cravings: 0, meetings: 0,
-                        checkins: 0, breaks: 0, bookText: false, mode: mode };
+                        checkins: 0, breaks: 0, messages: 0, bookText: false, mode: mode };
 
         var prepare = mode === 'replace'
             ? Promise.all([
@@ -176,7 +180,8 @@
                 DB.clear(DB.STORE_CRAVINGS),
                 DB.clear(DB.STORE_MEETINGS),
                 DB.clear(DB.STORE_CHECKINS),
-                DB.clear(DB.STORE_BREAKS)
+                DB.clear(DB.STORE_BREAKS),
+                DB.clear(DB.STORE_MESSAGES)
             ])
             : Promise.resolve();
 
@@ -250,6 +255,17 @@
             });
             summary.breaks = breaks.length;
 
+            // Absent from anything written before 2.19, same rule as the rest:
+            // an older file must restore without emptying what is on this phone.
+            var existingMessages = {};
+            if (mode === 'merge') {
+                Store.state.messages.forEach(function (row) { existingMessages[row.id] = row; });
+            }
+            var messages = (payload.messages || []).map(function (row) {
+                return newerOf(row, existingMessages[row.id]);
+            });
+            summary.messages = messages.length;
+
             return Promise.all([
                 DB.putMany(DB.STORE_NOTES, notes),
                 DB.putMany(DB.STORE_BOOKMARKS, bookmarks),
@@ -257,7 +273,8 @@
                 DB.putMany(DB.STORE_CRAVINGS, cravings),
                 DB.putMany(DB.STORE_MEETINGS, meetings),
                 DB.putMany(DB.STORE_CHECKINS, checkins),
-                DB.putMany(DB.STORE_BREAKS, breaks)
+                DB.putMany(DB.STORE_BREAKS, breaks),
+                DB.putMany(DB.STORE_MESSAGES, messages)
             ]);
         }).then(function () {
             if (payload.book && payload.book.sections && payload.book.sections.length) {

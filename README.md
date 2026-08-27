@@ -25,6 +25,9 @@ without a signal.
 - 📋 **The rules as they stand** — two lists, what you keep and what you have asked of a
   sponsee, in Settings
 - ✎ **Notes on any passage** — tap a paragraph, write a note; it stays attached to those words
+- 🎙 **Say something to them** — speak a message to your sponsor, your sponsee or your
+  spouse and send it as a text, through the share sheet, or on the clipboard; it saves as
+  you go and keeps a record of what went out
 - 🤝 **Before we talk** — a page a day for the sponsor conversation and the sponsee one:
   your own questions, what to raise, and notes from the meeting
 - 🗣 **Things to bring up** — mark anything for your sponsor, a sponsee or a meeting, keep a
@@ -152,6 +155,44 @@ A little formatting is allowed where a word needs the weight: `**two stars**`
 makes a phrase **bold**, `*one star*` or `_an underscore_` makes it *italic*.
 Everything else is left exactly as typed — text is escaped before it is
 formatted, so nothing that looks like a tag is ever run as one.
+
+## Saying something to them
+
+*I want to say something to someone* on the home screen — and a row beside the
+numbers to ring on the craving screen, because ringing somebody is not always in
+you and a message often is.
+
+**One box, and it is meant to be talked into.** Tap in it, tap the microphone key
+on the phone's keyboard, and say the thing out loud; it lands as text you can
+change before anybody sees it. Your sponsor, sponsee and spouse sit along the
+top — whoever has a name or a number in Settings, sponsor first. Changing your
+mind about who it is for keeps what you have written.
+
+**Somewhere to start** offers four openers. The hardest sentence in a message
+like this is the first one, and at the moment you most need to send it that is
+the sentence you cannot find. They go *in* the box, to be built on or deleted.
+
+**It saves as you type**, not when you leave the field, so a message half worked
+out at eleven at night is still there in the morning. The draft lives in the
+phone's own storage rather than the database, because that write is synchronous
+and survives iOS killing the app without warning — which is exactly the moment
+one gets lost. It is deliberately **not** in the backup: a record moves to a new
+phone, a half-finished sentence does not need to.
+
+**Three ways out**, and the app takes none of them itself: as a **text** if you
+have their number, through the **share sheet** to WhatsApp, Signal or mail, or
+onto the **clipboard**. It hands the words to the phone and stands back.
+
+**What you have sent** keeps the last ones — who to, when, and which way each
+left. That last part is precise on purpose: the app never learns whether a
+message arrived, so the record says *Copied*, *Shared* or *By text* rather than
+claiming delivery. Tap one to read it whole, say the same thing again, or delete
+it. The list rides the backup with everything else.
+
+**There is no microphone button of ours, and that is a decision.** Dictation on
+the phone's own keyboard is the phone's business and largely happens on the
+device. A record button in this app would have meant sending your voice to
+somebody's server, and nothing here leaves your phone unless you send it.
 
 ## Before we talk
 
@@ -510,7 +551,9 @@ backup, and the whole book is readable with the network switched off.
 | Notes, answers, bookmarks, any text you import | IndexedDB (`ams-big-12s`) |
 | Every row of every step's work | IndexedDB, in its own store — structured records, not prose |
 | Questions you put away or added | IndexedDB, carried explicitly by the backup |
+| Messages you have sent from the app | IndexedDB, in its own store, carried by the backup |
 | Settings, reading position | IndexedDB, mirrored to `localStorage` for a fast first paint |
+| An unsent message still in the box | `localStorage` only — a synchronous write survives the app being killed, and a draft is not a record to move to a new phone |
 | App shell and bundled text | Cache Storage, via the service worker |
 
 Nothing leaves the device. Clearing the browser's site data for this app erases

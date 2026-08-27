@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.18 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.19 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -200,8 +200,9 @@ store.** The home screen and the step page were both counting days; two
 implementations of "what day is it" would eventually disagree. `ui.js` keeps thin
 wrappers that call through.
 
-**No shortcut tile is a placeholder any more.** Both — *I have cravings* (2.2)
-and *I'm going to a meeting* (2.3) — were built. The machinery is still there:
+**No shortcut tile is a placeholder any more.** All of them — *I have cravings*
+(2.2), *I'm going to a meeting* (2.3) and *I want to say something to someone*
+(2.19) — were built. Seven tiles now. The machinery is still there:
 a tile whose name `runShortcut()` does not know falls through to "Not built yet
 — this one is a place held open", and `is-soon` dashes its border. Use that for
 the next tile added ahead of what it does, and never wire a new tile to
@@ -330,6 +331,62 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## Saying something to them (2.19)
+
+**The app sends nothing, and the record says so.** A message leaves by a `sms:`
+link, `navigator.share`, or the clipboard, and `how` records which of the three.
+The app never learns whether it arrived, so the list says *By text* / *Shared* /
+*Copied* and the heading is "What you have sent" rather than any claim of
+delivery. Do not "improve" this into a delivery status — there is nothing behind
+it to be true.
+
+**There is deliberately no Web Speech API and no microphone button.** Martin
+asked to *dictate* a message; the answer is a box the phone's own keyboard
+dictation is good at, not `webkitSpeechRecognition`. That API ships audio to
+Apple's or Google's servers, which would break the promise made in `db.js`'s own
+header, in the About panel and in the README — nothing leaves the device unless
+the reader sends it — and it is unreliable in an installed PWA on iOS besides.
+The keyboard's dictation is largely on-device and is what he already uses (step
+four's card view is "the view you dictate into"). If he asks again for a record
+button, he has heard the argument and it is his call.
+
+**The draft is in `localStorage`, not IndexedDB, and that is the point.**
+`MESSAGE_DRAFT_KEY` is written synchronously, so it survives iOS killing a
+backgrounded PWA — which is exactly when a half-written message is lost. The
+reading position keeps its mirror there for the same reason. It is written on a
+400 ms debounce, on `visibilitychange`, on `pagehide` and on leaving the screen.
+It is deliberately **not** in the backup: a record moves to a new phone, a
+half-finished sentence does not, and a smoke check holds that.
+
+**A record is written only when the message actually leaves.** An empty box
+writes nothing, and a draft is never in the list — the same rule
+`checkinIsEmpty()` follows for an untouched day. `saveMessage()` rejects an empty
+text rather than storing one.
+
+**`messages` is a store of its own (`DB_VERSION` 7)** — the sixth to follow the
+pattern: guarded upgrade, carried by `backup.js` both ways, and a check that a
+backup written before the store existed restores without emptying it. Not bent
+into the note store, and the reason is not just shape: a note tagged `sponsor` is
+something *still waiting to be said*, and one of these has been said already.
+
+**Who you can write to is derived, not configured.** `Store.messagePeople()`
+reads the same `sponsor`/`sponsee`/`spouse` name and phone pairs from settings
+that `RING_PEOPLE` rings, in the same order and for the same reasons, and filters
+to those with a name or a number. A name alone is enough — the share sheet does
+not need a number, only a text message does, and the screen says so with a row
+that goes to Settings rather than a button that cannot work. Add a fourth role by
+extending `MESSAGE_PEOPLE` and `RING_PEOPLE`, not by branching.
+
+**`updateMessageSendState()` runs on every keystroke; `renderMessageSend()` does
+not.** The word count and the `sms:` href follow the box, but rebuilding the rows
+under the reader's finger would be both wasteful and rude. Only a change of
+person rebuilds them.
+
+**The openers are openers, not messages.** Four of them, in `store.js` as
+`MESSAGE_OPENERS` alongside `CHECKIN_SPECS`, because the hardest sentence is the
+first one. They append to the box to be edited, and never replace what is there.
+Changing who the message is for keeps the words too — a smoke check holds both.
 
 ## The craving log and the three days (2.18)
 
@@ -582,7 +639,7 @@ sw.js               Service worker: offline shell + book cache
 css/style.css       Themes (sepia/light/dark/auto), reader typography
 js/parser.js        Plain text → sections. Shared with tools/build-book.js
 js/db.js            IndexedDB wrapper (meta, book, notes, bookmarks, inventory,
-                    cravings, meetings, checkins, breaks)
+                    cravings, meetings, checkins, breaks, messages)
 js/store.js         Book, settings, position, notes, bookmarks, search
 js/backup.js        Export / restore
 js/ui.js            Screens, rendering, all event wiring
@@ -597,7 +654,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    356 end-to-end browser checks
+tools/smoke-test.js    382 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -609,7 +666,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 356 checks, expect 356/356
+node tools/smoke-test.js                  # 382 checks, expect 382/382
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.
