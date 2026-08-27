@@ -548,10 +548,10 @@
         var body = $('step-work-body');
 
         // Kinds still declared in the data with no renderer show no work section
-        // rather than an empty one. Remaining: two-lists, sittings,
-        // carried-defects, people-worked-with.
+        // rather than an empty one. Remaining: sittings, carried-defects,
+        // people-worked-with.
         var kinds = ['inventory-tables', 'amends-list', 'amends-progress',
-            'daily-entries', 'daily-practice', 'prayer'];
+            'daily-entries', 'daily-practice', 'prayer', 'two-lists'];
         if (!work || kinds.indexOf(work.kind) === -1) {
             holder.hidden = true;
             body.innerHTML = '';
@@ -572,9 +572,142 @@
             body.appendChild(renderAmendsProgress(step, work));
         } else if (work.kind === 'prayer') {
             body.appendChild(renderPrayer(step, work));
+        } else if (work.kind === 'two-lists') {
+            body.appendChild(renderTwoLists(step, work));
         } else {
             body.appendChild(renderDaily(step, work));
         }
+    }
+
+    /* -------------------------------------------------- steps one and two */
+
+    /*
+     * Two lists kept side by side, added to over time rather than filled in
+     * once. Each list is its own table, so an item simply belongs to the list
+     * it was written into.
+     *
+     * Items can be moved across. Step two asks for exactly that — what you
+     * cannot accept today may be what has shifted a year from now, and the
+     * point of the page is being able to see that it moved.
+     */
+    function renderTwoLists(step, work) {
+        var wrap = document.createElement('div');
+        wrap.className = 'twolists';
+        var lists = work.lists || [];
+
+        lists.forEach(function (list, listIndex) {
+            var other = lists[listIndex === 0 ? 1 : 0];
+            var items = Store.inventoryFor(step.id, list.id);
+
+            var panel = document.createElement('section');
+            panel.className = 'listpanel';
+            panel.innerHTML =
+                '<h3 class="listpanel-title">' + escapeHtml(list.title) +
+                    (items.length ? ' <span class="listpanel-count">' + items.length + '</span>' : '') +
+                '</h3>' +
+                '<p class="listpanel-prompt">' + escapeHtml(list.prompt || '') + '</p>';
+
+            var rows = document.createElement('div');
+            rows.className = 'listpanel-items';
+
+            items.forEach(function (row) {
+                var text = (row.values && row.values.text) || '';
+                var item = document.createElement('div');
+                item.className = 'listitem';
+                item.innerHTML =
+                    '<p class="listitem-text">' + escapeHtml(text) + '</p>' +
+                    '<p class="listitem-when">' + escapeHtml(formatDay(
+                        (row.createdAt || '').slice(0, 10))) + '</p>';
+
+                var actions = document.createElement('div');
+                actions.className = 'card-actions';
+
+                var edit = document.createElement('button');
+                edit.className = 'chip';
+                edit.textContent = 'Edit';
+                edit.addEventListener('click', function () {
+                    openPaste({
+                        title: list.title,
+                        hint: list.prompt || '',
+                        value: text,
+                        onConfirm: function (value) {
+                            var next = String(value || '').trim();
+                            if (!next) { toast('Nothing written — left as it was'); return; }
+                            Store.saveInventoryRow(Object.assign({}, row, { values: { text: next } }))
+                                .then(function () { renderStep(Store.getStep(step.id)); });
+                        }
+                    });
+                });
+                actions.appendChild(edit);
+
+                if (other) {
+                    var move = document.createElement('button');
+                    move.className = 'chip';
+                    move.textContent = 'Move across';
+                    move.title = 'Move to ' + other.title;
+                    move.addEventListener('click', function () {
+                        // Keeps its id and the date it was first written, so
+                        // moving records a change of mind rather than looking
+                        // like something written today.
+                        Store.saveInventoryRow(Object.assign({}, row, { tableId: other.id }))
+                            .then(function () {
+                                toast('Moved to ' + other.title);
+                                renderStep(Store.getStep(step.id));
+                            });
+                    });
+                    actions.appendChild(move);
+                }
+
+                var del = document.createElement('button');
+                del.className = 'chip';
+                del.textContent = 'Remove';
+                del.addEventListener('click', function () {
+                    if (!confirm('Remove this from ' + list.title + '?')) return;
+                    Store.deleteInventoryRow(row.id).then(function () {
+                        toast('Removed');
+                        renderStep(Store.getStep(step.id));
+                    });
+                });
+                actions.appendChild(del);
+
+                item.appendChild(actions);
+                rows.appendChild(item);
+            });
+
+            if (!items.length) {
+                var none = document.createElement('p');
+                none.className = 'hint';
+                none.textContent = 'Nothing here yet.';
+                rows.appendChild(none);
+            }
+            panel.appendChild(rows);
+
+            var add = document.createElement('button');
+            add.className = 'btn btn-quiet btn-small listpanel-add';
+            add.textContent = 'Add to this list';
+            add.addEventListener('click', function () {
+                openPaste({
+                    title: list.title,
+                    hint: list.prompt || '',
+                    placeholder: 'One thing. Add another afterwards.',
+                    onConfirm: function (value) {
+                        var values = { text: String(value || '').trim() };
+                        if (Store.rowIsEmpty(values)) { toast('Nothing written'); return; }
+                        Store.saveInventoryRow({
+                            stepId: step.id, tableId: list.id, values: values
+                        }).then(function () {
+                            toast('Added');
+                            renderStep(Store.getStep(step.id));
+                        });
+                    }
+                });
+            });
+            panel.appendChild(add);
+
+            wrap.appendChild(panel);
+        });
+
+        return wrap;
     }
 
     /* ------------------------------------------------ steps three and seven */

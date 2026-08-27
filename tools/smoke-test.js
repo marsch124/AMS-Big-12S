@@ -271,13 +271,16 @@ async function shot(page, name) {
         (await page.$$eval('.inv-title', (e) =>
             e.map((x) => x.textContent.replace(/\d+$/, '').trim()))).join(' / '));
 
-    // a step whose work module has no renderer yet shows no work section at all,
-    // rather than an empty one
+    // A step whose work module has no renderer yet shows no work section at all,
+    // rather than an empty one. Step five (sittings) is the check — move this to
+    // another unbuilt step when five is built, do not simply delete it.
     await page.click('#step-back');
-    await page.click('.step-item >> nth=0');
+    await page.click('.step-item >> nth=4');
     await page.waitForSelector('#screen-step.is-active');
     check('a step whose work is not built yet shows no work section',
-        !(await page.isVisible('#step-work')));
+        (await page.textContent('#step-title')) === 'Step 5' &&
+        !(await page.isVisible('#step-work')),
+        await page.textContent('#step-title'));
     await page.click('#step-back');
     await page.click('.step-item >> nth=3');
     await page.waitForSelector('#screen-step.is-active');
@@ -849,6 +852,58 @@ async function shot(page, name) {
         carried.length === 3 && carriedAnswers.length === 2 &&
         carried.every((n) => !n.sectionId),
         carried.length + ' notes, ' + carriedAnswers.length + ' answers');
+
+    // ── steps one and two: two lists side by side ─────────────────────────
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=0');           // step 1
+    await page.waitForSelector('#screen-step.is-active');
+    check('step one now has its work section', await page.isVisible('#step-work'));
+    check('both lists are offered, with their own titles',
+        JSON.stringify(await page.$$eval('.listpanel-title', (e) =>
+            e.map((x) => x.textContent.trim().replace(/\s*\d+$/, '')))) ===
+        JSON.stringify(['Powerless over alcohol', 'Life unmanageable']));
+
+    await page.click('.listpanel >> nth=0 >> .listpanel-add');
+    await page.waitForSelector('#paste-sheet:not([hidden])');
+    await page.fill('#paste-body', 'Meant to have two, woke up on the sofa.');
+    await page.click('#paste-confirm');
+    await page.waitForTimeout(250);
+    check('an item can be added to a list',
+        (await page.$$eval('.listpanel >> nth=0 >> .listitem', (e) => e.length)) === 1);
+
+    await page.click('.listpanel >> nth=0 >> .listpanel-add');
+    await page.waitForSelector('#paste-sheet:not([hidden])');
+    await page.fill('#paste-body', '   ');
+    await page.click('#paste-confirm');
+    await page.waitForTimeout(250);
+    check('a blank item is refused, in a list whose point is evidence',
+        (await page.$$eval('.listpanel >> nth=0 >> .listitem', (e) => e.length)) === 1);
+
+    const whenBefore = await page.textContent('.listpanel >> nth=0 >> .listitem-when');
+    await page.click('.listpanel >> nth=0 >> .listitem >> nth=0 >> .chip:has-text("Move across")');
+    await page.waitForTimeout(300);
+    check('an item can move across, which is what step two is for',
+        (await page.$$eval('.listpanel >> nth=0 >> .listitem', (e) => e.length)) === 0 &&
+        (await page.$$eval('.listpanel >> nth=1 >> .listitem', (e) => e.length)) === 1);
+    check('and keeps the date it was first written, not the date it moved',
+        (await page.textContent('.listpanel >> nth=1 >> .listitem-when')) === whenBefore,
+        whenBefore);
+
+    await page.click('.listpanel >> nth=1 >> .listitem >> nth=0 >> .chip:has-text("Edit")');
+    await page.waitForSelector('#paste-sheet:not([hidden])');
+    check('editing an item opens with it in the box',
+        (await page.inputValue('#paste-body')).indexOf('Meant to have two') === 0);
+    await page.click('#paste-cancel');
+
+    await page.click('#step-back');
+    await page.click('.step-item >> nth=1');           // step 2
+    await page.waitForSelector('#screen-step.is-active');
+    check('step two has its own two lists, and its own items',
+        JSON.stringify(await page.$$eval('.listpanel-title', (e) =>
+            e.map((x) => x.textContent.trim().replace(/\s*\d+$/, '')))) ===
+        JSON.stringify(['What I cannot accept yet', 'What has shifted']) &&
+        (await page.$$eval('.listitem', (e) => e.length)) === 0);
+    await page.click('#step-back');
 
     // ── steps three and seven: a dated decision ───────────────────────────
     await page.click('.tab[data-screen="steps"]');

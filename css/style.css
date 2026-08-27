@@ -351,6 +351,55 @@ button { cursor: pointer; }
 
 /* ════════════════════════════════════════════════════════════════ steps ══ */
 
+/* ── Steps one and two: two lists kept side by side ──────────────────────── */
+
+.twolists { display: flex; flex-direction: column; gap: 16px; }
+
+.listpanel {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--bg-raised);
+  padding: 13px 14px;
+}
+.listpanel-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.listpanel-count {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  background: var(--bg-sunken);
+  border-radius: 20px;
+  padding: 2px 8px;
+  margin-left: 4px;
+  vertical-align: 1px;
+}
+.listpanel-prompt {
+  margin: 5px 0 11px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.listpanel-items { display: flex; flex-direction: column; gap: 8px; }
+.listpanel-add { width: 100%; margin-top: 11px; }
+
+.listitem {
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--bg);
+  padding: 11px 12px 3px;
+}
+.listitem-text { margin: 0; font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
+.listitem-when {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.listitem .card-actions { padding: 8px 0 6px; }
+
 /* ── Steps three and seven: a dated record of a decision ─────────────────── */
 
 .prayer-passage {
