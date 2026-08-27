@@ -8,12 +8,13 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.22 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.0 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
-The twelve-step section is being built in phases. The full design plan, with the
-anatomy of a step page and what each step's own work needs, is at
+The twelve-step section was built in phases, all of them now done. The design
+plan — the anatomy of a step page and what each step's own work needs, kept up
+to date with what was actually built — is at
 https://claude.ai/code/artifact/b467fb04-03e9-4f26-aa77-7f8f18b8c433
 
 | | | |
@@ -24,32 +25,46 @@ https://claude.ai/code/artifact/b467fb04-03e9-4f26-aa77-7f8f18b8c433
 | Phase 4 | done | Answerable questions keeping every earlier answer; hide, add your own |
 | Phase 5 | **done** | Writing the twelve. **All twelve are written. 85 references resolve, none ambiguous. No stubs remain.** |
 | Phase 6 | **done** | Each step's own work. **All ten kinds built; all twelve steps show a work section.** |
-| Phase 7 | to do | Progress on the list, copy a step out for a sponsor, docs, v2.0 |
+| Phase 7 | **done** | Honest progress on the list, copying a step out, docs, **v2.0** |
+
+**The twelve-step section is finished.** Nothing from the plan is outstanding.
+Work on it now is new work, not a phase.
 
 **Audited 2026-08-27 against the running app, not from memory.** Every step page
-was opened in a browser and checked for a work section. All twelve now show one.
-Phase 6 is finished: every declared `work.kind` has a branch in
-`renderStepWork()`. The dispatcher still hides the section for a kind it does not
-know, and a smoke check proves that directly by handing it a bogus kind, rather
-than by pointing at an unbuilt step as it used to.
+was opened in a browser and checked. All twelve show their own work, every
+declared `work.kind` has a branch in `renderStepWork()`, and the dispatcher still
+hides the section for a kind it does not know — a smoke check proves that
+directly by handing it a bogus kind, rather than by pointing at an unbuilt step
+as it used to. Keep that check: it is the only thing standing behind the
+hide-when-unbuilt behaviour.
 
-Also open, all Phase 7:
+**The steps list counts three things, and `Store.stepProgress()` is the only
+place that decides.** It counted notes alone until 2.0, so answering eight
+questions and filling in an inventory left the row reading as untouched — the
+app telling the reader they had not done something they had. Notes, answers and
+work rows count together; anything showing progress must go through
+`stepProgress()` rather than counting one of them again by hand.
 
-- **The Steps list undercounts.** Its per-step number comes from
-  `Store.notesForStep()`, which deliberately excludes answers and work rows.
-  Answer eight questions on step 1 and the row still shows nothing. Progress on
-  the list needs to count notes, answers and work together.
-- **No way to copy a step out** for a sponsor — never started.
-- **README** still describes the Steps tab in Phase 2 terms: no mention of the
-  inventory tables, the amends list, or the daily practice.
-- **The plan artifact** (linked above) predates all of this and still reads as
-  though nothing is built.
+**Each work kind names its own rows** — `work.count` in `steps.source.json`,
+`{one, many}` — because "3 entries" is true of all ten kinds and so says
+nothing. `build-steps.js` **refuses to build** a work block without one: a name
+that exists in a single place is a name that gets forgotten. `Store.workCount()`
+counts a step's own rows, except where the step annotates another's (step 9),
+where it counts the rows it has written on — otherwise step 9 would read as
+finished the moment step 8 had names in it.
 
-**One smoke check guards the hide-when-unbuilt behaviour**, now pointed at step
-twelve — the last unbuilt kind. When twelve is built the check has nowhere left
-to point, and only then should it go. When five is built, repoint it at another unbuilt step rather than
-deleting it — it is the only thing proving an unbuilt kind hides its section
-instead of showing an empty one.
+**Copying a step out is composed in `store.js`, never scraped from the page.**
+`Store.stepAsText(step, opts)` walks the questions, notes and rows directly,
+because the page folds things away and shows the last five of a log — right for
+reading, wrong for a copy someone will rely on. The reader ticks what goes and
+sees the whole text before anything is copied. This is the only route by which
+what has been written can leave the phone, so nothing may be added to that text
+that the reader has not been shown.
+
+**A field marked `"private": true` in the source never leaves without being
+asked for by name.** Step five's `heldBack` is the one. The toggle carries the
+field's own words, and resets to off on every open. If another private field is
+ever added, the flag is the mechanism — do not rely on a default staying put.
 
 **Step six does not annotate step four's rows**, unlike step nine on step
 eight's. The same defect appears in several rows and deserves one answer, so
@@ -71,28 +86,15 @@ point into the book, and until then only `text` and `references` were validated 
 a typo in a work passage would have failed silently at run time instead of at
 build time.
 
-Build them by adding a branch in `renderStepWork()` in `ui.js`. Step 4's build is
-the pattern to copy: rows in their own IndexedDB store, carried explicitly by
-`backup.js`, an empty row refused, and a smoke test that covers the backup round
-trip *both* ways — including that a backup written before the kind existed does
-not wipe what is on the device.
-
-After that, phase 7: progress on the steps list, copying a step out for a
-sponsor, docs, v2.0.
-
-**Phase 6, per step.** All twelve now declare a `work` kind: `two-lists` (1, 2),
+**The ten kinds of work, and which steps use them:** `two-lists` (1, 2),
 `prayer` (3, 7), `inventory-tables` (4), `sittings` (5), `carried-defects` (6),
 `amends-list` (8), `amends-progress` (9), `daily-entries` (10), `daily-practice`
-(11), `people-worked-with` (12). **Only `inventory-tables` has a renderer.** `renderStepWork()`
-in `ui.js` hides the whole work section for a kind it cannot draw, so steps 1, 2,
-3 and 5 show no work section at all rather than an empty one — build the next
-kind by adding a branch there. What each needs: 1 two lists of evidence; 2 what cannot be accepted yet
-and what has shifted; 3 and 7 a prayer with a date kept each time; **4 three
-inventory tables — resentments, fears, conduct — the largest build here**; 5 who
-you sat with and what was held back; 6 the defects from step 4 carried through;
-8 the amends list, names carried from step 4; 9 the same list with status and
-outcome, lives for years; 10 short daily entries, a different rhythm; 11 the
-morning and evening prompts plus a practice log; 12 who you have worked with.
+(11), `people-worked-with` (12). Each is a branch in `renderStepWork()` in
+`ui.js`. If an eleventh is ever needed, step 4's build is the pattern to copy:
+rows in their own IndexedDB store, carried explicitly by `backup.js`, an empty
+row refused, a `count` naming its rows, and a smoke test covering the backup
+round trip *both* ways — including that a backup written before the kind existed
+does not wipe what is on the device.
 
 **The step text disagrees with itself in one place.** Step five as printed in
 *How It Works* says "the exact nature of our wrongs"; *Into Action* says
@@ -204,7 +206,7 @@ data/steps.json                     Built steps with references resolved
 tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
-tools/smoke-test.js    173 end-to-end browser checks
+tools/smoke-test.js    190 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -216,7 +218,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 173 checks, expect 173/173
+node tools/smoke-test.js                  # 190 checks, expect 190/190
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.
@@ -253,6 +255,11 @@ losing the lines. The heuristic still exists for unmarked text pasted by hand.
 **`isNoise()` is gated on `aggressive`.** Page-number and running-head stripping
 runs only for unmarked text. It was matching the Foreword's closing signature,
 "ALCOHOLICS ANONYMOUS.", and deleting it.
+
+**`closeSheets()` closes every `.sheet`, not a list of ids.** It used to name
+five of them, so the share sheet added in 2.0 stayed open behind whatever came
+next — `openSheet()` calls `closeSheets()` first, and a sheet missing from that
+list simply never closed. A new bottom sheet needs only the `sheet` class on it.
 
 **Reading position saves at four moments,** not just on scroll: on opening a
 chapter, on scroll (debounced 400 ms), on leaving the reader, and on

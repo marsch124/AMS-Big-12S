@@ -16,9 +16,12 @@ without a signal.
 - 🗣 **Things to bring up** — mark anything for your sponsor or a sponsee, keep a running count of
   what is still waiting, tick it off after the conversation, and copy the list out before a call
 - 💭 **Notes of your own** — write down what did not come from a page at all
-- 🪜 **The twelve steps** — a page each, with the passages of the book that describe them,
-  questions to take to a sponsor — answerable, and keeping every earlier answer dated —
-  and notes that keep every pass rather than overwriting the last
+- 🪜 **The twelve steps** — a page each: the passages of the book that describe them,
+  questions to take to a sponsor that keep every earlier answer dated, dated notes on every
+  pass, and the work that step actually asks for — inventory tables, an amends list two
+  steps write into, a daily rhythm, a record of who you have sat with
+- 📤 **A step you can take out** — copy any step to the clipboard for a sponsor, ticking
+  what goes and seeing it in full before it leaves
 - 🔍 **Full-text search** — jump straight from a phrase to the passage it lives in
 - 💾 **One-file backup** — notes, bookmarks, position, settings and (optionally) the text
 - 📡 **Fully offline** — everything lives on your device; no account, no server, no tracking
@@ -55,6 +58,81 @@ or **my sponsee**:
 
 **Reflections** gathers everything written that did not come from a page,
 whoever it was for.
+
+## Working the steps
+
+The **Steps** tab holds a page for each of the twelve. Every page carries the
+step as the 1939 edition prints it, a plain explanation of what it asks, the
+passages of the book that describe it — several, where the book makes its case
+in more than one place — and questions to take to a sponsor.
+
+Those questions are answerable, and **answering again keeps the earlier
+answer**. The new one sits on top with its date; the old ones fold underneath.
+A question you have no use for can be put away without touching what you wrote
+against it, and you can add questions of your own.
+
+**Notes on this step** are separate from the answers — a note each time you
+read or work the step, newest first, long ones folded until you open them.
+
+### The work of each step
+
+Below that is the work that particular step asks for, and it differs by step
+because the steps do:
+
+| | |
+|---|---|
+| 1, 2 | Two lists kept side by side, with items that can move across — which is what step two is for |
+| 3, 7 | The prayer as the book prints it, with a date kept every time it is taken |
+| 4 | Three inventory tables — resentments, fears, conduct — fillable one card at a time or readable as a grid |
+| 5 | A record that the telling happened, dated by the day it happened, with what was held back folded away |
+| 6 | The defects step four named, carried through and asked about once each however many times they were written |
+| 8 | The amends list, names carried over from step four's conduct pass |
+| 9 | The same list, annotated — status, outcome and the date you chose. It never makes a second list |
+| 10, 11 | A daily rhythm rather than a piece of work: the last fortnight at a glance, with a streak counted from yesterday so it is not a reprimand each morning |
+| 12 | Who you have sat with and what came of it — recordable before you know how it went |
+
+The list of twelve shows what has been done on each: questions answered, notes
+written, how much of that step's own work is there, and the day it was last
+worked. A step with nothing written says nothing rather than showing a row of
+noughts.
+
+### Taking a step out
+
+**Copy this step out**, at the foot of any step page, turns what you have
+written into plain text for a message or an email before a call. You tick what
+goes — answers, notes, the step's work, and whether the earlier answers travel
+with the latest — and the whole text is shown before anything is copied.
+
+Step five's *what I held back* is left out unless it is ticked by name, and
+starts unticked every time. The page folds it away; a copy button should not
+quietly undo that.
+
+Nothing is sent by the app. It goes on the clipboard, and where it goes after
+that is your doing.
+
+### Where the step material comes from
+
+The explanations and questions were written for this app. They are **not
+official A.A. material**, not from the 1952 *Twelve Steps and Twelve
+Traditions*, and are meant to be disagreed with. Only the quoted step wording
+and the linked passages come from the book.
+
+Each link is stored as the opening words of the passage, exactly as a note is.
+`tools/build-steps.js` resolves those against the text at build time and
+**refuses to build** if one matches nothing or matches more than one paragraph;
+the app resolves them again at runtime, so they survive importing a different
+copy of the text.
+
+```bash
+node tools/build-steps.js          # data/steps.source.json → data/steps.json
+node tools/build-steps.js --check  # validate only, write nothing
+```
+
+```
+steps:      12 present, 12 written, 0 still stubs
+references: 85 resolved, all unambiguous
+questions:  96
+```
 
 ## The text
 
@@ -163,9 +241,21 @@ The backup is plain JSON, readable without this app:
                "body": "Ask how much detail step four really needs.",
                "tag": "sponsor", "discussedAt": "2026-08-24T18:30:00.000Z" } ],
   "bookmarks": [ … ],
+  "stepPrefs": { "hidden": { "s4-q3": true },
+                 "custom": { "step01": [ { "id": "s1-own-…", "text": "…" } ] } },
+  "inventory": [ { "id": "inv-…", "stepId": "step08", "tableId": "amends-list",
+                   "values": { "who": "Anna", "harm": "…", "outcome": "…" },
+                   "states": { "step08": "willing", "step09": "made" },
+                   "on": "2026-08-16" } ],
   "settings": { … }
 }
 ```
+
+Everything written in the steps section rides the same backup: the answers and
+step notes are notes like any other, `stepPrefs` carries the questions you put
+away and the ones you added, and `inventory` carries every row of every step's
+work. A backup written before a kind of work existed restores without wiping
+what is on the device.
 
 ## Development
 
@@ -184,24 +274,45 @@ python3 -m http.server 7801
 ├── js/
 │   ├── parser.js       Plain text → sections (shared with tools/build-book.js)
 │   ├── db.js           IndexedDB wrapper
-│   ├── store.js        Book, settings, position, notes, bookmarks, search
+│   ├── store.js        Book, settings, position, notes, bookmarks, steps, search
 │   ├── backup.js       Export / restore
 │   ├── ui.js           Screens, rendering, event wiring
 │   └── app.js          Bootstrap
 ├── data/
 │   ├── book.json                      The parsed book the app reads
-│   └── alcoholics-anonymous-1939.txt  The source text it was built from
+│   ├── alcoholics-anonymous-1939.txt  The source text it was built from
+│   ├── steps.source.json              The step material, written by hand
+│   └── steps.json                     Built steps, with book references resolved
 └── tools/
     ├── epub-to-text.py EPUB → plain text, skipping publisher matter
     ├── build-book.js   Plain text → data/book.json
+    ├── build-steps.js  steps.source.json → steps.json, resolving book references
+    ├── smoke-test.js   End-to-end browser checks
     └── make-icons.py   Regenerate the icon set
 ```
+
+### Testing
+
+```bash
+python3 -m http.server 7802 &
+npm install playwright        # once, not committed
+node tools/smoke-test.js      # 190 checks
+```
+
+It drives a real browser against the served copy and asserts the things that
+matter: the bundled text is complete, notes and bookmarks persist, the reading
+position survives a reload, every step's work saves and round-trips through a
+backup, and the whole book is readable with the network switched off.
+`CHROMIUM_PATH` points at a browser binary if Playwright cannot find one;
+`SHOT_DIR` writes screenshots.
 
 ### Where your data lives
 
 | What | Where |
 |---|---|
-| Notes, bookmarks, any text you import | IndexedDB (`ams-big-12s`) |
+| Notes, answers, bookmarks, any text you import | IndexedDB (`ams-big-12s`) |
+| Every row of every step's work | IndexedDB, in its own store — structured records, not prose |
+| Questions you put away or added | IndexedDB, carried explicitly by the backup |
 | Settings, reading position | IndexedDB, mirrored to `localStorage` for a fast first paint |
 | App shell and bundled text | Cache Storage, via the service worker |
 
