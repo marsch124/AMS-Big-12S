@@ -81,13 +81,16 @@
 
     function showScreen(name) {
         if (name !== 'reader') flushPosition();
-        ['home', 'library', 'reader', 'steps', 'step', 'notes', 'search', 'settings', 'craving']
+        ['home', 'library', 'reader', 'steps', 'step', 'notes', 'search', 'settings',
+         'craving', 'meeting']
             .forEach(function (screen) {
                 $('screen-' + screen).classList.toggle('is-active', screen === name);
             });
-        // A step page is pushed from the Steps tab, and the craving screen from
-        // the home screen, so those tabs stay lit while you are inside one.
-        var litTab = name === 'step' ? 'steps' : (name === 'craving' ? 'home' : name);
+        // A step page is pushed from the Steps tab, and the craving and meeting
+        // screens from the home screen, so those tabs stay lit while you are
+        // inside one.
+        var litTab = name === 'step' ? 'steps'
+            : (name === 'craving' || name === 'meeting') ? 'home' : name;
         Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
             tab.classList.toggle('is-active', tab.dataset.screen === litTab);
         });
@@ -101,7 +104,7 @@
         // wake-up a minute for a screen nobody is looking at.
         if (name === 'home') renderHome();
         else if (name === 'craving') renderCraving();
-        else stopClock();
+        else { stopClock(); if (name === 'meeting') renderMeeting(); }
         if (name === 'library') renderLibrary();
         if (name === 'notes') renderNotes();
         if (name === 'settings') renderSettings();
@@ -209,6 +212,7 @@
         $('shortcut-read-note').textContent = section ? section.title : 'From the beginning';
 
         $('shortcut-craving-note').textContent = cravingStateLine();
+        $('shortcut-meeting-note').textContent = meetingStateLine();
 
         [['sponsor', 'shortcut-sponsor-note'], ['sponsee', 'shortcut-sponsee-note']].forEach(function (pair) {
             var waiting = Store.waitingFor(pair[0]);
@@ -235,6 +239,7 @@
             return;
         }
         if (name === 'craving') { showScreen('craving'); return; }
+        if (name === 'meeting') { showScreen('meeting'); return; }
         if (name === 'sponsor') { openNotesWith('sponsor'); return; }
         if (name === 'sponsee') { openNotesWith('sponsee'); return; }
         if (name === 'write') { openNoteSheet(null, null, null, { tag: '' }); return; }
@@ -481,6 +486,141 @@
             cravingEditing = null;
             closeSheets();
             renderCraving();
+        });
+    }
+
+    /* ------------------------------------------------------------ meeting */
+
+    var meetingEditing = null;   // the record the sheet is open on
+
+    // Meetings are weekly things, so the day of the week is worth as much as the
+    // date — "Tuesday, Kolpinghaus" only reads right against a Tuesday.
+    function meetingDay(iso) {
+        var d = new Date(iso + 'T00:00:00');
+        if (isNaN(d)) return iso;
+        var format = { weekday: 'short', month: 'short', day: 'numeric' };
+        if (d.getFullYear() !== new Date().getFullYear()) format.year = 'numeric';
+        return d.toLocaleDateString(undefined, format);
+    }
+
+    function meetingStateLine() {
+        var summary = Store.meetingSummary();
+        if (!summary.last) return '';
+        var days = daysSince(summary.last.on + 'T00:00:00');
+        if (days < 1) return 'One today';
+        if (days === 1) return 'The last was yesterday';
+        return 'The last was ' + days + ' days ago';
+    }
+
+    function meetingSummaryLine() {
+        var summary = Store.meetingSummary();
+        if (!summary.total) {
+            return 'Nothing written down yet. Nobody remembers in March how many they got to in January.';
+        }
+        var line = summary.total === 1 ? 'One written down' : summary.total + ' written down';
+        line += ', ' + summary.recent + ' in the last thirty days.';
+        if (summary.shared) {
+            line += ' You spoke at ' + (summary.shared === 1 ? 'one of them.' : summary.shared + ' of them.');
+        }
+        return line;
+    }
+
+    function renderMeeting() {
+        $('meeting-sub').textContent = meetingStateLine();
+        renderMeetingRaise();
+        renderMeetingList();
+    }
+
+    /*
+     * The points marked for a meeting, still waiting. The same card as on the
+     * Notes tab — so it can be ticked off from here, and so there is one card
+     * to keep right rather than two.
+     */
+    function renderMeetingRaise() {
+        var box = $('meeting-raise');
+        box.innerHTML = '';
+
+        var waiting = Store.state.notes
+            .filter(function (note) { return note.tag === 'meeting' && !note.discussedAt; })
+            .map(Store.resolveNote);
+
+        waiting.forEach(function (note) { box.appendChild(noteCard(note)); });
+        $('meeting-raise-empty').hidden = waiting.length > 0;
+        $('meeting-copy').hidden = !waiting.length;
+        $('meeting-copy').onclick = function () { copyTalkList(waiting, 'meeting'); };
+    }
+
+    function renderMeetingList() {
+        var box = $('meeting-list');
+        box.innerHTML = '';
+        $('meeting-summary').textContent = meetingSummaryLine();
+
+        Store.state.meetings.slice(0, 12).forEach(function (row) {
+            var card = document.createElement('button');
+            card.className = 'card meeting-card';
+            card.innerHTML =
+                '<span class="meeting-head">' +
+                    '<span class="meeting-date">' + escapeHtml(meetingDay(row.on)) + '</span>' +
+                    (row.where ? '<span class="meeting-where">' + escapeHtml(row.where) + '</span>' : '') +
+                    (row.shared ? '<span class="meeting-shared">Shared</span>' : '') +
+                '</span>' +
+                (row.what ? '<p class="meeting-what">' + escapeHtml(row.what) + '</p>' : '');
+            card.addEventListener('click', function () { openMeetingSheet(row); });
+            box.appendChild(card);
+        });
+
+        if (Store.state.meetings.length > 12) {
+            var more = document.createElement('p');
+            more.className = 'hint';
+            more.textContent = 'Showing the last 12 of ' + Store.state.meetings.length + '.';
+            box.appendChild(more);
+        }
+    }
+
+    function setMeetingShared(shared) {
+        var chip = $('meeting-sheet-shared');
+        chip.dataset.shared = shared ? 'yes' : 'no';
+        chip.classList.toggle('is-active', !!shared);
+    }
+
+    function openMeetingSheet(row) {
+        meetingEditing = row || null;
+        $('meeting-sheet-title').textContent = row ? 'This meeting' : 'A meeting';
+        $('meeting-sheet-on').value = (row && row.on) || Store.todayISO();
+        $('meeting-sheet-on').max = Store.todayISO();
+        $('meeting-sheet-where').value = (row && row.where) || '';
+        $('meeting-sheet-what').value = (row && row.what) || '';
+        setMeetingShared(row && row.shared);
+        $('meeting-sheet-delete').hidden = !row;
+
+        // The places you already go, so the usual one is a tap and keeps the
+        // name it had last time — which is what makes the list countable.
+        var places = $('meeting-places');
+        places.innerHTML = '';
+        Store.usualPlaces().forEach(function (name) {
+            var chip = document.createElement('button');
+            chip.className = 'chip';
+            chip.textContent = name;
+            chip.addEventListener('click', function () {
+                $('meeting-sheet-where').value = name;
+            });
+            places.appendChild(chip);
+        });
+
+        openSheet('meeting-sheet');
+    }
+
+    function saveMeetingSheet() {
+        var record = Object.assign({}, meetingEditing || {}, {
+            on: $('meeting-sheet-on').value || Store.todayISO(),
+            where: $('meeting-sheet-where').value,
+            shared: $('meeting-sheet-shared').dataset.shared === 'yes',
+            what: $('meeting-sheet-what').value
+        });
+        Store.saveMeeting(record).then(function () {
+            meetingEditing = null;
+            closeSheets();
+            renderMeeting();
         });
     }
 
@@ -732,19 +872,20 @@
 
     // Who a note is being kept for. Two people, named plainly: the labels are
     // what a reader would say out loud, not a schema.
-    var TAG_SHORT = { sponsor: 'Sponsor', sponsee: 'Sponsee' };
+    var TAG_SHORT = { sponsor: 'Sponsor', sponsee: 'Sponsee', meeting: 'Meeting' };
 
     function setNoteTag(tag) {
         noteTag = tag || '';
         Array.prototype.forEach.call(document.querySelectorAll('#note-tags .chip'), function (chip) {
             chip.classList.toggle('is-active', chip.dataset.tag === noteTag);
         });
-        $('note-tag-hint').textContent = noteTag
-            ? 'It will wait on your ' + (noteTag === 'sponsor' ? 'sponsor' : 'sponsee') +
-              ' list until you tick it off.'
-            : (noteOnPassage
-                ? 'Leave both off and it stays a note on this passage.'
-                : 'Leave both off and it stays a thought of your own.');
+        $('note-tag-hint').textContent = noteTag === 'meeting'
+            ? 'It will wait with the things to bring up at a meeting until you tick it off.'
+            : noteTag
+                ? 'It will wait on your ' + noteTag + ' list until you tick it off.'
+                : (noteOnPassage
+                    ? 'Leave them all off and it stays a note on this passage.'
+                    : 'Leave them all off and it stays a thought of your own.');
     }
 
     // sectionId null means a note that belongs to no passage — written straight
@@ -830,6 +971,7 @@
             if (step) renderStep(step);
         } else {
             if (current.screen === 'craving') renderCraving();
+            if (current.screen === 'meeting') renderMeeting();
             renderNotes();
         }
     }
@@ -2732,7 +2874,7 @@
     /* -------------------------------------------------------------- notes */
 
     var FILTER_LABELS = { all: 'All', sponsor: 'Sponsor', sponsee: 'Sponsee',
-                          steps: 'Steps', own: 'Reflections' };
+                          meeting: 'Meeting', steps: 'Steps', own: 'Reflections' };
 
     var EMPTY_COPY = {
         all: 'No notes yet. While reading, tap any paragraph and choose <strong>Add note</strong> — ' +
@@ -2741,6 +2883,8 @@
                  'or mark a note for them while you are reading.',
         sponsee: 'Nothing waiting for your sponsee. Tap <strong>+</strong> to put something on the list, ' +
                  'or mark a note for them while you are reading.',
+        meeting: 'Nothing waiting for a meeting. Tap <strong>+</strong> to put something on the list, ' +
+                 'or mark a note for one while you are reading.',
         own: 'Nothing here yet. Tap <strong>+</strong> and write what is on your mind — it does not have to ' +
              'come from a page.',
         steps: 'Nothing written against a step yet. Open the <strong>Steps</strong> tab, choose one, and ' +
@@ -2765,6 +2909,7 @@
         var counts = {
             sponsor: Store.waitingFor('sponsor'),
             sponsee: Store.waitingFor('sponsee'),
+            meeting: Store.waitingFor('meeting'),
             steps: Store.state.notes.filter(Store.isStepNote).length,
             own: Store.state.notes.filter(Store.isLooseNote).length
         };
@@ -2778,8 +2923,10 @@
 
     // Before a meeting or a phone call, the list is more use out of the app than
     // in it. Only what is still waiting goes across.
-    function copyTalkList(notes) {
-        var heading = 'To talk about with my ' + (notesFilter === 'sponsor' ? 'sponsor' : 'sponsee');
+    function copyTalkList(notes, tag) {
+        var heading = tag === 'meeting'
+            ? 'To bring up at a meeting'
+            : 'To talk about with my ' + (tag === 'sponsor' ? 'sponsor' : 'sponsee');
         var lines = [heading, ''];
         notes.forEach(function (note) {
             lines.push('• ' + note.body);
@@ -2801,7 +2948,7 @@
     function renderNotesActions(notes) {
         var holder = $('notes-actions');
         holder.innerHTML = '';
-        if (notesFilter !== 'sponsor' && notesFilter !== 'sponsee') return;
+        if (['sponsor', 'sponsee', 'meeting'].indexOf(notesFilter) === -1) return;
 
         var waiting = notes.filter(function (note) { return !note.discussedAt; });
         if (!waiting.length) return;
@@ -2810,7 +2957,8 @@
         button.className = 'btn btn-quiet btn-block';
         button.id = 'notes-copy';
         button.textContent = 'Copy this list';
-        button.addEventListener('click', function () { copyTalkList(waiting); });
+        var tag = notesFilter;
+        button.addEventListener('click', function () { copyTalkList(waiting, tag); });
         holder.appendChild(button);
     }
 
@@ -2865,6 +3013,9 @@
                 var settled = !note.discussedAt;
                 Store.setNoteDiscussed(note.id, settled).then(function () {
                     toast(settled ? 'Ticked off' : 'Back on the list');
+                    // The same card is used on the Notes tab and on the meeting
+                    // screen, so both have to be told.
+                    if (current.screen === 'meeting') renderMeeting();
                     renderNotes();
                 });
             });
@@ -3105,6 +3256,30 @@
         });
         Array.prototype.forEach.call(document.querySelectorAll('[data-goto="settings-import"]'), function (btn) {
             btn.addEventListener('click', function () { showSettingsAt('settings-import'); });
+        });
+
+        // ── a meeting ──────────────────────────────────────────────────────
+        $('meeting-back').addEventListener('click', function () { showScreen('home'); });
+        $('meeting-write').addEventListener('click', function () {
+            openNoteSheet(null, null, null, { tag: 'meeting' });
+        });
+        $('meeting-add').addEventListener('click', function () { openMeetingSheet(null); });
+        $('meeting-sheet-shared').addEventListener('click', function () {
+            setMeetingShared(this.dataset.shared !== 'yes');
+        });
+        $('meeting-sheet-save').addEventListener('click', saveMeetingSheet);
+        $('meeting-sheet-cancel').addEventListener('click', function () {
+            meetingEditing = null;
+            closeSheets();
+        });
+        $('meeting-sheet-delete').addEventListener('click', function () {
+            if (!meetingEditing) return;
+            if (!confirm('Delete this one? It comes off the count as well.')) return;
+            Store.deleteMeeting(meetingEditing.id).then(function () {
+                meetingEditing = null;
+                closeSheets();
+                renderMeeting();
+            });
         });
 
         // ── a craving ──────────────────────────────────────────────────────

@@ -32,7 +32,8 @@
         daily: null,             // { passages: [] } from data/daily.json
         stepPrefs: { hidden: {}, custom: {} },  // questions hidden, questions added
         inventory: [],           // step four's rows: { id, stepId, tableId, values, ... }
-        cravings: []             // { id, startedAt, endedAt, outcome, what }
+        cravings: [],            // { id, startedAt, endedAt, outcome, what }
+        meetings: []             // { id, on, where, shared, what }
     };
 
     function uid(prefix) {
@@ -1323,6 +1324,79 @@
         };
     }
 
+    /* ------------------------------------------------------------ meetings */
+
+    /*
+     * A meeting you were at: the day, where it was, whether you spoke, and
+     * anything worth keeping. Dated by the day rather than the minute — a
+     * meeting happened on a Tuesday, and writing it up on Wednesday morning
+     * does not make it Wednesday's.
+     */
+    function loadMeetings() {
+        return DB.getAll(DB.STORE_MEETINGS).then(function (rows) {
+            state.meetings = (rows || []).sort(function (a, b) {
+                var byDay = String(b.on || '').localeCompare(String(a.on || ''));
+                return byDay || String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+            });
+            return state.meetings;
+        }).catch(function () {
+            state.meetings = [];
+            return state.meetings;
+        });
+    }
+
+    function saveMeeting(row) {
+        var now = new Date().toISOString();
+        var record = {
+            id: row.id || uid('meet'),
+            on: row.on || todayISO(),
+            where: String(row.where || '').trim(),
+            shared: !!row.shared,
+            what: String(row.what || '').trim(),
+            createdAt: row.createdAt || now,
+            updatedAt: now
+        };
+        return DB.put(DB.STORE_MEETINGS, record).then(loadMeetings).then(function () {
+            return record;
+        });
+    }
+
+    function deleteMeeting(id) {
+        return DB.remove(DB.STORE_MEETINGS, id).then(loadMeetings);
+    }
+
+    /*
+     * The places you actually go, newest first. Offered as chips in the sheet so
+     * the usual meeting is one tap rather than typed out again every week — and
+     * so the same meeting keeps the same name, which is what makes the list
+     * countable later.
+     */
+    function usualPlaces(limit) {
+        var seen = {};
+        var places = [];
+        state.meetings.forEach(function (row) {
+            var name = String(row.where || '').trim();
+            var key = name.toLowerCase();
+            if (!name || seen[key]) return;
+            seen[key] = true;
+            places.push(name);
+        });
+        return places.slice(0, limit || 6);
+    }
+
+    function meetingSummary() {
+        var cutoff = shiftDay(todayISO(), -29);
+        var recent = state.meetings.filter(function (row) {
+            return String(row.on || '') >= cutoff;
+        });
+        return {
+            total: state.meetings.length,
+            recent: recent.length,
+            shared: state.meetings.filter(function (row) { return row.shared; }).length,
+            last: state.meetings[0] || null
+        };
+    }
+
     /* --------------------------------------------------------------- boot */
 
     function init() {
@@ -1333,6 +1407,7 @@
             .then(loadStepPrefs)
             .then(loadInventory)
             .then(loadCravings)
+            .then(loadMeetings)
             .then(loadNotes)
             .then(loadBookmarks)
             .then(loadPosition)
@@ -1428,6 +1503,12 @@
         deleteCraving: deleteCraving,
         cravingMinutes: cravingMinutes,
         cravingSummary: cravingSummary,
+
+        loadMeetings: loadMeetings,
+        saveMeeting: saveMeeting,
+        deleteMeeting: deleteMeeting,
+        usualPlaces: usualPlaces,
+        meetingSummary: meetingSummary,
 
         loadBookmarks: loadBookmarks,
         findBookmark: findBookmark,

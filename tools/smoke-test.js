@@ -98,16 +98,11 @@ async function openContents(page) {
 
     check('six shortcuts, in the first person',
         (await page.$$eval('#shortcuts .shortcut', (e) => e.length)) === 6);
-    check('the one still to be built says so',
-        (await page.$$eval('#shortcuts .shortcut.is-soon', (e) => e.length)) === 1);
+    check('every shortcut now goes somewhere',
+        (await page.$$eval('#shortcuts .shortcut.is-soon', (e) => e.length)) === 0);
     check('four counts', (await page.$$eval('#stats .stat', (e) => e.length)) === 4);
     check('a fresh install counts nothing rather than flattering you',
         (await page.textContent('#stats .stat')).includes('0%'));
-
-    await page.click('#shortcuts .shortcut.is-soon');
-    await page.waitForSelector('#toast:not([hidden])');
-    check('a shortcut with nothing behind it says so out loud',
-        (await page.textContent('#toast')).toLowerCase().includes('not built yet'));
 
     // ── the book ships with the app ───────────────────────────────────────
     await openContents(page);
@@ -379,6 +374,88 @@ async function openContents(page) {
     check('what was going on is kept with it',
         (await page.textContent('.craving-card')).includes('Went to the shop.'));
 
+    // ── a meeting ─────────────────────────────────────────────────────────
+    await page.click('.tab[data-screen="home"]');
+    await page.click('.shortcut[data-shortcut="meeting"]');
+    await page.waitForSelector('#screen-meeting.is-active');
+    check('the meeting shortcut opens a screen of its own', true);
+    check('nothing recorded yet says so plainly',
+        (await page.textContent('#meeting-summary')).includes('Nothing written down yet'));
+    check('and nothing is waiting to be brought up',
+        await page.isVisible('#meeting-raise-empty'));
+
+    await page.click('#meeting-add');
+    await page.waitForSelector('#meeting-sheet:not([hidden])');
+    check('a new one is dated today',
+        (await page.inputValue('#meeting-sheet-on')) ===
+        (await page.evaluate(() => Store.todayISO())));
+    await page.fill('#meeting-sheet-where', 'Tuesday, Kolpinghaus');
+    await page.click('#meeting-sheet-shared');
+    await page.fill('#meeting-sheet-what', 'The fear goes before the willingness does.');
+    await page.click('#meeting-sheet-save');
+    await page.waitForSelector('#meeting-sheet', { state: 'hidden' });
+
+    const meetingCard = (await page.textContent('.meeting-card')).replace(/\s+/g, ' ');
+    check('it joins the list with where it was and that you spoke',
+        meetingCard.includes('Tuesday, Kolpinghaus') && meetingCard.includes('Shared'),
+        meetingCard);
+    check('the count says how many and how recently',
+        (await page.textContent('#meeting-summary')).includes('in the last thirty days'),
+        await page.textContent('#meeting-summary'));
+
+    // A point to raise there — the third thing a note can be waiting for.
+    await page.click('#meeting-write');
+    await page.waitForSelector('#note-sheet:not([hidden])');
+    check('writing one down comes up already marked for a meeting',
+        await page.$eval('#note-tags .chip[data-tag="meeting"]',
+            (e) => e.classList.contains('is-active')));
+    await page.fill('#note-sheet-body', 'Ask how people handle the hour after work.');
+    await page.click('#note-save');
+    await page.waitForSelector('#note-sheet', { state: 'hidden' });
+    check('and turns up on the meeting screen at once',
+        (await page.$$eval('#meeting-raise .card', (e) => e.length)) === 1);
+    check('with the list ready to copy out', await page.isVisible('#meeting-copy'));
+
+    await page.click('.tab[data-screen="notes"]');
+    await page.click('#notes-filters .chip[data-filter="meeting"]');
+    await page.waitForTimeout(150);
+    check('the Notes tab has a filter for them too',
+        (await page.$$eval('#notes-list .card', (e) => e.length)) === 1);
+    check('and the chip counts what its own list shows',
+        (await page.textContent('#notes-filters .chip[data-filter="meeting"]')).includes('1'));
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('#screen-home.is-active');
+    check('the home tile says when you were last at one',
+        (await page.textContent('#shortcut-meeting-note')).length > 0,
+        await page.textContent('#shortcut-meeting-note'));
+    await page.click('.shortcut[data-shortcut="meeting"]');
+    await page.waitForSelector('#screen-meeting.is-active');
+    check('the record survives a reload',
+        (await page.$$eval('.meeting-card', (e) => e.length)) === 1);
+
+    // The places you already go are offered rather than typed again.
+    await page.click('#meeting-add');
+    await page.waitForSelector('#meeting-sheet:not([hidden])');
+    check('the meetings you go to are offered as chips',
+        (await page.$$eval('#meeting-places .chip', (e) => e.map((x) => x.textContent)))
+            .includes('Tuesday, Kolpinghaus'));
+    await page.click('#meeting-places .chip');
+    check('and tapping one fills it in',
+        (await page.inputValue('#meeting-sheet-where')) === 'Tuesday, Kolpinghaus');
+    await page.click('#meeting-sheet-cancel');
+    await page.waitForSelector('#meeting-sheet', { state: 'hidden' });
+
+    // Take the point back off the list. Everything below counts notes, and a
+    // test that leaves one behind turns every later count into a puzzle.
+    await page.evaluate(async () => {
+        const mine = Store.state.notes.filter((n) => n.tag === 'meeting');
+        for (const note of mine) await Store.deleteNote(note.id);
+        UI.showScreen('meeting');
+    });
+    check('the point comes off the list when it is deleted',
+        (await page.$$eval('#meeting-raise .card', (e) => e.length)) === 0);
+
     // ── backup round trip ─────────────────────────────────────────────────
     const slim = JSON.parse(await page.evaluate(() => Backup.serialize({ includeBookText: false })));
     check('backup carries notes, bookmarks, position, settings',
@@ -387,17 +464,21 @@ async function openContents(page) {
     check('backup carries the cravings and the sponsor', slim.cravings.length === 2 &&
         slim.settings.sponsorPhone === '+43 660 123 4567',
         (slim.cravings || []).length + ' cravings');
+    check('and the meetings', slim.meetings.length === 1,
+        (slim.meetings || []).length + ' meetings');
 
     // A backup written before the craving screen existed has no such key, and
     // must restore without emptying a list that is only worth anything whole.
     const older = JSON.parse(JSON.stringify(slim));
     delete older.cravings;
+    delete older.meetings;
     const keptThrough = await page.evaluate(async (json) => {
         await Backup.restoreBackup(Backup.parseBackup(json), 'merge');
-        return Store.state.cravings.length;
+        return { cravings: Store.state.cravings.length, meetings: Store.state.meetings.length };
     }, JSON.stringify(older));
-    check('an older backup restores without wiping the cravings', keptThrough === 2,
-        keptThrough + ' still there');
+    check('an older backup restores without wiping either of them',
+        keptThrough.cravings === 2 && keptThrough.meetings === 1,
+        JSON.stringify(keptThrough));
     check('backup stays small when the text is not included',
         !slim.includesBookText && JSON.stringify(slim).length < 4000,
         JSON.stringify(slim).length + ' bytes');
@@ -423,8 +504,9 @@ async function openContents(page) {
         Backup.restoreBackup(Backup.parseBackup(json), 'replace'), JSON.stringify(slim));
     check('restore reports what it did', summary.notes === 1 && summary.bookmarks === 1,
         JSON.stringify(summary));
-    check('and brings the cravings back with everything else',
-        await page.evaluate(() => Store.state.cravings.length === 2),
+    check('and brings the cravings and meetings back with everything else',
+        await page.evaluate(() => Store.state.cravings.length === 2 &&
+            Store.state.meetings.length === 1),
         JSON.stringify(summary));
 
     await page.reload({ waitUntil: 'networkidle' });

@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=20">
+<link rel="stylesheet" href="css/style.css?v=21">
 </head>
 <body>
 
@@ -71,7 +71,7 @@
           <span class="shortcut-note" id="shortcut-craving-note"></span>
         </button>
 
-        <button class="shortcut is-soon" data-shortcut="meeting">
+        <button class="shortcut" data-shortcut="meeting">
           <span class="shortcut-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="8" cy="8.4" r="2.6"/>
             <circle cx="16.4" cy="9.6" r="2.1"/>
@@ -79,7 +79,7 @@
             <path d="M14.2 14.1c2.4-.9 4.9.4 5.4 3.1"/>
           </svg></span>
           <span class="shortcut-label">I’m going to a meeting</span>
-          <span class="shortcut-note">Not built yet</span>
+          <span class="shortcut-note" id="shortcut-meeting-note"></span>
         </button>
 
         <button class="shortcut" data-shortcut="sponsor">
@@ -188,6 +188,7 @@
         <button class="chip is-active" data-filter="all">All</button>
         <button class="chip" data-filter="sponsor">Sponsor</button>
         <button class="chip" data-filter="sponsee">Sponsee</button>
+        <button class="chip" data-filter="meeting">Meeting</button>
         <button class="chip" data-filter="steps">Steps</button>
         <button class="chip" data-filter="own">Reflections</button>
       </div>
@@ -358,6 +359,39 @@
       <h2 class="section-heading">The ones before this</h2>
       <p class="hint" id="craving-summary"></p>
       <div id="craving-list" class="card-list"></div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════ A meeting ── -->
+  <!-- What you wanted to say there, and the record that you went. The count is
+       the part worth having: nobody remembers in March how many they got to in
+       January. -->
+  <section class="screen" id="screen-meeting">
+    <header class="topbar">
+      <button class="icon-btn" id="meeting-back" aria-label="Back">‹</button>
+      <div class="topbar-titles">
+        <h1 class="topbar-title">A meeting</h1>
+        <p class="topbar-sub" id="meeting-sub"></p>
+      </div>
+    </header>
+
+    <div class="screen-body">
+      <h2 class="section-heading">To bring up</h2>
+      <div id="meeting-raise" class="card-list"></div>
+      <p class="empty" id="meeting-raise-empty" hidden>
+        Nothing waiting. Mark any note <strong>for a meeting</strong> and it turns up here.
+      </p>
+      <div class="btn-row">
+        <button class="btn btn-quiet" id="meeting-write">Write one down</button>
+        <button class="btn btn-quiet" id="meeting-copy" hidden>Copy this list</button>
+      </div>
+
+      <h2 class="section-heading">Were you there?</h2>
+      <button class="btn btn-primary btn-block" id="meeting-add">I was at one</button>
+
+      <h2 class="section-heading">Where you have been</h2>
+      <p class="hint" id="meeting-summary"></p>
+      <div id="meeting-list" class="card-list"></div>
     </div>
   </section>
 
@@ -645,6 +679,27 @@
 
       <h2 class="section-heading">Version history</h2>
       <div class="panel panel-flush">
+
+        <details class="disclosure">
+          <summary><span>Meetings, and the last placeholder</span><span class="ver-tag">2.3</span></summary>
+          <div class="disclosure-body">
+            <p><strong>I'm going to a meeting</strong> was the last tile with nothing behind it.
+               Every shortcut on the home screen now goes somewhere.</p>
+            <ul>
+              <li><strong>To bring up</strong> — a note can now be waiting for <em>a meeting</em>,
+                  alongside your sponsor and your sponsee. Mark one while you are reading, or
+                  write one down here, and the list is ready to copy out before you go.</li>
+              <li><strong>A record that you went</strong> — the day, which one, whether you spoke,
+                  and anything worth keeping. Nobody remembers in March how many they got to in
+                  January, so the screen counts them: how many in all, how many in the last
+                  thirty days, and how many you spoke at.</li>
+              <li><strong>The meetings you already go to</strong> come up as taps rather than
+                  being typed again — which also keeps the same meeting under the same name,
+                  and that is what makes the list worth counting.</li>
+              <li>The home tile says when the last one was.</li>
+            </ul>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>The craving screen</span><span class="ver-tag">2.2</span></summary>
@@ -1251,6 +1306,34 @@
 <!-- ═══════════════════════════════════════════════════════════════ Sheets ── -->
 <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
 
+<div class="sheet sheet-tall" id="meeting-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title" id="meeting-sheet-title">A meeting</h2>
+  <label class="inv-input">
+    <span class="sheet-label">When</span>
+    <input type="date" id="meeting-sheet-on" class="field">
+  </label>
+  <label class="inv-input">
+    <span class="sheet-label">Which one</span>
+    <input type="text" id="meeting-sheet-where" class="field" autocomplete="off"
+           placeholder="Where it was, or what it is called">
+  </label>
+  <div class="chip-row" id="meeting-places"></div>
+  <div class="chip-row">
+    <button class="chip" id="meeting-sheet-shared" data-shared="no">I shared</button>
+  </div>
+  <label class="inv-input">
+    <span class="sheet-label">Worth keeping</span>
+    <textarea id="meeting-sheet-what" class="note-input" rows="3"
+              placeholder="Something someone said, or something you want to think about."></textarea>
+  </label>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="meeting-sheet-save">Save</button>
+    <button class="btn btn-danger" id="meeting-sheet-delete" hidden>Delete</button>
+    <button class="btn btn-quiet" id="meeting-sheet-cancel">Cancel</button>
+  </div>
+</div>
+
 <div class="sheet" id="craving-sheet" hidden>
   <div class="sheet-handle"></div>
   <h2 class="sheet-title" id="craving-sheet-title">How did it end?</h2>
@@ -1309,8 +1392,9 @@
   <div class="chip-row" id="note-tags">
     <button class="chip" data-tag="sponsor">My sponsor</button>
     <button class="chip" data-tag="sponsee">My sponsee</button>
+    <button class="chip" data-tag="meeting">A meeting</button>
   </div>
-  <p class="hint" id="note-tag-hint">Leave both off and it stays a thought of your own.</p>
+  <p class="hint" id="note-tag-hint">Leave them all off and it stays a thought of your own.</p>
   <div class="btn-row">
     <button class="btn btn-primary" id="note-save">Save note</button>
     <button class="btn btn-danger" id="note-delete" hidden>Delete</button>
@@ -1373,10 +1457,10 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="js/parser.js?v=1"></script>
-<script src="js/db.js?v=3"></script>
-<script src="js/store.js?v=10"></script>
-<script src="js/backup.js?v=4"></script>
-<script src="js/ui.js?v=19"></script>
-<script src="js/app.js?v=7"></script>
+<script src="js/db.js?v=4"></script>
+<script src="js/store.js?v=11"></script>
+<script src="js/backup.js?v=5"></script>
+<script src="js/ui.js?v=20"></script>
+<script src="js/app.js?v=8"></script>
 </body>
 </html>

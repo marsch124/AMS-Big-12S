@@ -8,7 +8,7 @@
     'use strict';
 
     var DB_NAME = 'ams-big-12s';
-    var DB_VERSION = 3;
+    var DB_VERSION = 4;
 
     var STORE_META = 'meta';
     var STORE_BOOK = 'book';
@@ -20,6 +20,8 @@
     // Cravings: when one started, when it ended, how. Structured for the same
     // reason, and kept out of the inventory store because it belongs to no step.
     var STORE_CRAVINGS = 'cravings';
+    // Meetings you were at: a day, a place, and what came of it.
+    var STORE_MEETINGS = 'meetings';
 
     var dbPromise = null;
 
@@ -56,6 +58,11 @@
                 if (!db.objectStoreNames.contains(STORE_CRAVINGS)) {
                     var cravings = db.createObjectStore(STORE_CRAVINGS, { keyPath: 'id' });
                     cravings.createIndex('startedAt', 'startedAt', { unique: false });
+                }
+                // Added in DB_VERSION 4, and the same again.
+                if (!db.objectStoreNames.contains(STORE_MEETINGS)) {
+                    var meetings = db.createObjectStore(STORE_MEETINGS, { keyPath: 'id' });
+                    meetings.createIndex('on', 'on', { unique: false });
                 }
             };
 
@@ -147,6 +154,7 @@
         STORE_BOOKMARKS: STORE_BOOKMARKS,
         STORE_INVENTORY: STORE_INVENTORY,
         STORE_CRAVINGS: STORE_CRAVINGS,
+        STORE_MEETINGS: STORE_MEETINGS,
         open: open,
         get: get,
         getAll: getAll,

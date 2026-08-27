@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 2.2 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.3 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -194,11 +194,12 @@ store.** The home screen and the step page were both counting days; two
 implementations of "what day is it" would eventually disagree. `ui.js` keeps thin
 wrappers that call through.
 
-**One shortcut tile is still a placeholder, on purpose.** *I'm going to a
-meeting* carries `is-soon`, is dashed rather than greyed, and says "Not built
-yet" when tapped. Martin asked for placeholders explicitly. Do not quietly wire
-it to something approximate — ask him what it should do. (*I have cravings* was
-the other one; it was built in 2.2.)
+**No shortcut tile is a placeholder any more.** Both — *I have cravings* (2.2)
+and *I'm going to a meeting* (2.3) — were built. The machinery is still there:
+a tile whose name `runShortcut()` does not know falls through to "Not built yet
+— this one is a place held open", and `is-soon` dashes its border. Use that for
+the next tile added ahead of what it does, and never wire a new tile to
+something approximate instead of asking Martin what it should do.
 
 ## The craving screen (2.2)
 
@@ -263,6 +264,40 @@ Step 4 gets full tables, not free text. Step work rides the normal backup, with 
 plain warning at the moment of export. **No lock and no encryption** — asked and
 declined explicitly.
 
+## The meeting screen (2.3)
+
+**A note can now be waiting for a meeting.** `tag` takes `''`, `'sponsor'`,
+`'sponsee'` and now `'meeting'` — the third is an ordinary tag, so
+`waitingFor()`, the chips, `copyTalkList()` and the pills all work by the same
+route. `copyTalkList(notes, tag)` takes the tag explicitly now rather than
+reading `notesFilter`, because the meeting screen copies the list without any
+filter being lit.
+
+**`noteCard()` is used on two screens.** The meeting screen shows the same card
+as the Notes tab, so a point can be ticked off where you are standing. That is
+why its "talked about" handler re-renders the meeting screen as well —
+`refreshAfterNoteChange()` does the same. Do not fork a second, smaller card:
+one card to keep right.
+
+**Meetings have a store of their own (`DB_VERSION` 4)**, following cravings and
+step four: guarded upgrade, carried explicitly by `backup.js` both ways, and a
+smoke check that an older backup restores without emptying it.
+
+**Dated by the day, not the minute.** A meeting happened on a Tuesday; writing it
+up on Wednesday morning does not make it Wednesday's. Same reasoning as step
+five's `dated: true` sittings.
+
+**`Store.usualPlaces()` is derived, not configured.** There is no schedule of
+regular meetings to maintain — the chips in the sheet are the distinct `where`
+values already recorded, newest first. That keeps the same meeting under the
+same name, which is the only thing that makes the count mean anything. If a
+real schedule (weekday, time, address) is ever wanted, that is a new feature and
+a new store, not a widening of this one.
+
+**The count is the point, and it is plain.** How many in all, how many in the
+last thirty days, how many you spoke at. No streaks, no targets, nothing about
+90 in 90 — the app does not set anyone a quota.
+
 ## Non-negotiables
 
 **Never write book text from memory.** People quote this book precisely. A
@@ -292,7 +327,8 @@ manifest.json       PWA metadata — paths are RELATIVE ("./"), see below
 sw.js               Service worker: offline shell + book cache
 css/style.css       Themes (sepia/light/dark/auto), reader typography
 js/parser.js        Plain text → sections. Shared with tools/build-book.js
-js/db.js            IndexedDB wrapper (meta, book, notes, bookmarks, inventory, cravings)
+js/db.js            IndexedDB wrapper (meta, book, notes, bookmarks, inventory,
+                    cravings, meetings)
 js/store.js         Book, settings, position, notes, bookmarks, search
 js/backup.js        Export / restore
 js/ui.js            Screens, rendering, all event wiring
@@ -307,7 +343,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    228 end-to-end browser checks
+tools/smoke-test.js    244 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -319,7 +355,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 228 checks, expect 228/228
+node tools/smoke-test.js                  # 244 checks, expect 244/244
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.
@@ -394,6 +430,13 @@ questions the reader had put away and drop the ones they wrote. Putting a
 question away never deletes its answers; `Store.questionText()` resolves a
 hidden question's text so an answer on the Notes tab still shows what it
 answered.
+
+**A note's `tag` is who it is waiting for, and there are three.** `'sponsor'`,
+`'sponsee'`, `'meeting'`, or `''` for nobody. Anything that switches on the tag
+must handle all three — `TAG_SHORT`, `FILTER_LABELS`, `EMPTY_COPY`, the counts
+in `renderNoteFilters()`, `renderNotesActions()` and the hint under the chips in
+the note sheet. The first cut of the meeting tag missed the hint and it told the
+reader to "leave both off" with three chips on screen.
 
 **One note store, four kinds of note.** A step journal entry is a note with a
 `stepId` and no `sectionId`. That makes it *standalone* by `isStandalone()`,

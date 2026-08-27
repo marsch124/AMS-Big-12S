@@ -42,7 +42,10 @@
             // Every craving written down, and how each one ended. The value of
             // that list is entirely in its length, so it must survive a new
             // phone like anything else.
-            cravings: state.cravings
+            cravings: state.cravings,
+            // Meetings you were at. The count is the thing, so it moves phones
+            // with everything else.
+            meetings: state.meetings
         };
 
         if (options.includeBookText && state.book && state.book.textIncluded) {
@@ -154,7 +157,7 @@
      */
     function restoreBackup(payload, mode) {
         mode = mode || 'merge';
-        var summary = { notes: 0, bookmarks: 0, inventory: 0, cravings: 0,
+        var summary = { notes: 0, bookmarks: 0, inventory: 0, cravings: 0, meetings: 0,
                         bookText: false, mode: mode };
 
         var prepare = mode === 'replace'
@@ -162,7 +165,8 @@
                 DB.clear(DB.STORE_NOTES),
                 DB.clear(DB.STORE_BOOKMARKS),
                 DB.clear(DB.STORE_INVENTORY),
-                DB.clear(DB.STORE_CRAVINGS)
+                DB.clear(DB.STORE_CRAVINGS),
+                DB.clear(DB.STORE_MEETINGS)
             ])
             : Promise.resolve();
 
@@ -206,11 +210,22 @@
             });
             summary.cravings = cravings.length;
 
+            // And the meetings, absent from anything written before 2.3.
+            var existingMeetings = {};
+            if (mode === 'merge') {
+                Store.state.meetings.forEach(function (row) { existingMeetings[row.id] = row; });
+            }
+            var meetings = (payload.meetings || []).map(function (row) {
+                return newerOf(row, existingMeetings[row.id]);
+            });
+            summary.meetings = meetings.length;
+
             return Promise.all([
                 DB.putMany(DB.STORE_NOTES, notes),
                 DB.putMany(DB.STORE_BOOKMARKS, bookmarks),
                 DB.putMany(DB.STORE_INVENTORY, inventory),
-                DB.putMany(DB.STORE_CRAVINGS, cravings)
+                DB.putMany(DB.STORE_CRAVINGS, cravings),
+                DB.putMany(DB.STORE_MEETINGS, meetings)
             ]);
         }).then(function () {
             if (payload.book && payload.book.sections && payload.book.sections.length) {

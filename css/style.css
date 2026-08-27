@@ -399,6 +399,28 @@ button { cursor: pointer; }
   text-align: right;
 }
 
+/* ═══════════════════════════════════════════════════════════════ meeting ══ */
+
+.meeting-card { border-left: 3px solid var(--accent); }
+.meeting-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.meeting-date { font-size: 15px; font-weight: 600; }
+.meeting-where { font-size: 14px; color: var(--text-dim); }
+.meeting-shared {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.meeting-what { margin: 7px 0 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+
+/* The places you already go, offered rather than typed again. */
+#meeting-places:empty { display: none; }
+#meeting-places .chip { flex: 0 1 auto; }
+#meeting-raise .card-list { margin-top: 0; }
+#meeting-raise:empty { display: none; }
+
 /* ═══════════════════════════════════════════════════════════════ library ══ */
 
 .section-heading {

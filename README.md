@@ -14,11 +14,12 @@ without a signal.
   stopped, the reasons you might have opened the app, and an honest count of what you have done
 - 🌊 **A craving screen** — start a clock on one, close it when it goes, and keep the list of
   the ones that passed; your sponsor a tap away
+- 👥 **Meetings** — what you meant to bring up, and the record of the ones you got to
 - 📖 **Distraction-free reader** — serif or sans, four themes, adjustable size and spacing
 - 🔖 **Remembers where you stopped** — down to the paragraph, restored on every launch
 - ✎ **Notes on any passage** — tap a paragraph, write a note; it stays attached to those words
-- 🗣 **Things to bring up** — mark anything for your sponsor or a sponsee, keep a running count of
-  what is still waiting, tick it off after the conversation, and copy the list out before a call
+- 🗣 **Things to bring up** — mark anything for your sponsor, a sponsee or a meeting, keep a
+  running count of what is still waiting, tick it off afterwards, and copy the list out first
 - 💭 **Notes of your own** — write down what did not come from a page at all
 - 🪜 **The twelve steps** — a page each: the passages of the book that describe them,
   questions to take to a sponsor that keep every earlier answer dated, dated notes on every
@@ -61,8 +62,8 @@ node tools/build-daily.js --check  # validate only, write nothing
 because that is how the reason arrives — not "notes" but *I want to write
 something down*. Meeting your sponsor or your sponsee opens the list of points
 still waiting for that conversation, with the count on the tile beforehand.
-*I'm going to a meeting* has nothing behind it yet and says so when tapped. A
-place held open is more honest than a button that quietly does nothing.
+Every one of them goes somewhere. When a new tile is added ahead of what it
+does, it says "Not built yet" when tapped rather than doing nothing quietly.
 
 **Where you have got to** is four counts: how far through the book, what you have
 written, how many of the twelve steps you have worked on, and how many days you
@@ -95,6 +96,23 @@ The record can also say that you drank. A list that only holds victories is not
 a record, and the count stops claiming every one passed the moment one did not.
 Cravings ride the normal backup, like everything else.
 
+## Meetings
+
+*I'm going to a meeting* opens two things: what you meant to say there, and the
+record of the ones you got to.
+
+**To bring up** is the list of notes marked for a meeting — a third thing a note
+can be waiting for, alongside your sponsor and your sponsee. Mark one while you
+are reading, or write one down on the spot, and copy the list out before you go.
+Ticking one off works the same as anywhere else: it keeps its place with the date
+on it, and goes back on the list if there turns out to be more to say.
+
+**Where you have been** is the day, which meeting, whether you spoke, and
+anything worth keeping. It counts them — how many in all, how many in the last
+thirty days, how many you spoke at — because nobody remembers in March how many
+they got to in January. The meetings you already go to are offered as chips
+rather than typed out again, which keeps the same meeting under the same name.
+
 ## Notes, and things to talk about
 
 Tap any paragraph while reading and choose **Add note**. The note stays attached
@@ -106,8 +124,8 @@ Notes tab writes a note with no passage behind it — a question that surfaced o
 the drive home, something to raise with a sponsee, a reflection that is nobody
 else's business.
 
-Any note, from a page or not, can be marked **Bring this up with — my sponsor**
-or **my sponsee**:
+Any note, from a page or not, can be marked **Bring this up with — my sponsor**,
+**my sponsee** or **a meeting**:
 
 - the filters at the top of the Notes tab carry a count of what is **still
   waiting** for each conversation;
@@ -304,6 +322,8 @@ The backup is plain JSON, readable without this app:
                "body": "Ask how much detail step four really needs.",
                "tag": "sponsor", "discussedAt": "2026-08-24T18:30:00.000Z" } ],
   "bookmarks": [ … ],
+  "meetings": [ { "id": "meet-…", "on": "2026-08-25", "where": "Tuesday, Kolpinghaus",
+                  "shared": true, "what": "The fear goes before the willingness does." } ],
   "cravings": [ { "id": "crav-…", "startedAt": "2026-08-25T19:04:00.000Z",
                   "endedAt": "2026-08-25T19:16:00.000Z", "outcome": "passed",
                   "what": "Rowed with Anna about nothing." } ],
@@ -365,7 +385,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 228 checks
+node tools/smoke-test.js      # 244 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that
