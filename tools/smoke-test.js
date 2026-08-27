@@ -293,6 +293,22 @@ async function openContents(page) {
         probe.remove();
         return bad;
     });
+    // The browser draws the checkbox, the date field, the selects and the
+    // scrollbars, and it draws them light unless the page says otherwise.
+    const schemes = await page.evaluate(() => {
+        const was = document.documentElement.getAttribute('data-theme');
+        const out = {};
+        ['morning', 'light', 'dark'].forEach((t) => {
+            document.documentElement.setAttribute('data-theme', t);
+            out[t] = getComputedStyle(document.documentElement).colorScheme;
+        });
+        document.documentElement.setAttribute('data-theme', was);
+        return out;
+    });
+    check('the browser is told which way round each theme is',
+        schemes.dark === 'dark' && schemes.morning === 'light' && schemes.light === 'light',
+        JSON.stringify(schemes));
+
     check('every type colour clears 4.5:1 on every screen of every theme',
         paletteTrouble.length === 0, paletteTrouble.join(' | ') || 'all clear');
 

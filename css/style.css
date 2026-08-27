@@ -11,6 +11,13 @@
    a theme that leaves one out gets another theme's colour. */
 
 :root {
+  /* Native controls — the checkbox, the date picker, the selects, the
+     scrollbars — are drawn by the browser, not by us, and it draws them light
+     unless told otherwise. Without this the "keep screen awake" box came out a
+     solid white square in Dark, and the date field would have been a white
+     slab in the middle of a black panel. */
+  color-scheme: light;
+
   --bg:        #fcfaf6;
   --bg-raised: #ffffff;
   --bg-sunken: #f1ede4;
@@ -123,6 +130,8 @@
    7:1 or better on the ground, and the shadow becomes a lighter edge, since a
    black shadow on a black card is nothing at all. */
 [data-theme="dark"] {
+  color-scheme: dark;
+
   --bg:        #16181c;
   --bg-raised: #21242a;
   --bg-sunken: #101216;

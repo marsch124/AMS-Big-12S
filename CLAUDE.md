@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.32 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.33 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,15 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## color-scheme (2.33)
+
+**`color-scheme: light` on `:root`, `dark` on the dark theme.** Native controls
+— checkbox, date input, selects, scrollbars — are drawn by the browser and it
+draws them light unless told. Nothing had told it, so Dark rendered the "keep
+screen awake" box as a solid white square and would have opened a white date
+picker inside a black panel. A check asserts the computed `color-scheme` per
+theme. Any new theme needs this line.
 
 ## Settings as an index (2.32)
 
@@ -1181,7 +1190,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    491 end-to-end browser checks
+tools/smoke-test.js    492 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -1193,7 +1202,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 491 checks, expect 491/491
+node tools/smoke-test.js                  # 492 checks, expect 492/492
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

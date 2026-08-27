@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=44">
+<link rel="stylesheet" href="css/style.css?v=45">
 </head>
 <body>
 
@@ -1233,6 +1233,18 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Controls that know it is dark</span><span class="ver-tag">2.33</span></summary>
+          <div class="disclosure-body">
+            <p>The checkbox, the date field, the dropdowns and the scrollbars are drawn by
+               the browser rather than by this app, and <strong>the browser draws them
+               light unless the page tells it otherwise</strong>. Nothing had ever told it.</p>
+            <p>So in Dark, <em>keep screen awake</em> was a solid white square, and the day
+               you count from would have opened a white slab in the middle of a black panel.
+               Both are dark now, and the scrollbars with them.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Settings, in one screen</span><span class="ver-tag">2.32</span></summary>
