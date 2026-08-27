@@ -725,9 +725,9 @@ async function openContents(page) {
     await page.click('.shortcut[data-shortcut="sponsor"]');
     await page.waitForSelector('#screen-checkin.is-active');
     await page.click('#checkin-share');
-    await page.waitForSelector('#checkin-share-sheet:not([hidden])');
+    await page.waitForSelector('#copy-sheet:not([hidden])');
 
-    const outgoing = await page.inputValue('#checkin-share-preview');
+    const outgoing = await page.inputValue('#copy-preview');
     check('the page copies out headed by the conversation and the day',
         outgoing.indexOf('Talking to my sponsor') === 0, outgoing.split('\n')[0]);
     check('with the questions answered, in their own words',
@@ -738,18 +738,18 @@ async function openContents(page) {
         /\d+ questions not answered yet\./.test(outgoing),
         (outgoing.match(/\d+ questions not answered yet\./) || [''])[0]);
     check('the size of it is shown before anything is copied',
-        /About \d+ words\./.test(await page.textContent('#checkin-share-size')),
-        await page.textContent('#checkin-share-size'));
+        /About \d+ words\./.test(await page.textContent('#copy-size')),
+        await page.textContent('#copy-size'));
 
     check('the notes from the meeting go by default, and can be left out',
         outgoing.includes('easy amends') &&
-        (await page.$$eval('#checkin-share-options input', (e) => e.length)) === 1);
-    await page.click('#checkin-share-options input');
+        (await page.$$eval('#copy-options input', (e) => e.length)) === 1);
+    await page.click('#copy-options input');
     await page.waitForTimeout(150);
     check('and leaving them out is a choice you can see you made',
-        !(await page.inputValue('#checkin-share-preview')).includes('easy amends'));
-    await page.click('#checkin-share-cancel');
-    await page.waitForSelector('#checkin-share-sheet', { state: 'hidden' });
+        !(await page.inputValue('#copy-preview')).includes('easy amends'));
+    await page.click('#copy-cancel');
+    await page.waitForSelector('#copy-sheet', { state: 'hidden' });
 
     // A day with nothing on it says so rather than pretending.
     const emptyDay = await page.evaluate(() => {
@@ -840,6 +840,32 @@ async function openContents(page) {
         (await page.inputValue('#meeting-sheet-where')) === 'Tuesday, Kolpinghaus');
     await page.click('#meeting-sheet-cancel');
     await page.waitForSelector('#meeting-sheet', { state: 'hidden' });
+
+    // Taking the meetings out, in the same sheet the conversation pages use.
+    await page.click('#meeting-share');
+    await page.waitForSelector('#copy-sheet:not([hidden])');
+    const meetingsOut = await page.inputValue('#copy-preview');
+    check('the meetings copy out with the count that leads the screen',
+        meetingsOut.indexOf('Meetings') === 0 && meetingsOut.includes('in the last thirty days'),
+        meetingsOut.split('\n')[2]);
+    check('and each one with its day, where it was and whether you spoke',
+        /Tuesday, Kolpinghaus/.test(meetingsOut) && /shared/.test(meetingsOut),
+        (meetingsOut.split('\n').filter((l) => l.includes('Kolpinghaus'))[0] || ''));
+    check('the last thirty days is the default, and can be widened',
+        (await page.$$eval('#copy-options label', (e) =>
+            e.map((x) => x.querySelector('span').textContent)))[0] ===
+        'Only the last thirty days');
+    check('what is worth keeping goes, and can be left out',
+        meetingsOut.includes('The fear goes before the willingness does.'));
+    await page.click('#copy-options input >> nth=1');
+    await page.waitForTimeout(150);
+    check('leaving it out is a choice you can see you made',
+        !(await page.inputValue('#copy-preview')).includes('The fear goes before'));
+    check('and the size of it is shown before anything is copied',
+        /About \d+ words\./.test(await page.textContent('#copy-size')),
+        await page.textContent('#copy-size'));
+    await page.click('#copy-cancel');
+    await page.waitForSelector('#copy-sheet', { state: 'hidden' });
 
     // Take the point back off the list. Everything below counts notes, and a
     // test that leaves one behind turns every later count into a puzzle.

@@ -454,6 +454,10 @@
       <h2 class="section-heading">Where you have been</h2>
       <p class="hint" id="meeting-summary"></p>
       <div id="meeting-list" class="card-list"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-quiet btn-block" id="meeting-share">Copy these out</button>
+      </div>
     </div>
   </section>
 
@@ -801,6 +805,18 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Copying the meetings out</span><span class="ver-tag">2.16</span></summary>
+          <div class="disclosure-body">
+            <p><strong>Copy these out</strong>, at the foot of the meeting page: where you have
+               been, as plain text. The last thirty days by default, or all of them; what was
+               worth keeping from each; and what is still waiting to be brought up, if you tick
+               it.</p>
+            <p>The two copy sheets are one sheet now — the same tick-what-goes, read-it-first
+               shape wherever it turns up. Copying a step out keeps its own, which does more.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Taking the page to the meeting</span><span class="ver-tag">2.15</span></summary>
@@ -1765,19 +1781,21 @@
   <button class="btn btn-quiet btn-block" id="type-close">Done</button>
 </div>
 
-<div class="sheet sheet-tall" id="checkin-share-sheet" hidden>
+<!-- Copying something out. One sheet for everything but a step, which has its
+     own richer one: tick what goes, read the whole text, then the clipboard. -->
+<div class="sheet sheet-tall" id="copy-sheet" hidden>
   <div class="sheet-handle"></div>
-  <h2 class="sheet-title" id="checkin-share-title">Copy this page</h2>
+  <h2 class="sheet-title" id="copy-title">Copy this out</h2>
   <p class="hint">Only what you tick goes, and nothing is sent by this app — it is put on the
      clipboard for you to paste wherever you like.</p>
-  <div id="checkin-share-options"></div>
+  <div id="copy-options"></div>
   <p class="sheet-label">What will be copied</p>
-  <textarea id="checkin-share-preview" class="note-input share-preview" rows="9" readonly></textarea>
-  <p class="hint" id="checkin-share-size"></p>
+  <textarea id="copy-preview" class="note-input share-preview" rows="9" readonly></textarea>
+  <p class="hint" id="copy-size"></p>
   <div class="btn-row">
-    <button class="btn btn-primary" id="checkin-share-copy">Copy</button>
-    <button class="btn btn-quiet" id="checkin-share-send" hidden>Share…</button>
-    <button class="btn btn-quiet" id="checkin-share-cancel">Close</button>
+    <button class="btn btn-primary" id="copy-copy">Copy</button>
+    <button class="btn btn-quiet" id="copy-send" hidden>Share…</button>
+    <button class="btn btn-quiet" id="copy-cancel">Close</button>
   </div>
 </div>
 
@@ -1812,9 +1830,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=5"></script>
-<script src="js/store.js?v=18"></script>
+<script src="js/store.js?v=19"></script>
 <script src="js/backup.js?v=7"></script>
-<script src="js/ui.js?v=32"></script>
-<script src="js/app.js?v=20"></script>
+<script src="js/ui.js?v=33"></script>
+<script src="js/app.js?v=21"></script>
 </body>
 </html>

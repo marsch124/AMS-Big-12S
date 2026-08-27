@@ -764,55 +764,58 @@
     }
 
     /*
-     * Taking the day to the meeting. The same shape as copying a step out: you
-     * tick what goes, you see the whole text first, and it goes on the clipboard
-     * rather than anywhere else.
+     * Copying something out: tick what goes, read the whole text, then the
+     * clipboard. One sheet for everything but a step, which keeps its own
+     * because it does more.
+     *
+     *   config.title    what is being copied
+     *   config.options  [{ key, label, on }] — may be empty
+     *   config.compose  function (opts) -> the text
+     *   config.note     function (opts, text) -> the line under the preview
+     *   config.copied   what the toast says
      */
-    var checkinShareOpts = { notes: true };
+    var copyOpts = {};
 
-    function openCheckinShare() {
-        var who = current.checkinWho || 'sponsor';
-        var day = current.checkinOn || Store.todayISO();
-        var record = Store.checkinFor(who, day);
-        var hasNotes = !!(record && String(record.notes || '').trim());
+    function openCopySheet(config) {
+        copyOpts = {};
+        (config.options || []).forEach(function (option) {
+            copyOpts[option.key] = !!option.on;
+        });
 
-        checkinShareOpts.notes = true;
-        $('checkin-share-title').textContent = Store.checkinSpec(who).title + ' · ' +
-            (day === Store.todayISO() ? 'today' : formatDay(day));
+        $('copy-title').textContent = config.title;
 
-        // Only offered when there is something to leave out.
-        var holder = $('checkin-share-options');
+        var holder = $('copy-options');
         holder.innerHTML = '';
-        if (hasNotes) {
+        (config.options || []).forEach(function (option) {
             var row = document.createElement('label');
             row.className = 'row';
             var text = document.createElement('span');
-            text.textContent = Store.CHECKIN_NOTES.label;
+            text.textContent = option.label;
             var box = document.createElement('input');
             box.type = 'checkbox';
-            box.checked = true;
+            box.checked = !!option.on;
             box.addEventListener('change', function () {
-                checkinShareOpts.notes = box.checked;
-                refreshCheckinShare(who, day);
+                copyOpts[option.key] = box.checked;
+                refreshCopySheet(config);
             });
             row.appendChild(text);
             row.appendChild(box);
             holder.appendChild(row);
-        }
+        });
 
-        var send = $('checkin-share-send');
+        var send = $('copy-send');
         send.hidden = !navigator.share;
         send.onclick = function () {
-            navigator.share({ text: $('checkin-share-preview').value })
+            navigator.share({ text: $('copy-preview').value })
                 .then(function () { closeSheets(); })
                 .catch(function () {});
         };
 
-        $('checkin-share-copy').onclick = function () {
-            var text = $('checkin-share-preview').value;
+        $('copy-copy').onclick = function () {
+            var text = $('copy-preview').value;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text)
-                    .then(function () { closeSheets(); toast('Copied'); })
+                    .then(function () { closeSheets(); toast(config.copied || 'Copied'); })
                     .catch(function () { toast('Could not copy'); });
             } else {
                 // The preview is a real text box, so there is still a way out.
@@ -820,18 +823,63 @@
             }
         };
 
-        refreshCheckinShare(who, day);
-        openSheet('checkin-share-sheet');
+        refreshCopySheet(config);
+        openSheet('copy-sheet');
     }
 
-    function refreshCheckinShare(who, day) {
-        var text = Store.checkinAsText(who, day, checkinShareOpts);
-        $('checkin-share-preview').value = text;
-
-        var record = Store.checkinFor(who, day);
-        $('checkin-share-size').textContent = Store.checkinIsEmpty(record)
-            ? 'Nothing has been written for this day yet — only the questions would go.'
+    function refreshCopySheet(config) {
+        var text = config.compose(copyOpts);
+        $('copy-preview').value = text;
+        $('copy-size').textContent = config.note
+            ? config.note(copyOpts, text)
             : 'About ' + text.trim().split(/\s+/).length + ' words.';
+    }
+
+    function openCheckinShare() {
+        var who = current.checkinWho || 'sponsor';
+        var day = current.checkinOn || Store.todayISO();
+        var record = Store.checkinFor(who, day);
+        var hasNotes = !!(record && String(record.notes || '').trim());
+
+        openCopySheet({
+            title: Store.checkinSpec(who).title + ' \u00b7 ' +
+                (day === Store.todayISO() ? 'today' : formatDay(day)),
+            // Only offered when there is something to leave out.
+            options: hasNotes
+                ? [{ key: 'notes', label: Store.CHECKIN_NOTES.label, on: true }]
+                : [],
+            compose: function (opts) { return Store.checkinAsText(who, day, opts); },
+            note: function (opts, text) {
+                return Store.checkinIsEmpty(Store.checkinFor(who, day))
+                    ? 'Nothing has been written for this day yet — only the questions would go.'
+                    : 'About ' + text.trim().split(/\s+/).length + ' words.';
+            }
+        });
+    }
+
+    function openMeetingShare() {
+        var anyNotes = Store.state.meetings.some(function (row) {
+            return String(row.what || '').trim();
+        });
+        var waiting = Store.waitingFor('meeting');
+
+        var options = [{ key: 'recent', label: 'Only the last thirty days', on: true }];
+        if (anyNotes) options.push({ key: 'what', label: 'What was worth keeping', on: true });
+        if (waiting) {
+            options.push({ key: 'raise',
+                label: 'What is still waiting to be brought up (' + waiting + ')', on: false });
+        }
+
+        openCopySheet({
+            title: 'Where you have been',
+            options: options,
+            compose: function (opts) { return Store.meetingsAsText(opts); },
+            note: function (opts, text) {
+                return Store.state.meetings.length
+                    ? 'About ' + text.trim().split(/\s+/).length + ' words.'
+                    : 'No meetings written down yet — only the count would go, and it is nought.';
+            }
+        });
     }
 
     function renderCheckinHistory(who, day) {
@@ -866,16 +914,6 @@
 
     var meetingEditing = null;   // the record the sheet is open on
 
-    // Meetings are weekly things, so the day of the week is worth as much as the
-    // date — "Tuesday, Kolpinghaus" only reads right against a Tuesday.
-    function meetingDay(iso) {
-        var d = new Date(iso + 'T00:00:00');
-        if (isNaN(d)) return iso;
-        var format = { weekday: 'short', month: 'short', day: 'numeric' };
-        if (d.getFullYear() !== new Date().getFullYear()) format.year = 'numeric';
-        return d.toLocaleDateString(undefined, format);
-    }
-
     function meetingStateLine() {
         var summary = Store.meetingSummary();
         if (!summary.last) return '';
@@ -883,19 +921,6 @@
         if (days < 1) return 'One today';
         if (days === 1) return 'The last was yesterday';
         return 'The last was ' + days + ' days ago';
-    }
-
-    function meetingSummaryLine() {
-        var summary = Store.meetingSummary();
-        if (!summary.total) {
-            return 'Nothing written down yet. Nobody remembers in March how many they got to in January.';
-        }
-        var line = summary.total === 1 ? 'One written down' : summary.total + ' written down';
-        line += ', ' + summary.recent + ' in the last thirty days.';
-        if (summary.shared) {
-            line += ' You spoke at ' + (summary.shared === 1 ? 'one of them.' : summary.shared + ' of them.');
-        }
-        return line;
     }
 
     function renderMeeting() {
@@ -926,14 +951,14 @@
     function renderMeetingList() {
         var box = $('meeting-list');
         box.innerHTML = '';
-        $('meeting-summary').textContent = meetingSummaryLine();
+        $('meeting-summary').textContent = Store.meetingSummaryLine();
 
         Store.state.meetings.slice(0, 12).forEach(function (row) {
             var card = document.createElement('button');
             card.className = 'card meeting-card';
             card.innerHTML =
                 '<span class="meeting-head">' +
-                    '<span class="meeting-date">' + escapeHtml(meetingDay(row.on)) + '</span>' +
+                    '<span class="meeting-date">' + escapeHtml(Store.meetingDayText(row.on)) + '</span>' +
                     (row.where ? '<span class="meeting-where">' + escapeHtml(row.where) + '</span>' : '') +
                     (row.shared ? '<span class="meeting-shared">Shared</span>' : '') +
                 '</span>' +
@@ -3822,7 +3847,8 @@
             openNoteSheet(null, null, null, { tag: current.checkinWho });
         });
         $('checkin-share').addEventListener('click', openCheckinShare);
-        $('checkin-share-cancel').addEventListener('click', closeSheets);
+        $('meeting-share').addEventListener('click', openMeetingShare);
+        $('copy-cancel').addEventListener('click', closeSheets);
 
         // ── a meeting ──────────────────────────────────────────────────────
         $('meeting-back').addEventListener('click', function () { showScreen('home'); });

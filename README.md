@@ -188,6 +188,11 @@ are reading, or write one down on the spot, and copy the list out before you go.
 Ticking one off works the same as anywhere else: it keeps its place with the date
 on it, and goes back on the list if there turns out to be more to say.
 
+**Copy these out**, at the foot of the page, turns where you have been into plain
+text — the last thirty days or all of them, what was worth keeping from each,
+and what is still waiting to be brought up if you tick it. The same
+tick-what-goes, read-it-first sheet the conversation pages use.
+
 **Where you have been** is the day, which meeting, whether you spoke, and
 anything worth keeping. It counts them — how many in all, how many in the last
 thirty days, how many you spoke at — because nobody remembers in March how many
@@ -466,7 +471,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 324 checks
+node tools/smoke-test.js      # 330 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that

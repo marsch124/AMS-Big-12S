@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.15 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.16 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -331,6 +331,23 @@ HTML, which is why it is shaped this way — do not collapse it back.
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
 
+## Copying things out (2.16)
+
+**`openCopySheet(config)` is the one sheet** for everything but a step: a title,
+a list of `{key, label, on}` toggles, a `compose(opts)` that returns the text,
+and an optional `note()` for the line under the preview. The check-in page and
+the meeting page both go through it. A step keeps `#share-sheet`, which does
+more (private fields, per-part options, its own title).
+
+**Every composer lives in `store.js`** — `stepAsText`, `checkinAsText`,
+`meetingsAsText`, `copyTalkList`'s list. Never scrape the screen: the page folds
+things away, shows the last twelve of a log, and is arranged for filling in
+rather than for reading.
+
+**`meetingSummaryLine()` and `meetingDayText()` moved to the store in 2.16** so
+the screen and the copy cannot come to different conclusions about the same
+list. The prose is shared; only the layout differs.
+
 ## Before we talk (2.14)
 
 **The questions are Martin's own, and they are asymmetric on purpose.** The
@@ -515,7 +532,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    324 end-to-end browser checks
+tools/smoke-test.js    330 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -527,7 +544,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 324 checks, expect 324/324
+node tools/smoke-test.js                  # 330 checks, expect 330/330
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

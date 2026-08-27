@@ -1408,6 +1408,62 @@
         });
     }
 
+    // One sentence, used by the screen and by the copy, so the two cannot come
+    // to different conclusions about the same list.
+    function meetingSummaryLine() {
+        var summary = meetingSummary();
+        if (!summary.total) {
+            return 'Nothing written down yet. Nobody remembers in March how many they got to in January.';
+        }
+        var line = summary.total === 1 ? 'One written down' : summary.total + ' written down';
+        line += ', ' + summary.recent + ' in the last thirty days.';
+        if (summary.shared) {
+            line += ' You spoke at ' + (summary.shared === 1 ? 'one of them.' : summary.shared + ' of them.');
+        }
+        return line;
+    }
+
+    /*
+     * The meetings as plain text. Composed here rather than read off the screen,
+     * which shows the last twelve and folds nothing else in.
+     */
+    function meetingsAsText(options) {
+        options = options || {};
+        var cutoff = options.recent === false ? '' : shiftDay(todayISO(), -29);
+        var rows = state.meetings.filter(function (row) {
+            return !cutoff || String(row.on || '') >= cutoff;
+        });
+
+        var lines = ['Meetings', '', meetingSummaryLine(), ''];
+        if (cutoff) lines.push('The last thirty days:');
+        else if (rows.length) lines.push('All of them:');
+        if (cutoff || rows.length) lines.push('');
+
+        rows.forEach(function (row) {
+            var head = meetingDayText(row.on);
+            if (row.where) head += ' \u00b7 ' + row.where;
+            if (row.shared) head += ' \u00b7 shared';
+            lines.push(head);
+            if (row.what && options.what !== false) lines.push('    ' + row.what);
+        });
+        if (!rows.length) lines.push('Nothing in that stretch.');
+        lines.push('');
+
+        if (options.raise) {
+            var waiting = state.notes.filter(function (note) {
+                return note.tag === 'meeting' && !note.discussedAt;
+            });
+            if (waiting.length) {
+                lines.push('To bring up:');
+                waiting.forEach(function (note) { lines.push('\u2022 ' + note.body); });
+                lines.push('');
+            }
+        }
+
+        lines.push('Copied from AMS Big 12S on ' + dayText(todayISO()) + '.');
+        return lines.join('\n');
+    }
+
     /* ------------------------------------------------------- showing up */
 
     /*
@@ -1702,6 +1758,16 @@
         return places.slice(0, limit || 6);
     }
 
+    // Weekday and date. Meetings are weekly things, so "Tuesday, Kolpinghaus"
+    // only reads right against a Tuesday — on the screen and in a copy alike.
+    function meetingDayText(iso) {
+        var d = new Date(String(iso).slice(0, 10) + 'T00:00:00');
+        if (isNaN(d)) return String(iso);
+        var format = { weekday: 'short', month: 'short', day: 'numeric' };
+        if (d.getFullYear() !== new Date().getFullYear()) format.year = 'numeric';
+        return d.toLocaleDateString(undefined, format);
+    }
+
     function meetingSummary() {
         var cutoff = shiftDay(todayISO(), -29);
         var recent = state.meetings.filter(function (row) {
@@ -1850,6 +1916,9 @@
         deleteMeeting: deleteMeeting,
         usualPlaces: usualPlaces,
         meetingSummary: meetingSummary,
+        meetingSummaryLine: meetingSummaryLine,
+        meetingDayText: meetingDayText,
+        meetingsAsText: meetingsAsText,
 
         loadBookmarks: loadBookmarks,
         findBookmark: findBookmark,
