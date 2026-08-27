@@ -221,6 +221,37 @@ button { cursor: pointer; }
   padding-top: 2px;
 }
 
+/* The day count. One line: the number, what it counts, and the day it counts
+   from. Deliberately not the biggest thing on the screen — it is a fact, not a
+   trophy. */
+.daycount {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--bg-raised);
+  color: var(--text);
+  padding: 11px 15px;
+  margin-bottom: 12px;
+}
+.daycount[hidden] { display: none; }
+.daycount:active { background: var(--bg-sunken); }
+.daycount-n {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.daycount-label { font-size: 14px; }
+.daycount-since { margin-left: auto; font-size: 12px; color: var(--text-dim); }
+/* Nothing set yet: the row is an invitation rather than a statistic. */
+.daycount.is-unset { border-style: dashed; background: transparent; }
+.daycount.is-unset .daycount-label { color: var(--text-dim); }
+
 .passage-card {
   display: block;
   width: 100%;

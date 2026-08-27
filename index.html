@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=23">
+<link rel="stylesheet" href="css/style.css?v=24">
 </head>
 <body>
 
@@ -33,6 +33,14 @@
     </header>
 
     <div class="screen-body">
+      <!-- Small, and first. It is the number he opens the app already knowing;
+           the app's job is to have counted it right, not to make a fuss of it. -->
+      <button class="daycount" id="daycount">
+        <span class="daycount-n" id="daycount-n"></span>
+        <span class="daycount-label" id="daycount-label"></span>
+        <span class="daycount-since" id="daycount-since"></span>
+      </button>
+
       <button class="passage-card" id="passage-card">
         <span class="passage-label">Today’s passage</span>
         <span class="passage-text" id="passage-text"></span>
@@ -434,6 +442,19 @@
         </label>
       </div>
 
+      <h2 class="section-heading" id="settings-abstinence">Counting the days</h2>
+      <div class="panel">
+        <p class="panel-note">
+          The first day, counted inclusively — set it to today and the home screen reads
+          <strong>1 day</strong>. Leave it empty and the counter stays off the home screen
+          altogether.
+        </p>
+        <label class="row">
+          <span>First day</span>
+          <input type="date" id="set-sober-since" class="row-input">
+        </label>
+      </div>
+
       <h2 class="section-heading" id="settings-sponsor">Your sponsor</h2>
       <div class="panel">
         <p class="panel-note">
@@ -685,6 +706,18 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Counting the days</span><span class="ver-tag">2.6</span></summary>
+          <div class="disclosure-body">
+            <p>A day count at the top of the home screen. Set the first day in
+               <strong>Settings → Counting the days</strong> and it counts inclusively, so the
+               day you set it reads <strong>1 day</strong> — which is how anybody says it, and
+               day one is the one worth counting most.</p>
+            <p>Tap it to change the date. Leave the date empty and the counter is not there at
+               all; there is no nought on the home screen.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>A 24-hour clock, and the version on the tab</span><span class="ver-tag">2.5</span></summary>
@@ -1487,9 +1520,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=4"></script>
-<script src="js/store.js?v=11"></script>
+<script src="js/store.js?v=12"></script>
 <script src="js/backup.js?v=5"></script>
-<script src="js/ui.js?v=22"></script>
-<script src="js/app.js?v=10"></script>
+<script src="js/ui.js?v=23"></script>
+<script src="js/app.js?v=11"></script>
 </body>
 </html>

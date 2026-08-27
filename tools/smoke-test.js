@@ -109,6 +109,54 @@ async function openContents(page) {
     check('a fresh install counts nothing rather than flattering you',
         (await page.textContent('#stats .stat')).includes('0%'));
 
+    // ── counting the days ─────────────────────────────────────────────────
+    check('with no first day set, the counter is an invitation rather than a nought',
+        (await page.$eval('#daycount', (e) => e.classList.contains('is-unset'))) &&
+        (await page.textContent('#daycount-n')) === '');
+
+    const dayOne = await page.evaluate(async () => {
+        await Store.saveSettings({ soberSince: Store.todayISO() });
+        UI.showScreen('home');
+        return document.getElementById('daycount-n').textContent + ' ' +
+            document.getElementById('daycount-label').textContent;
+    });
+    check('the day you set it reads day one, not day nought', dayOne === '1 day', dayOne);
+
+    const counted = await page.evaluate(async () => {
+        await Store.saveSettings({ soberSince: '2023-03-03' });
+        UI.showScreen('home');
+        const days = Store.daysAbstinent();
+        return { days: days, shown: document.getElementById('daycount-n').textContent,
+                 since: document.getElementById('daycount-since').textContent };
+    });
+    // Worked out here rather than asked of the app, and off today's real date so
+    // it does not start failing tomorrow.
+    const now = new Date();
+    const expectedDays = Math.round(
+        (Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - Date.UTC(2023, 2, 3))
+        / 86400000) + 1;
+    check('and counts inclusively from a date years back',
+        counted.days === expectedDays,
+        counted.days + ' days, expected ' + expectedDays);
+    check('shown with a separator, and the day it counts from',
+        counted.shown.replace(/[.,\u202f\u00a0]/g, '') === String(counted.days) &&
+        /2023/.test(counted.since),
+        counted.shown + ' — ' + counted.since);
+
+    const future = await page.evaluate(async () => {
+        await Store.saveSettings({ soberSince: Store.shiftDay(Store.todayISO(), 5) });
+        const days = Store.daysAbstinent();
+        await Store.saveSettings({ soberSince: '2023-03-03' });
+        UI.showScreen('home');
+        return days;
+    });
+    check('a date in the future counts nothing rather than backwards', future === 0, String(future));
+
+    await page.click('#daycount');
+    await page.waitForSelector('#screen-settings.is-active');
+    check('tapping it goes to the day it counts from',
+        (await page.inputValue('#set-sober-since')) === '2023-03-03');
+
     // ── the book ships with the app ───────────────────────────────────────
     await openContents(page);
     check('no "import the text" notice — text is bundled', !(await page.isVisible('#import-notice')));

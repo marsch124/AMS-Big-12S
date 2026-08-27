@@ -10,8 +10,9 @@ without a signal.
 
 ## Features
 
-- 🏠 **A home screen** — the time and the date, a passage from the book for today, where you
-  stopped, the reasons you might have opened the app, and an honest count of what you have done
+- 🏠 **A home screen** — the day count, the time and the date, a passage from the book for
+  today, where you stopped, the reasons you might have opened the app, and an honest count of
+  what you have done
 - 🌊 **A craving screen** — start a clock on one, close it when it goes, and keep the list of
   the ones that passed; your sponsor a tap away
 - 👥 **Meetings** — what you meant to bring up, and the record of the ones you got to
@@ -41,6 +42,11 @@ without a signal.
 
 The app opens here rather than in the contents, because reading is not the only
 reason anyone picks it up.
+
+**The day count** sits at the top. Set the first day in **Settings → Counting
+the days** and it counts inclusively, so the day you set it reads *1 day* —
+which is how anybody says it. Leave the date empty and the counter is not there
+at all; there is no nought on the home screen. Tapping it goes back to the date.
 
 **Today's passage** is one passage from the book, the same one all day, changing
 at midnight. Tap it to read it where it sits in the chapter. There are 94 of
@@ -385,7 +391,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 248 checks
+node tools/smoke-test.js      # 254 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that

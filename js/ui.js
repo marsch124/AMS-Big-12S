@@ -182,10 +182,32 @@
 
     function renderHome() {
         startClock();
+        renderDayCount();
         renderPassage();
         renderContinueCard('home-continue');
         renderShortcuts();
         renderStats();
+    }
+
+    /*
+     * The day count. Tapping it goes to the date it counts from, which is the
+     * only thing there is to do with it.
+     */
+    function renderDayCount() {
+        var card = $('daycount');
+        var days = Store.daysAbstinent();
+        var since = String(Store.state.settings.soberSince || '').trim();
+
+        card.classList.toggle('is-unset', days === null);
+        if (days === null) {
+            $('daycount-n').textContent = '';
+            $('daycount-label').textContent = 'Count the days — set the first one';
+            $('daycount-since').textContent = '';
+        } else {
+            $('daycount-n').textContent = days.toLocaleString();
+            $('daycount-label').textContent = days === 1 ? 'day' : 'days';
+            $('daycount-since').textContent = 'since ' + formatDay(since);
+        }
     }
 
     /*
@@ -3129,6 +3151,8 @@
         $('set-lineheight').value = Math.round(settings.lineHeight * 100);
         $('set-lineheight-value').textContent = settings.lineHeight.toFixed(2);
         $('set-keepawake').checked = !!settings.keepAwake;
+        $('set-sober-since').value = settings.soberSince || '';
+        $('set-sober-since').max = Store.todayISO();
         $('set-sponsor-name').value = settings.sponsorName || '';
         $('set-sponsor-phone').value = settings.sponsorPhone || '';
         $('about-version').textContent = 'v' + (global.APP_VERSION || '1.0');
@@ -3444,6 +3468,12 @@
             Store.saveSettings({ keepAwake: this.checked }).then(function () {
                 if (!Store.state.settings.keepAwake) releaseWakeLock();
             });
+        });
+        $('daycount').addEventListener('click', function () {
+            showSettingsAt('settings-abstinence');
+        });
+        $('set-sober-since').addEventListener('change', function () {
+            Store.saveSettings({ soberSince: this.value });
         });
         $('set-sponsor-name').addEventListener('change', function () {
             Store.saveSettings({ sponsorName: this.value.trim() });

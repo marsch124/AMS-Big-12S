@@ -17,7 +17,10 @@
         // its own because it is one person and one number, and settings already
         // ride the backup.
         sponsorName: '',
-        sponsorPhone: ''
+        sponsorPhone: '',
+        // The first day. Empty until it is set, and the counter stays off the
+        // home screen until then rather than showing a nought.
+        soberSince: ''
     };
 
     var POSITION_MIRROR_KEY = 'ams-big-12s:position';
@@ -1324,6 +1327,24 @@
         };
     }
 
+    /* ------------------------------------------------------------ the count */
+
+    /*
+     * Days counted inclusively from the first day, so the day you set it reads
+     * one rather than nought — which is how anybody says it, and day one is the
+     * one worth counting most.
+     *
+     * Null when there is no date to count from. A date in the future counts as
+     * nothing yet rather than as a negative number.
+     */
+    function daysAbstinent(date) {
+        var since = String(state.settings.soberSince || '').trim();
+        if (!since) return null;
+        var start = new Date(since + 'T00:00:00');
+        if (isNaN(start)) return null;
+        return Math.max(0, dayNumber(date) - dayNumber(start) + 1);
+    }
+
     /* ------------------------------------------------------------ meetings */
 
     /*
@@ -1503,6 +1524,8 @@
         deleteCraving: deleteCraving,
         cravingMinutes: cravingMinutes,
         cravingSummary: cravingSummary,
+
+        daysAbstinent: daysAbstinent,
 
         loadMeetings: loadMeetings,
         saveMeeting: saveMeeting,
