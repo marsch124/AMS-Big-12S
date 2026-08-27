@@ -302,6 +302,29 @@ async function openContents(page) {
     check('and all five chips are different',
         new Set(moveChips.map((m) => m.chip)).size === 5,
         moveChips.map((m) => m.chip).join(' '));
+
+    // Sepia is one colour everywhere except here. That is deliberate: the
+    // colour on these five rows is legibility, not decoration, and nobody
+    // picks a reading theme meaning to make the worst ten minutes harder to
+    // read. Reaching somebody and the prayers do stay brown — they are named
+    // by a person or a title and are not what you pick between in a hurry.
+    const inSepia = await page.evaluate(() => {
+        const was = document.documentElement.getAttribute('data-theme');
+        document.documentElement.setAttribute('data-theme', 'sepia');
+        const chip = (sel) => {
+            const n = document.querySelector(sel);
+            return n ? getComputedStyle(n.querySelector('.do-icon')).backgroundColor : '';
+        };
+        const moves = [...document.querySelectorAll('#craving-moves .do-row')]
+            .map((n) => getComputedStyle(n.querySelector('.do-icon')).backgroundColor);
+        const reach = chip('#craving-message');
+        document.documentElement.setAttribute('data-theme', was);
+        return { moves, reach };
+    });
+    check('the five ways out keep their colours even in sepia',
+        new Set(inSepia.moves).size === 5, inSepia.moves.join(' '));
+    check('and everything else on that screen stays sepia\'s one colour',
+        inSepia.moves.indexOf(inSepia.reach) === -1, 'reach ' + inSepia.reach);
     check('the ways to reach somebody are one colour, being one kind of thing',
         (await page.$$eval('#craving-rings .do-row, #craving-message, #craving-write',
             (nodes) => nodes.length > 0 &&

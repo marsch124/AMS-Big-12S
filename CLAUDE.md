@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.29 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.30 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,25 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## Sepia's one exception (2.30)
+
+**Sepia is monochrome everywhere except the five craving moves**, and that is
+deliberate, asked for, and held by two smoke checks. The argument: colour on
+those five rows is legibility rather than decoration, so it must not be
+switchable off by a reading preference chosen months earlier. Reaching somebody
+and the two prayers stay brown in sepia — they are named by a person or a title
+and are not what anyone is choosing between in a hurry, so the exception stays
+as narrow as the argument for it.
+
+**Do not "tidy" sepia's `--move-*` back to one colour.** The checks
+`the five ways out keep their colours even in sepia` and
+`and everything else on that screen stays sepia's one colour` exist precisely to
+stop that, and the second one is what keeps the exception narrow.
+
+**Light's `--wash` is warm** (`#fdf1e3`), not the cool blue it started as. The
+wash sits behind the home screen only, and the home screen's colour is orange;
+a cool wash was the one place two colours in the app disagreed.
 
 ## The palette audit (2.29)
 
@@ -1108,7 +1127,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    486 end-to-end browser checks
+tools/smoke-test.js    488 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -1120,7 +1139,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 486 checks, expect 486/486
+node tools/smoke-test.js                  # 488 checks, expect 488/488
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

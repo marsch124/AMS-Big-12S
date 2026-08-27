@@ -115,11 +115,18 @@
   --who-sponsee:  #7f6340;
   --who-spouse:   #7f6340;
 
-  --move-breathe: #8c6d46;  --move-breathe-on: #fbf6ea;
-  --move-headon:  #8c6d46;  --move-headon-on:  #fbf6ea;
-  --move-whatif:  #8c6d46;  --move-whatif-on:  #fbf6ea;
-  --move-shower:  #8c6d46;  --move-shower-on:  #fbf6ea;
-  --move-own:     #8c6d46;  --move-own-on:     #fbf6ea;
+  /* The one exception to sepia being a single colour, and it is deliberate.
+     The five ways out of a craving are coloured everywhere, including here,
+     because that colour is legibility and not decoration: nobody chooses a
+     reading theme in March meaning to make the worst ten minutes of July
+     harder to read. Reaching somebody and the two prayers stay brown — those
+     are named by a person or a title, and they are not what you are picking
+     between in a hurry. */
+  --move-breathe: #0eb5c9;  --move-breathe-on: #105159;
+  --move-headon:  #8b5cf6;  --move-headon-on:  #27027a;
+  --move-whatif:  #f7d117;  --move-whatif-on:  #7d690a;
+  --move-shower:  #2e9bf0;  --move-shower-on:  #003f70;
+  --move-own:     #22bb66;  --move-own-on:     #0d542d;
   --move-reach:   #8c6d46;  --move-reach-on:   #fbf6ea;
   --move-prayer:  #8c6d46;  --move-prayer-on:  #fbf6ea;
 }
@@ -143,7 +150,7 @@
   --hue-notes:    #00822b;
   --hue-search:   #007d7d;
   --hue-settings: #b03a7a;
-  --wash: #e6f1fb;
+  --wash: #fdf1e3;
 }
 
 /* Night, not a switched-off day. The hues lift and desaturate so they read at
