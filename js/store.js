@@ -24,6 +24,7 @@
         notes: [],
         bookmarks: [],
         steps: null,           // { title, edition, steps: [] } from data/steps.json
+        daily: null,             // { passages: [] } from data/daily.json
         stepPrefs: { hidden: {}, custom: {} },  // questions hidden, questions added
         inventory: []            // step four's rows: { id, stepId, tableId, values, ... }
     };
@@ -403,11 +404,23 @@
             { year: 'numeric', month: 'short', day: 'numeric' });
     }
 
+    // Local date, not UTC: at 23:00 in London a UTC date would already be
+    // tomorrow, and "today" has to mean the reader's today.
+    function dayISO(date) {
+        var d = date || new Date();
+        return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+    }
+
+    function shiftDay(iso, days) {
+        var d = new Date(iso + 'T00:00:00');
+        d.setDate(d.getDate() + days);
+        return dayISO(d);
+    }
+
     function todayISO() {
-        var now = new Date();
-        return now.getFullYear() + '-' +
-            String(now.getMonth() + 1).padStart(2, '0') + '-' +
-            String(now.getDate()).padStart(2, '0');
+        return dayISO();
     }
 
     // Every place a work block can declare an input, in the order it declares
@@ -1096,12 +1109,100 @@
         return results;
     }
 
+    /* ------------------------------------------------------ a passage a day */
+
+    /*
+     * data/daily.json is built by tools/build-daily.js: passages verified word
+     * for word against the book, each carrying the section, the paragraph and
+     * the anchor that finds it again.
+     */
+    function loadDaily() {
+        return fetch('data/daily.json', { cache: 'no-cache' })
+            .then(function (response) {
+                if (!response.ok) throw new Error('daily.json: HTTP ' + response.status);
+                return response.json();
+            })
+            .then(function (data) { state.daily = data; return data; })
+            .catch(function (error) {
+                console.warn('Could not load data/daily.json', error);
+                state.daily = { passages: [] };
+                return state.daily;
+            });
+    }
+
+    // Whole days since the epoch, counted off the reader's own calendar date.
+    // Built from Date.UTC so the arithmetic is in exact days and a clock going
+    // back an hour in October cannot hand back yesterday's number.
+    function dayNumber(date) {
+        var d = date || new Date();
+        return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+    }
+
+    /*
+     * The passage for a given day. The same for everyone reading on the same
+     * date, settled at midnight and unchanged until the next one — a passage
+     * you can think about all day is worth more than a fresh one every time the
+     * app opens.
+     */
+    function passageForDay(date) {
+        var passages = (state.daily && state.daily.passages) || [];
+        if (!passages.length) return null;
+
+        var passage = passages[dayNumber(date) % passages.length];
+        var section = getSection(passage.sectionId);
+
+        return {
+            text: passage.text,
+            sectionId: passage.sectionId,
+            // The live section's title, not the one recorded at build time: the
+            // reader may be on their own copy of the text.
+            sectionTitle: (section && section.title) || passage.sectionTitle,
+            // Resolved the way a note or a step reference is, so the link lands
+            // on the right words rather than a remembered paragraph number.
+            // Null means this copy of the text has not got it.
+            paraIndex: resolveStepRef(passage)
+        };
+    }
+
+    /*
+     * How many days in a row a daily step has been written, counted back from
+     * today — or from yesterday when today is not written yet, because
+     * otherwise every run would read zero each morning until you had done it,
+     * which turns a record of practice into a reprimand.
+     */
+    function stepStreak(step) {
+        var work = workFor(step);
+        if (!work || String(work.kind).indexOf('daily') !== 0) return 0;
+
+        var byDay = {};
+        rowsForWork(step).forEach(function (row) { if (row.on) byDay[row.on] = true; });
+
+        var cursor = byDay[todayISO()] ? todayISO() : shiftDay(todayISO(), -1);
+        var run = 0;
+        while (byDay[cursor]) { run++; cursor = shiftDay(cursor, -1); }
+        return run;
+    }
+
+    // The longest run currently going among the daily steps — ten and eleven.
+    // Ties go to the earlier step, so a first day on both reads as step ten.
+    function dailyRun() {
+        var best = null;
+        allSteps().forEach(function (step) {
+            var work = workFor(step);
+            if (!work || String(work.kind).indexOf('daily') !== 0) return;
+            var run = stepStreak(step);
+            if (!best || run > best.run) best = { run: run, step: step };
+        });
+        return best || { run: 0, step: null };
+    }
+
     /* --------------------------------------------------------------- boot */
 
     function init() {
         return loadSettings()
             .then(loadBook)
             .then(loadSteps)
+            .then(loadDaily)
             .then(loadStepPrefs)
             .then(loadInventory)
             .then(loadNotes)
@@ -1127,6 +1228,15 @@
 
         loadSteps: loadSteps,
         allSteps: allSteps,
+
+        loadDaily: loadDaily,
+        passageForDay: passageForDay,
+        dayNumber: dayNumber,
+        stepStreak: stepStreak,
+        dailyRun: dailyRun,
+        dayISO: dayISO,
+        shiftDay: shiftDay,
+        todayISO: todayISO,
         getStep: getStep,
         stepIsWritten: stepIsWritten,
         resolveStepRef: resolveStepRef,

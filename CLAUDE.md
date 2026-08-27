@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 2.0 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.1 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -158,6 +158,60 @@ records, not prose, and bending them into a note would have disturbed
 `DB_VERSION` is 2; the upgrade is guarded by `objectStoreNames.contains`, so an
 existing install gains the store and keeps everything else.
 
+## The home screen (2.1)
+
+**The app opens on `#screen-home`; the contents is `#screen-library`, on the Read
+tab.** Martin asked for a front page: "the app has evolved, and it's not just
+about reading". Six tabs now, and the tab labels are a shade smaller for it.
+Anything that wants the table of contents — a test, a link, a back button — has
+to ask for `library`, not `home`.
+
+**A passage a day, and it is never written from memory.** `data/daily.source.json`
+is a hand-picked list of quotes and nothing else. `tools/build-daily.js` finds
+each one in `book.json`, **refuses to build** on a quote that matches nothing or
+matches twice, and writes the *book's* characters into `daily.json` by mapping
+the flattened match back to the original — so what ships is the book's own text
+even if a curly quote was typed straight. It also refuses a quote that starts or
+ends mid-sentence, which is always a slip rather than a choice. Same bar as
+`build-steps.js`, for the same reason: people quote this book precisely. 94
+passages, so one repeats about every three months.
+
+**The passage is picked by the local day, not at random.** `Store.passageForDay()`
+indexes on `dayNumber()`, which is `Date.UTC(y, m, d) / 86400000` — whole days
+off the reader's calendar date, so a clock going back an hour in October cannot
+hand back yesterday's passage. The same day gives the same passage all day, which
+is the point: a passage you can carry around is worth more than a fresh one every
+time the app opens. The paragraph is re-resolved at runtime through
+`resolveStepRef()`, so the link still lands on the right words in an imported
+copy, and the card says the passage is missing rather than opening a guess.
+
+**`renderContinueCard(prefix)` draws one card into two screens.** Home passes
+`home-continue`, the contents passes `continue`. There is deliberately no second
+copy of that logic — the second copy is the one that falls behind.
+
+**The streak belongs to `Store.stepStreak()`, and `dayISO`/`shiftDay` live in the
+store.** The home screen and the step page were both counting days; two
+implementations of "what day is it" would eventually disagree. `ui.js` keeps thin
+wrappers that call through.
+
+**Two shortcut tiles are placeholders, on purpose.** *I have cravings* and *I'm
+going to a meeting* carry `is-soon`, are dashed rather than greyed, and say "Not
+built yet" when tapped. Martin asked for placeholders explicitly. Do not quietly
+wire them to something approximate — ask him what should happen. (*I have
+cravings* is read from "I have crazy wings" in his message; if that was a
+mishearing, the label is the only thing to change.)
+
+**The clock ticks on the minute and only while home is on screen.** `startClock()`
+waits out the remainder of the current minute and then goes hourly-honest at
+60000ms; `showScreen` stops it for every other screen, and `visibilitychange`
+re-renders the whole home screen on return — a phone left open overnight would
+otherwise wake showing yesterday's date and yesterday's passage.
+
+**Each count is of exactly what its own screen shows** — the same rule the Notes
+chips follow. "Notes written" is `state.notes.length` because that is what the
+Notes tab's All list contains, answers included. "Steps worked on" goes through
+`Store.stepProgress()`, never a hand count.
+
 **Settled already — do not re-ask.** Sponsor (not "spindrift", a transcription
 slip). Chapter-and-passage references, no page numbers: the Dover pagination does
 not match the edition people quote. Explanations in my voice, editable by him.
@@ -203,10 +257,13 @@ data/book.json                      Parsed book the app reads (~577 KB)
 data/alcoholics-anonymous-1939.txt  Source text book.json was built from
 data/steps.source.json              Step material, written by hand
 data/steps.json                     Built steps with references resolved
+data/daily.source.json              Home-screen passages, chosen by hand
+data/daily.json                     Those passages, verified against the book
 tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
-tools/smoke-test.js    190 end-to-end browser checks
+tools/build-daily.js   daily.source.json → daily.json, verifying every quote
+tools/smoke-test.js    207 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -218,7 +275,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 190 checks, expect 190/190
+node tools/smoke-test.js                  # 207 checks, expect 207/207
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

@@ -10,6 +10,8 @@ without a signal.
 
 ## Features
 
+- 🏠 **A home screen** — the time and the date, a passage from the book for today, where you
+  stopped, the reasons you might have opened the app, and an honest count of what you have done
 - 📖 **Distraction-free reader** — serif or sans, four themes, adjustable size and spacing
 - 🔖 **Remembers where you stopped** — down to the paragraph, restored on every launch
 - ✎ **Notes on any passage** — tap a paragraph, write a note; it stays attached to those words
@@ -31,6 +33,40 @@ without a signal.
 1. Open the live link above in **Safari** (iOS) or **Chrome** (Android).
 2. iOS: **Share → Add to Home Screen**. Android: **Menu → Install app**.
 3. Launch it from the home screen. It runs full-screen and works with no signal.
+
+## The home screen
+
+The app opens here rather than in the contents, because reading is not the only
+reason anyone picks it up.
+
+**Today's passage** is one passage from the book, the same one all day, changing
+at midnight. Tap it to read it where it sits in the chapter. There are 94 of
+them, so one comes round again about every three months.
+
+They are chosen by hand and then **verified against the text before they ship**.
+`tools/build-daily.js` finds each quote in `data/book.json`, refuses to build if
+one matches nothing or matches in two places, and writes out the book's own
+characters rather than the ones that were typed — so a slip in the typing becomes
+a failed build rather than a misquotation on the front page. Nothing on that card
+was written from memory.
+
+```bash
+node tools/build-daily.js          # data/daily.source.json → data/daily.json
+node tools/build-daily.js --check  # validate only, write nothing
+```
+
+**What brings you here** is a handful of shortcuts written in the first person,
+because that is how the reason arrives — not "notes" but *I want to write
+something down*. Meeting your sponsor or your sponsee opens the list of points
+still waiting for that conversation, with the count on the tile beforehand.
+Two of them — *I have cravings*, *I'm going to a meeting* — have nothing behind
+them yet and say so when tapped. A place held open is more honest than a button
+that quietly does nothing.
+
+**Where you have got to** is four counts: how far through the book, what you have
+written, how many of the twelve steps you have worked on, and how many days you
+are running on a daily step. Each is of exactly what its own screen shows, and a
+morning with nothing written says so.
 
 ## Notes, and things to talk about
 
@@ -282,11 +318,14 @@ python3 -m http.server 7801
 │   ├── book.json                      The parsed book the app reads
 │   ├── alcoholics-anonymous-1939.txt  The source text it was built from
 │   ├── steps.source.json              The step material, written by hand
-│   └── steps.json                     Built steps, with book references resolved
+│   ├── steps.json                     Built steps, with book references resolved
+│   ├── daily.source.json              The passages for the home screen, chosen by hand
+│   └── daily.json                     Those passages, verified against the book
 └── tools/
     ├── epub-to-text.py EPUB → plain text, skipping publisher matter
     ├── build-book.js   Plain text → data/book.json
     ├── build-steps.js  steps.source.json → steps.json, resolving book references
+    ├── build-daily.js   daily.source.json → daily.json, verifying every quote
     ├── smoke-test.js   End-to-end browser checks
     └── make-icons.py   Regenerate the icon set
 ```
@@ -296,7 +335,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 190 checks
+node tools/smoke-test.js      # 207 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that

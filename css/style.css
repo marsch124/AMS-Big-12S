@@ -148,10 +148,15 @@ button { cursor: pointer; }
 .tabbar[hidden] { display: none; }
 .tab {
   flex: 1;
+  min-width: 0;
   border: 0;
   background: transparent;
   color: var(--text-dim);
-  font-size: 11px;
+  /* Six tabs, so the label is a shade smaller than it was at five and never
+     wraps — a tab that goes to two lines pushes the whole bar out of line. */
+  font-size: 10.5px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -160,8 +165,8 @@ button { cursor: pointer; }
 }
 .tab-icon { display: inline-flex; line-height: 1; }
 .tab-icon svg {
-  width: 25px;
-  height: 25px;
+  width: 23px;
+  height: 23px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.6;
@@ -178,6 +183,126 @@ button { cursor: pointer; }
   45%  { transform: scale(1.16) rotate(-7deg); }
   100% { transform: scale(1) rotate(0deg); }
 }
+
+/* ══════════════════════════════════════════════════════════════════ home ══ */
+
+.topbar-home { align-items: flex-start; }
+.topbar-home .topbar-title { font-size: 19px; }
+.topbar-home .topbar-sub { font-size: 13px; }
+
+/* Tabular figures so the minute changing does not shift the digits about. */
+.home-clock {
+  flex: none;
+  font-size: 27px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  padding-top: 2px;
+}
+
+.passage-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: 14px;
+  background: var(--bg-raised);
+  padding: 15px 16px 14px;
+  margin-bottom: 12px;
+}
+.passage-card[hidden] { display: none; }
+.passage-card:active { background: var(--bg-sunken); }
+.passage-card[disabled] { opacity: 0.75; }
+.passage-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+/* The book's own typeface, at the book's own pace — this is a passage to read,
+   not a caption to skim. */
+.passage-text {
+  display: block;
+  margin-top: 9px;
+  font-family: var(--reader-family);
+  font-size: 17px;
+  line-height: 1.55;
+}
+.passage-where { display: block; margin-top: 9px; font-size: 12px; color: var(--text-dim); }
+
+.shortcuts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.shortcut {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  min-height: 112px;
+  text-align: left;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--bg-raised);
+  color: var(--text);
+  padding: 13px 13px 12px;
+}
+.shortcut:active { background: var(--bg-sunken); }
+/* Nothing behind it yet. Dashed rather than greyed out: it is a place held
+   open, not a thing switched off. */
+.shortcut.is-soon { border-style: dashed; background: transparent; }
+.shortcut-icon { display: inline-flex; line-height: 1; color: var(--accent); }
+.shortcut-icon svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.shortcut.is-soon .shortcut-icon { color: var(--text-dim); }
+.shortcut-label { font-size: 14px; font-weight: 500; line-height: 1.35; }
+.shortcut-note { margin-top: auto; font-size: 11.5px; color: var(--text-dim); }
+.shortcut-note:empty { display: none; }
+.shortcut-note.is-waiting { color: var(--accent); font-weight: 600; }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.stat {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--bg-raised);
+  color: var(--text);
+  padding: 12px 13px;
+}
+.stat:active { background: var(--bg-sunken); }
+.stat-value {
+  display: block;
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.stat-unit { font-size: 15px; font-weight: 500; color: var(--text-dim); }
+.stat-label { display: block; margin-top: 5px; font-size: 13px; }
+.stat-note { display: block; margin-top: 2px; font-size: 11.5px; color: var(--text-dim); }
+.stat-note:empty { display: none; }
 
 /* ═══════════════════════════════════════════════════════════════ library ══ */
 

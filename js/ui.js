@@ -81,9 +81,10 @@
 
     function showScreen(name) {
         if (name !== 'reader') flushPosition();
-        ['home', 'reader', 'steps', 'step', 'notes', 'search', 'settings'].forEach(function (screen) {
-            $('screen-' + screen).classList.toggle('is-active', screen === name);
-        });
+        ['home', 'library', 'reader', 'steps', 'step', 'notes', 'search', 'settings']
+            .forEach(function (screen) {
+                $('screen-' + screen).classList.toggle('is-active', screen === name);
+            });
         // A step page is pushed from the Steps tab, so that tab stays lit while
         // you are inside one.
         var litTab = name === 'step' ? 'steps' : name;
@@ -95,7 +96,11 @@
         current.screen = name;
 
         if (name === 'reader') requestWakeLock(); else releaseWakeLock();
-        if (name === 'home') renderHome();
+        // The clock ticks only while it is on screen. Nothing else on the home
+        // screen has to keep time, and a timer running behind the reader is a
+        // wake-up a minute for a screen nobody is looking at.
+        if (name === 'home') renderHome(); else stopClock();
+        if (name === 'library') renderLibrary();
         if (name === 'notes') renderNotes();
         if (name === 'settings') renderSettings();
         if (name === 'steps') renderSteps();
@@ -104,13 +109,184 @@
 
     /* --------------------------------------------------------------- home */
 
+    var clockTimer = null;
+
+    function greetingFor(hour) {
+        if (hour < 5) return 'Still up';
+        if (hour < 12) return 'Good morning';
+        if (hour < 18) return 'Good afternoon';
+        return 'Good evening';
+    }
+
+    function paintClock() {
+        var now = new Date();
+        $('home-clock').textContent =
+            now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        $('home-greeting').textContent = greetingFor(now.getHours());
+        $('home-date').textContent = now.toLocaleDateString(undefined,
+            { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    /*
+     * On the minute, not on the second. The clock shows minutes, so a timer
+     * sixty times as busy would spend sixty times the battery drawing the same
+     * two digits. The first wait is short — however long is left of this minute
+     * — so the change lands when the minute actually turns.
+     */
+    function startClock() {
+        stopClock();
+        paintClock();
+        var now = new Date();
+        clockTimer = setTimeout(function () {
+            paintClock();
+            clockTimer = setInterval(paintClock, 60000);
+        }, (60 - now.getSeconds()) * 1000 - now.getMilliseconds());
+    }
+
+    function stopClock() {
+        if (!clockTimer) return;
+        clearTimeout(clockTimer);
+        clearInterval(clockTimer);
+        clockTimer = null;
+    }
+
     function renderHome() {
+        startClock();
+        renderPassage();
+        renderContinueCard('home-continue');
+        renderShortcuts();
+        renderStats();
+    }
+
+    /*
+     * The passage for today, and a way into the page it came from. The text is
+     * the book's own, verified at build time; if the reader has imported a copy
+     * that does not contain it, the card says so rather than opening the reader
+     * at a guessed paragraph.
+     */
+    function renderPassage() {
+        var card = $('passage-card');
+        var passage = Store.passageForDay();
+        if (!passage) { card.hidden = true; return; }
+
+        card.hidden = false;
+        $('passage-text').textContent = passage.text;
+        card.disabled = passage.paraIndex === null;
+        $('passage-where').textContent = passage.paraIndex === null
+            ? passage.sectionTitle + ' — not in the text now loaded'
+            : passage.sectionTitle + ' · tap to read it in place';
+
+        card.onclick = function () {
+            if (passage.paraIndex === null) return;
+            openReader(passage.sectionId, { paraIndex: passage.paraIndex, highlight: true });
+        };
+    }
+
+    /*
+     * Six ways in, written in the first person, because that is how the reason
+     * arrives: not "notes" but "I want to write something down". Two of them
+     * have nothing behind them yet and say so when tapped — a place held open
+     * is more honest than a button that quietly does nothing.
+     */
+    function renderShortcuts() {
+        var position = Store.state.position;
+        var section = position && Store.getSection(position.sectionId);
+        $('shortcut-read-note').textContent = section ? section.title : 'From the beginning';
+
+        [['sponsor', 'shortcut-sponsor-note'], ['sponsee', 'shortcut-sponsee-note']].forEach(function (pair) {
+            var waiting = Store.waitingFor(pair[0]);
+            var note = $(pair[1]);
+            note.textContent = waiting ? waiting + ' still to raise' : 'Nothing waiting';
+            note.classList.toggle('is-waiting', waiting > 0);
+        });
+    }
+
+    function openNotesWith(filter) {
+        notesFilter = filter;
+        showScreen('notes');
+    }
+
+    function runShortcut(name) {
+        if (name === 'read') {
+            var position = Store.state.position;
+            if (position && Store.getSection(position.sectionId)) {
+                openReader(position.sectionId,
+                    { paraIndex: position.paraIndex, ratio: position.ratio });
+            } else {
+                showScreen('library');
+            }
+            return;
+        }
+        if (name === 'sponsor') { openNotesWith('sponsor'); return; }
+        if (name === 'sponsee') { openNotesWith('sponsee'); return; }
+        if (name === 'write') { openNoteSheet(null, null, null, { tag: '' }); return; }
+        toast('Not built yet — this one is a place held open.');
+    }
+
+    /*
+     * Four counts, each of exactly what its own screen shows. Nothing here is
+     * an estimate and nothing is flattered: a morning with nothing written says
+     * so, because a number that only ever goes up stops being a number.
+     */
+    function renderStats() {
+        var box = $('stats');
+        box.innerHTML = '';
+
+        var position = Store.state.position;
+        var section = position && Store.getSection(position.sectionId);
+
+        var touched = Store.allSteps().filter(function (step) {
+            return Store.stepProgress(step.id).total > 0;
+        }).length;
+
+        var run = Store.dailyRun();
+        var bookmarks = Store.state.bookmarks.length;
+
+        [{
+            value: String(Store.progressPercent()), unit: '%',
+            label: 'Through the book',
+            note: section ? section.title : 'Not opened yet',
+            go: function () { runShortcut('read'); }
+        }, {
+            value: String(Store.state.notes.length),
+            label: 'Notes written',
+            note: bookmarks ? bookmarks + (bookmarks === 1 ? ' bookmark' : ' bookmarks') : '',
+            go: function () { openNotesWith('all'); }
+        }, {
+            value: String(touched), unit: ' of 12',
+            label: 'Steps worked on',
+            note: touched === 12 ? 'all of them' : 'notes, answers, work',
+            go: function () { showScreen('steps'); }
+        }, {
+            value: String(run.run),
+            label: run.run === 1 ? 'Day running' : 'Days running',
+            // Named by number rather than by its short title: "Continued" is
+            // what step ten is called, and on its own it says nothing.
+            note: run.run && run.step ? 'Step ' + run.step.number : 'nothing logged yet',
+            go: function () { if (run.step) openStep(run.step.id); else showScreen('steps'); }
+        }].forEach(function (stat) {
+            var tile = document.createElement('button');
+            tile.className = 'stat';
+            tile.innerHTML =
+                '<span class="stat-value">' + escapeHtml(stat.value) +
+                    (stat.unit ? '<span class="stat-unit">' + escapeHtml(stat.unit) + '</span>' : '') +
+                '</span>' +
+                '<span class="stat-label">' + escapeHtml(stat.label) + '</span>' +
+                '<span class="stat-note">' + escapeHtml(stat.note || '') + '</span>';
+            tile.addEventListener('click', stat.go);
+            box.appendChild(tile);
+        });
+    }
+
+    /* ------------------------------------------------------------ library */
+
+    function renderLibrary() {
         var book = Store.state.book;
-        $('home-title').textContent = book.title || 'Alcoholics Anonymous';
-        $('home-edition').textContent = [book.edition, book.subtitle].filter(Boolean).join(' — ');
+        $('library-title').textContent = book.title || 'Alcoholics Anonymous';
+        $('library-edition').textContent = [book.edition, book.subtitle].filter(Boolean).join(' — ');
         $('import-notice').hidden = !!book.textIncluded;
 
-        renderContinueCard();
+        renderContinueCard('continue');
 
         var toc = $('toc');
         toc.innerHTML = '';
@@ -131,8 +307,13 @@
         });
     }
 
-    function renderContinueCard() {
-        var card = $('continue-card');
+    /*
+     * The same card, drawn into either the home screen or the contents. One
+     * function rather than two: the second copy is the one that would quietly
+     * fall behind. The id prefix names which set of elements to fill.
+     */
+    function renderContinueCard(prefix) {
+        var card = $(prefix === 'continue' ? 'continue-card' : prefix);
         var position = Store.state.position;
         if (!position || !Store.state.book.textIncluded) { card.hidden = true; return; }
 
@@ -141,10 +322,10 @@
 
         var index = Math.min(position.paraIndex || 0, section.paragraphs.length - 1);
         card.hidden = false;
-        $('continue-title').textContent = section.title;
-        $('continue-excerpt').textContent = firstWords(section.paragraphs[index], 28);
-        $('continue-progress').style.width = Store.progressPercent() + '%';
-        $('continue-meta').textContent = Store.progressPercent() + '% through the book · ' +
+        $(prefix + '-title').textContent = section.title;
+        $(prefix + '-excerpt').textContent = firstWords(section.paragraphs[index], 28);
+        $(prefix + '-progress').style.width = Store.progressPercent() + '%';
+        $(prefix + '-meta').textContent = Store.progressPercent() + '% through the book · ' +
             formatDate(position.updatedAt);
         card.onclick = function () {
             openReader(position.sectionId, { paraIndex: index, ratio: position.ratio });
@@ -1188,33 +1369,12 @@
 
     /* --------------------------------------------------- steps ten and eleven */
 
-    // Local date, not UTC: at 23:00 in London a UTC date would already be
-    // tomorrow, and "today" has to mean the reader's today.
-    function dayISO(date) {
-        var d = date || new Date();
-        return d.getFullYear() + '-' +
-            String(d.getMonth() + 1).padStart(2, '0') + '-' +
-            String(d.getDate()).padStart(2, '0');
-    }
+    // The day helpers live in the store, where the streak is worked out. Two
+    // implementations of "what day is it" would eventually disagree, and the
+    // home screen and the step page would then be counting different runs.
+    function dayISO(date) { return Store.dayISO(date); }
 
-    function shiftDay(iso, days) {
-        var d = new Date(iso + 'T00:00:00');
-        d.setDate(d.getDate() + days);
-        return dayISO(d);
-    }
-
-    /*
-     * Counted back from today, and from yesterday when today is not written yet.
-     * Otherwise every streak would read zero each morning until you had done it,
-     * which turns a record of practice into a reprimand.
-     */
-    function streakOf(byDay) {
-        var today = dayISO();
-        var cursor = byDay[today] ? today : shiftDay(today, -1);
-        var run = 0;
-        while (byDay[cursor]) { run++; cursor = shiftDay(cursor, -1); }
-        return run;
-    }
+    function shiftDay(iso, days) { return Store.shiftDay(iso, days); }
 
     function renderDaily(step, work) {
         var rows = Store.rowsForWork(step);
@@ -1223,7 +1383,7 @@
 
         var box = document.createElement('div');
         var today = dayISO();
-        var run = streakOf(byDay);
+        var run = Store.stepStreak(step);
 
         var line = document.createElement('p');
         line.className = 'inv-prompt';
@@ -2731,6 +2891,9 @@
         Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
             tab.addEventListener('click', function () { showScreen(tab.dataset.screen); });
         });
+        Array.prototype.forEach.call(document.querySelectorAll('#shortcuts .shortcut'), function (tile) {
+            tile.addEventListener('click', function () { runShortcut(tile.dataset.shortcut); });
+        });
         Array.prototype.forEach.call(document.querySelectorAll('[data-goto="settings-import"]'), function (btn) {
             btn.addEventListener('click', function () {
                 showScreen('settings');
@@ -2743,7 +2906,7 @@
         $('reader-back').addEventListener('click', function () {
             var from = current.readerFrom;
             if (from === 'step' && current.readerFromStep) { openStep(current.readerFromStep); return; }
-            showScreen(from && from !== 'reader' ? from : 'home');
+            showScreen(from && from !== 'reader' ? from : 'library');
         });
         $('step-back').addEventListener('click', function () { showScreen('steps'); });
         $('step-copy').addEventListener('click', function () {
@@ -2904,7 +3067,7 @@
             if (!confirm('Go back to the copy that came with the app? Your notes and bookmarks are kept.')) return;
             Store.clearImportedBook().then(function () {
                 renderSettings();
-                renderHome();
+                renderLibrary();
                 toast('Book text removed');
             });
         });
@@ -2940,7 +3103,7 @@
         // Android hardware back / browser back closes sheets and the reader.
         global.addEventListener('popstate', function () {
             if (!$('sheet-backdrop').hidden) { closeSheets(); return; }
-            if (current.screen === 'reader') showScreen('home');
+            if (current.screen === 'reader') showScreen(current.readerFrom || 'library');
         });
 
         if (global.matchMedia) {
@@ -2952,7 +3115,12 @@
         document.addEventListener('visibilitychange', function () {
             if (document.visibilityState === 'visible') {
                 if (current.screen === 'reader') requestWakeLock();
+                // A phone left on the home screen overnight would otherwise
+                // wake up showing yesterday — the wrong time, and the passage
+                // for a day that has been and gone.
+                if (current.screen === 'home') renderHome();
             } else {
+                stopClock();
                 flushPosition();
             }
         });

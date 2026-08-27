@@ -36,6 +36,13 @@ async function shot(page, name) {
     await page.screenshot({ path: SHOT_DIR + '/' + name });
 }
 
+/* The app opens on the home screen, so anything that wants the table of
+ * contents has to ask for the Read tab first. */
+async function openContents(page) {
+    await page.click('.tab[data-screen="library"]');
+    await page.waitForSelector('#screen-library.is-active');
+}
+
 (async () => {
     const browser = await chromium.launch(
         process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
@@ -49,8 +56,61 @@ async function shot(page, name) {
     await page.goto(BASE, { waitUntil: 'networkidle' });
     await page.waitForSelector('#screen-home.is-active');
 
+    // ── the home screen ───────────────────────────────────────────────────
+    check('app boots to the home screen, not into the book', true);
+
+    const clock = await page.textContent('#home-clock');
+    check('the clock shows a time', /\d{1,2}[:.]\d{2}/.test(clock), JSON.stringify(clock));
+    check('the date is spelled out', (await page.textContent('#home-date')).length > 8,
+        await page.textContent('#home-date'));
+    check('there is a word for the hour', (await page.textContent('#home-greeting')).length > 3,
+        await page.textContent('#home-greeting'));
+
+    const passage = (await page.textContent('#passage-text')).trim();
+    check('today\u2019s passage has text', passage.length > 40, JSON.stringify(passage.slice(0, 50)));
+
+    // The passage must be the book's own words, not something typed from memory:
+    // find it in the section it claims to come from.
+    const passageIsInTheBook = await page.evaluate(() => {
+        const flat = (t) => String(t).replace(/[\u2018\u2019\u02bc]/g, "'")
+            .replace(/[\u201c\u201d]/g, '"').replace(/[\u2013\u2014]/g, '-')
+            .replace(/\s+/g, ' ').trim().toLowerCase();
+        const shown = flat(document.getElementById('passage-text').textContent);
+        const today = Store.passageForDay();
+        const section = Store.getSection(today.sectionId);
+        return !!section && flat(section.paragraphs[today.paraIndex]).includes(shown);
+    });
+    check('the passage is in the book, word for word, where it says it is', passageIsInTheBook);
+
+    const sameTwice = await page.evaluate(() => {
+        const a = Store.passageForDay();
+        const b = Store.passageForDay();
+        return a.text === b.text;
+    });
+    check('the passage does not change while the day does not', sameTwice);
+
+    const movesOn = await page.evaluate(() => {
+        const today = Store.passageForDay();
+        const later = Store.passageForDay(new Date(Date.now() + 86400000));
+        return today.text !== later.text;
+    });
+    check('a different day brings a different passage', movesOn);
+
+    check('six shortcuts, in the first person',
+        (await page.$$eval('#shortcuts .shortcut', (e) => e.length)) === 6);
+    check('the ones with nothing behind them say so',
+        (await page.$$eval('#shortcuts .shortcut.is-soon', (e) => e.length)) === 2);
+    check('four counts', (await page.$$eval('#stats .stat', (e) => e.length)) === 4);
+    check('a fresh install counts nothing rather than flattering you',
+        (await page.textContent('#stats .stat')).includes('0%'));
+
+    await page.click('#shortcuts .shortcut.is-soon');
+    await page.waitForSelector('#toast:not([hidden])');
+    check('a shortcut with nothing behind it says so out loud',
+        (await page.textContent('#toast')).toLowerCase().includes('not built yet'));
+
     // ── the book ships with the app ───────────────────────────────────────
-    check('app boots to home screen', true);
+    await openContents(page);
     check('no "import the text" notice — text is bundled', !(await page.isVisible('#import-notice')));
 
     const readable = await page.$$eval('.toc-item:not([disabled])', (e) => e.length);
@@ -95,7 +155,8 @@ async function shot(page, name) {
 
     // ── resume where you stopped ──────────────────────────────────────────
     await page.click('#reader-back');
-    await page.waitForSelector('#screen-home.is-active');
+    await page.waitForSelector('#screen-library.is-active');
+    check('leaving the reader goes back to the contents it was opened from', true);
     await page.click('.toc-item:not([disabled]) >> nth=6');   // How It Works
     await page.waitForSelector('#screen-reader.is-active');
     check('How It Works opens', (await page.textContent('#reader-title')) === 'How It Works');
@@ -109,9 +170,21 @@ async function shot(page, name) {
 
     await page.reload({ waitUntil: 'networkidle' });
     await page.waitForSelector('#screen-home.is-active');
+    await page.waitForSelector('#home-continue:not([hidden])', { timeout: 5000 });
+    check('the home screen offers the chapter you stopped in',
+        (await page.textContent('#home-continue-title')) === 'How It Works');
+    check('progress percentage shown',
+        /\d+% through the book/.test(await page.textContent('#home-continue-meta')));
+    check('the home screen names where you are in the book',
+        (await page.textContent('#stats .stat')).includes('How It Works'));
+    check('the read shortcut names the chapter it would open',
+        (await page.textContent('#shortcut-read-note')) === 'How It Works');
+
+    // The same card is drawn on the contents, from the same function.
+    await openContents(page);
     await page.waitForSelector('#continue-card:not([hidden])', { timeout: 5000 });
-    check('resumes the right chapter', (await page.textContent('#continue-title')) === 'How It Works');
-    check('progress percentage shown', /\d+% through the book/.test(await page.textContent('#continue-meta')));
+    check('the contents offers it too',
+        (await page.textContent('#continue-title')) === 'How It Works');
 
     await page.click('#continue-card');
     await page.waitForSelector('#screen-reader.is-active');
@@ -246,10 +319,10 @@ async function shot(page, name) {
 
     await page.reload({ waitUntil: 'networkidle' });
     await page.waitForSelector('#screen-home.is-active');
-    await page.waitForSelector('#continue-card:not([hidden])', { timeout: 5000 });
+    await page.waitForSelector('#home-continue:not([hidden])', { timeout: 5000 });
     const expectedTitle = await page.evaluate(
         (id) => Store.getSection(id).title, slim.position.sectionId);
-    const restoredTitle = await page.textContent('#continue-title');
+    const restoredTitle = await page.textContent('#home-continue-title');
     check('position restored', restoredTitle === expectedTitle,
         'expected ' + expectedTitle + ', got ' + restoredTitle);
     await page.click('.tab[data-screen="notes"]');
@@ -599,7 +672,7 @@ async function shot(page, name) {
 
     // The same thing again, but starting from a passage — a note can be both a
     // note on the text and a point for a conversation.
-    await page.click('.tab[data-screen="home"]');
+    await openContents(page);
     await page.click('.toc-item:not([disabled]) >> nth=6');
     await page.waitForSelector('#screen-reader.is-active');
     await page.click('#reader-content .para[data-index="3"]');
@@ -1296,6 +1369,9 @@ async function shot(page, name) {
     await context.setOffline(true);
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#screen-home.is-active', { timeout: 10000 });
+    check('today\u2019s passage is there with the network off',
+        (await page.textContent('#passage-text')).trim().length > 40);
+    await openContents(page);
     const offlineReadable = await page.$$eval('.toc-item:not([disabled])', (e) => e.length);
     check('whole book readable with the network off', offlineReadable === 42,
         offlineReadable + ' sections offline');
@@ -1311,6 +1387,9 @@ async function shot(page, name) {
     await page.waitForTimeout(300);
     await shot(page, 'shot-reader.png');
     await page.click('#reader-back');
+    await page.waitForTimeout(250);
+    await shot(page, 'shot-contents.png');
+    await page.click('.tab[data-screen="home"]');
     await page.waitForTimeout(250);
     await shot(page, 'shot-home.png');
     await page.click('.tab[data-screen="search"]');

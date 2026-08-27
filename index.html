@@ -12,18 +12,122 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=18">
+<link rel="stylesheet" href="css/style.css?v=19">
 </head>
 <body>
 
 <div id="app">
 
-  <!-- ══════════════════════════════════════════════════ Library / home ── -->
+  <!-- ═════════════════════════════════════════════════════════════ Home ── -->
+  <!-- The front page. Not a way into the book so much as a way into the day:
+       what time it is, a passage to read, where you had stopped, the handful of
+       things you might have opened the app to do, and an honest count of what
+       you have written so far. -->
   <section class="screen is-active" id="screen-home">
+    <header class="topbar topbar-home">
+      <div class="topbar-titles">
+        <h1 class="topbar-title" id="home-greeting">Hello</h1>
+        <p class="topbar-sub" id="home-date"></p>
+      </div>
+      <span class="home-clock" id="home-clock" aria-live="off"></span>
+    </header>
+
+    <div class="screen-body">
+      <button class="passage-card" id="passage-card">
+        <span class="passage-label">Today’s passage</span>
+        <span class="passage-text" id="passage-text"></span>
+        <span class="passage-where" id="passage-where"></span>
+      </button>
+
+      <button class="continue-card" id="home-continue" hidden>
+        <span class="continue-label">Continue reading</span>
+        <span class="continue-title" id="home-continue-title"></span>
+        <span class="continue-excerpt" id="home-continue-excerpt"></span>
+        <span class="progress"><span class="progress-bar" id="home-continue-progress"></span></span>
+        <span class="continue-meta" id="home-continue-meta"></span>
+      </button>
+
+      <h2 class="section-heading">What brings you here</h2>
+      <!-- Written in the first person, because that is how the reason arrives:
+           not "notes" but "I want to write something down". The ones with
+           nothing behind them yet say so when tapped rather than pretending. -->
+      <div class="shortcuts" id="shortcuts">
+        <button class="shortcut" data-shortcut="read">
+          <span class="shortcut-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2.9 5.6c3.1-.5 6.1 0 9.1 1.9 3-1.9 6-2.4 9.1-1.9v11.9c-3.1-.5-6.1 0-9.1 1.9-3-1.9-6-2.4-9.1-1.9z"/>
+            <path d="M12 7.5v11.9"/>
+          </svg></span>
+          <span class="shortcut-label">I want to read</span>
+          <span class="shortcut-note" id="shortcut-read-note"></span>
+        </button>
+
+        <button class="shortcut is-soon" data-shortcut="craving">
+          <span class="shortcut-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2.6 8.4c1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0 1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0"/>
+            <path d="M2.6 13.2c1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0 1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0"/>
+            <path d="M2.6 18c1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0 1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0"/>
+          </svg></span>
+          <span class="shortcut-label">I have cravings</span>
+          <span class="shortcut-note">Not built yet</span>
+        </button>
+
+        <button class="shortcut is-soon" data-shortcut="meeting">
+          <span class="shortcut-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="8" cy="8.4" r="2.6"/>
+            <circle cx="16.4" cy="9.6" r="2.1"/>
+            <path d="M3.2 17.4c.4-2.6 2.3-4.1 4.8-4.1s4.4 1.5 4.8 4.1"/>
+            <path d="M14.2 14.1c2.4-.9 4.9.4 5.4 3.1"/>
+          </svg></span>
+          <span class="shortcut-label">I’m going to a meeting</span>
+          <span class="shortcut-note">Not built yet</span>
+        </button>
+
+        <button class="shortcut" data-shortcut="sponsor">
+          <span class="shortcut-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3.6v5.1"/>
+            <circle cx="12" cy="10.6" r="1.9"/>
+            <path d="M9.4 3.6h5.2"/>
+            <path d="M12 12.5v7.9"/>
+            <path d="M4.6 14.1c0 3.5 3.3 6.3 7.4 6.3s7.4-2.8 7.4-6.3"/>
+            <path d="M4.6 14.1h3M16.4 14.1h3"/>
+          </svg></span>
+          <span class="shortcut-label">I’m meeting my sponsor</span>
+          <span class="shortcut-note" id="shortcut-sponsor-note"></span>
+        </button>
+
+        <button class="shortcut" data-shortcut="sponsee">
+          <span class="shortcut-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 20.4v-7.6"/>
+            <path d="M12 13.4C9.6 13 8 11.2 8 8.6c2.6.2 4.2 2 4 4.8z"/>
+            <path d="M12.2 15.1c.2-2.6 2-4.2 4.6-4.4-.2 2.6-2 4.2-4.6 4.4z"/>
+            <path d="M7.6 20.4h8.8"/>
+          </svg></span>
+          <span class="shortcut-label">I’m meeting my sponsee</span>
+          <span class="shortcut-note" id="shortcut-sponsee-note"></span>
+        </button>
+
+        <button class="shortcut" data-shortcut="write">
+          <span class="shortcut-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3.8 20.4 8.6 15.4"/>
+            <path d="M20.4 3.6C11.6 4.9 6.4 10.1 8.6 15.4c5.6 2.2 10.8-3 11.8-11.8z"/>
+            <path d="M17.5 6.5C14.1 8.7 11.2 11.6 9.2 15"/>
+          </svg></span>
+          <span class="shortcut-label">I want to write something down</span>
+          <span class="shortcut-note">A note of your own</span>
+        </button>
+      </div>
+
+      <h2 class="section-heading">Where you have got to</h2>
+      <div class="stats" id="stats"></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ Library ── -->
+  <section class="screen" id="screen-library">
     <header class="topbar">
       <div class="topbar-titles">
-        <h1 class="topbar-title" id="home-title">Alcoholics Anonymous</h1>
-        <p class="topbar-sub" id="home-edition"></p>
+        <h1 class="topbar-title" id="library-title">Alcoholics Anonymous</h1>
+        <p class="topbar-sub" id="library-edition"></p>
       </div>
     </header>
 
@@ -443,6 +547,33 @@
 
       <h2 class="section-heading">Version history</h2>
       <div class="panel panel-flush">
+
+        <details class="disclosure">
+          <summary><span>A front page</span><span class="ver-tag">2.1</span></summary>
+          <div class="disclosure-body">
+            <p>The app used to open in the contents, as though reading were the only reason you
+               ever picked it up. It opens on a home screen now.</p>
+            <ul>
+              <li><strong>Today's passage</strong> — one passage from the book, the same one all
+                  day, changing at midnight. Tap it to read it where it sits in the chapter.
+                  Ninety-four of them, so one comes round again about every three months, and
+                  every one is checked word for word against the 1939 text before it ships:
+                  nothing on that card was typed from memory.</li>
+              <li><strong>The time and the date</strong>, at the top, and a word for the hour
+                  it is.</li>
+              <li><strong>What brings you here</strong> — the handful of reasons you actually
+                  opened the app, in your own words rather than the app's. Two of them have
+                  nothing behind them yet and say so when tapped: a place held open is more
+                  honest than a button that quietly does nothing.</li>
+              <li><strong>Where you have got to</strong> — how far through the book, what you have
+                  written, how many steps you have worked on, how many days you are running on a
+                  daily step. Each count is of exactly what its own screen shows, and a morning
+                  with nothing written says so.</li>
+              <li>The contents is now the <strong>Read</strong> tab, unchanged otherwise, and
+                  still remembers your place.</li>
+            </ul>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>The steps section, finished</span><span class="ver-tag">2.0</span></summary>
@@ -948,6 +1079,13 @@
   <nav class="tabbar" id="tabbar">
     <button class="tab is-active" data-screen="home">
       <span class="tab-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3.6 10.4 12 3.8l8.4 6.6"/>
+        <path d="M5.6 11.9v8.3h12.8v-8.3"/>
+        <path d="M9.9 20.2v-5.1h4.2v5.1"/>
+      </svg></span><span>Home</span>
+    </button>
+    <button class="tab" data-screen="library">
+      <span class="tab-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M2.9 5.6c3.1-.5 6.1 0 9.1 1.9 3-1.9 6-2.4 9.1-1.9v11.9c-3.1-.5-6.1 0-9.1 1.9-3-1.9-6-2.4-9.1-1.9z"/>
         <path d="M12 7.5v11.9"/>
       </svg></span><span>Read</span>
@@ -1094,9 +1232,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=2"></script>
-<script src="js/store.js?v=8"></script>
+<script src="js/store.js?v=9"></script>
 <script src="js/backup.js?v=3"></script>
-<script src="js/ui.js?v=17"></script>
-<script src="js/app.js?v=5"></script>
+<script src="js/ui.js?v=18"></script>
+<script src="js/app.js?v=6"></script>
 </body>
 </html>
