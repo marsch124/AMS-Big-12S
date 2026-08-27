@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=35">
+<link rel="stylesheet" href="css/style.css?v=36">
 </head>
 <body>
 
@@ -472,7 +472,7 @@
       <h2 class="section-heading">Or reach somebody</h2>
       <div class="panel panel-flush">
         <div id="craving-rings"></div>
-        <button class="do-row" id="craving-message">
+        <button class="do-row" data-move="reach" id="craving-message">
           <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 3.6a3 3 0 0 1 3 3v4.8a3 3 0 0 1-6 0V6.6a3 3 0 0 1 3-3z"/>
             <path d="M6.3 11.4c0 3.1 2.6 5.5 5.7 5.5s5.7-2.4 5.7-5.5"/>
@@ -485,7 +485,7 @@
           </span>
           <span class="do-go">›</span>
         </button>
-        <button class="do-row" id="craving-write">
+        <button class="do-row" data-move="reach" id="craving-write">
           <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3.8 20.4 8.6 15.4"/>
             <path d="M20.4 3.6C11.6 4.9 6.4 10.1 8.6 15.4c5.6 2.2 10.8-3 11.8-11.8z"/>
@@ -1219,6 +1219,31 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Colour where it earns its place</span><span class="ver-tag">2.24</span></summary>
+          <div class="disclosure-body">
+            <p><strong>The headings are ink again.</strong> They took the accent colour for
+               one release and it was too much — the colour on a screen belongs in the chips
+               and the counts, which are the things worth picking out of it. A heading is
+               structure, and structure is quiet.</p>
+            <p><strong>The craving screen has a colour for each way out.</strong> Breathe,
+               meet it head on, think it through, the shower, your own list — five rows that
+               looked identical, at the one moment nobody has any reading in them. A colour
+               each is a thing to reach for, and a thing you can learn. Ringing somebody,
+               saying something and writing it down share one colour, being one kind of
+               thing; the two prayers share another.</p>
+            <p><strong>Nothing about that screen was made cheerful.</strong> There is no
+               first light behind it and nothing on it congratulates anybody — there is a
+               test that holds both. Colour there is for finding things, not for mood.</p>
+            <p><strong>The twelve wear the Steps tab's violet</strong>, and say where you
+               have been: a step you have put something into is filled, one you have not is
+               an open ring. Twelve identical grey circles said nothing at all. The
+               Traditions do the same. A rainbow across the twelve was the other reading,
+               and it would have broken the rule the rest of the app runs on — violet
+               <em>is</em> that tab, and a step is not a category.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Morning</span><span class="ver-tag">2.23</span></summary>
@@ -2591,7 +2616,7 @@
 <script src="js/db.js?v=8"></script>
 <script src="js/store.js?v=25"></script>
 <script src="js/backup.js?v=10"></script>
-<script src="js/ui.js?v=39"></script>
+<script src="js/ui.js?v=40"></script>
 <script src="js/app.js?v=26"></script>
 </body>
 </html>

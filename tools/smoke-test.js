@@ -218,6 +218,66 @@ async function openContents(page) {
         Object.keys(hues).map((t) => hues[t].accent).join(' '));
     await page.click('.tab[data-screen="home"]');
     await page.waitForTimeout(120);
+
+    // Headings are ink, not the accent. They were the accent colour for one
+    // release and it was too much: the colour on a screen belongs in the chips
+    // and the counts, which are the things worth picking out of it.
+    const headingColour = await page.$eval('#screen-home .section-heading',
+        (n) => getComputedStyle(n).color);
+    const inkColour = await page.$eval('body', (n) => getComputedStyle(n).color);
+    check('section headings are the ink colour, not the accent',
+        headingColour === inkColour, headingColour + ' vs ink ' + inkColour);
+
+    // The craving screen: five rows that look identical are five things to
+    // read at the worst possible moment.
+    await page.click('#home-craving');
+    await page.waitForSelector('#screen-craving.is-active');
+    // Wait for the rows themselves: this block runs early and a fixed pause
+    // reads an empty list on a slow first paint.
+    await page.waitForSelector('#craving-moves .do-row');
+    const moveChips = await page.$$eval('#craving-moves .do-row', (nodes) =>
+        nodes.map((n) => ({
+            id: n.dataset.move,
+            chip: getComputedStyle(n.querySelector('.do-icon')).backgroundColor,
+        })));
+    check('every move on the craving screen names its own colour',
+        moveChips.length === 5 && moveChips.every((m) => m.id),
+        moveChips.map((m) => m.id).join(', '));
+    check('and all five chips are different',
+        new Set(moveChips.map((m) => m.chip)).size === 5,
+        moveChips.map((m) => m.chip).join(' '));
+    check('the ways to reach somebody are one colour, being one kind of thing',
+        (await page.$$eval('#craving-rings .do-row, #craving-message, #craving-write',
+            (nodes) => nodes.length > 0 &&
+                       nodes.every((n) => n.dataset.move === 'reach'))));
+    // Tone is not the same thing as colour. Nothing on this screen congratulates
+    // anybody, and the first light behind the home screen does not reach it.
+    check('and the craving screen carries no sunrise',
+        (await page.$eval('#screen-craving .screen-body',
+            (n) => getComputedStyle(n).backgroundImage)) === 'none');
+    await page.click('#craving-back');
+    await page.waitForTimeout(200);
+
+    // The twelve wear the Steps tab's colour, and say which ones you have been
+    // into. On a fresh install every circle is an open ring; none is filled.
+    await page.click('.tab[data-screen="steps"]');
+    await page.waitForSelector('#steplist .step-item');
+    const rings = await page.$$eval('#steplist .step-item', (nodes) =>
+        nodes.map((n) => ({
+            worked: n.classList.contains('is-worked'),
+            fill: getComputedStyle(n.querySelector('.step-num')).backgroundColor,
+            edge: getComputedStyle(n.querySelector('.step-num')).borderTopColor,
+        })));
+    const stepsHue = await page.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue('--hue-steps').trim());
+    check('all twelve step circles are drawn in the Steps colour',
+        rings.length === 12 && rings.every((r) => r.edge !== 'rgba(0, 0, 0, 0)'),
+        rings.length + ' rings, --hue-steps ' + stepsHue);
+    check('a step with nothing in it is an open ring, not a filled one',
+        rings.filter((r) => !r.worked)
+             .every((r) => r.fill === 'rgba(0, 0, 0, 0)'));
+    await page.click('.tab[data-screen="home"]');
+    await page.waitForTimeout(120);
     check('four counts', (await page.$$eval('#stats .stat', (e) => e.length)) === 4);
     check('a fresh install counts nothing rather than flattering you',
         (await page.textContent('#stats .stat')).includes('0%'));

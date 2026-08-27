@@ -565,6 +565,7 @@
             var name = String(settings[person.role + 'Name'] || '').trim();
             var row = document.createElement('a');
             row.className = 'do-row';
+            row.dataset.move = 'reach';
             // Spaces and brackets are for reading, not for dialling.
             row.href = 'tel:' + phone.replace(/[^+0-9]/g, '');
             row.innerHTML =
@@ -581,6 +582,7 @@
         if (!anyone) {
             var add = document.createElement('button');
             add.className = 'do-row';
+            add.dataset.move = 'reach';
             add.id = 'craving-ring';
             add.innerHTML =
                 '<span class="do-icon">' + PHONE_ICON + '</span>' +
@@ -650,6 +652,7 @@
 
             var row = document.createElement('button');
             row.className = 'do-row move-row' + (movesOpen[move.id] ? ' is-open' : '');
+            row.dataset.move = move.id;
             row.innerHTML = doRowHtml(MOVE_ICONS[move.id] || STAR_ICON, move.label, note);
             if (move.kind !== 'breathe') {
                 row.querySelector('.do-go').textContent = movesOpen[move.id] ? '–' : '+';
@@ -722,6 +725,7 @@
 
             var row = document.createElement('button');
             row.className = 'do-row move-row' + (prayersOpen[prayer.id] ? ' is-open' : '');
+            row.dataset.move = 'prayer';
             row.innerHTML = doRowHtml(SPOKEN_ICON, prayer.label, prayer.sectionTitle);
             row.querySelector('.do-go').textContent = prayersOpen[prayer.id] ? '–' : '+';
             box.appendChild(row);
@@ -2364,7 +2368,8 @@
             var written = Store.stepIsWritten(step);
             var done = Store.stepProgress(step.id);
             var item = document.createElement('button');
-            item.className = 'step-item' + (written || done.total ? '' : ' is-stub');
+            item.className = 'step-item' + (written || done.total ? '' : ' is-stub') +
+                (done.total ? ' is-worked' : '');
             item.innerHTML =
                 '<span class="step-num">' + step.number + '</span>' +
                 '<span class="step-body">' +
@@ -2503,7 +2508,7 @@
         Store.allTraditions().forEach(function (tradition) {
             var done = Store.traditionProgress(tradition.id);
             var item = document.createElement('button');
-            item.className = 'step-item';
+            item.className = 'step-item' + (done.total ? ' is-worked' : '');
             item.innerHTML =
                 '<span class="step-num">' + tradition.number + '</span>' +
                 '<span class="step-body">' +

@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.23 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.24 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,41 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## Where colour goes, and where it does not (2.24)
+
+**Headings are `--text`, not `--accent`.** They were the accent for exactly one
+release and Martin said so: the colour on a screen belongs in the chips and the
+counts, not in the structure. `.passage-label` is `--text-dim` for the same
+reason. A smoke check compares the heading colour against the body ink, so the
+orange cannot come back by accident.
+
+**The craving screen is colour-coded, and that is legibility, not mood.** Five
+rows that look identical are five things to read at the worst possible moment,
+so each move gets its own chip via `data-move` on the row and a `--move-*` /
+`--move-*-on` pair. Reaching somebody is one colour across all its rows and the
+prayers are another — colour separates the choices you make in a hurry and
+groups everything else.
+
+**But the screen's tone did not change**, and a check holds it: no sunrise
+behind it, nothing congratulating anybody. `.do-icon` is shared with the meeting
+rows, the message send rows and the quiet `#broken` row, so the chip is scoped
+to `.do-row[data-move]` — none of those others is a thing to pick between under
+pressure.
+
+**The twelve wear the Steps tab's own colour, filled once worked.**
+`.step-item.is-worked` comes from `stepProgress().total`, and `is-stub` still
+wins for a step with no text. A twelve-colour rainbow was the other reading and
+was rejected: violet **is** that tab under the `[data-hue]` system, and a step
+is an ordinal, not a category. Same for the Traditions.
+
+**Things that bit me here.** A blanket rename of a variable in the smoke test
+also rewrote a **selector string** (`#craving-moves` became
+`#craving-moveChips`), so the check passed its wait and then read an empty list;
+and the follow-up `str.replace` that would have exposed it silently no-opped
+because the text it looked for had already changed. **A `replace` that matches
+nothing is not an error** — assert the count, and never rename across a whole
+block without looking at what is inside it. Step ids are `step01`, not `step1`.
 
 ## Morning, and the colour system (2.23)
 
@@ -922,7 +957,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    459 end-to-end browser checks
+tools/smoke-test.js    466 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -934,7 +969,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 459 checks, expect 459/459
+node tools/smoke-test.js                  # 466 checks, expect 466/466
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

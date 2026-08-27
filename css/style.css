@@ -50,6 +50,18 @@
   --tile-message: #f0559b;  --tile-message-on: #730039;
   --tile-write:   #f7d117;  --tile-write-on:   #7d690a;
 
+  /* The craving screen. Five rows that look identical are five things to read
+     at the worst possible moment; a colour each is a thing to reach for, and
+     one you can learn. This is legibility under stress, not decoration — the
+     page's tone is untouched, and nothing on it is cheerful. */
+  --move-breathe: #0eb5c9;  --move-breathe-on: #105159;
+  --move-headon:  #8b5cf6;  --move-headon-on:  #27027a;
+  --move-whatif:  #f7d117;  --move-whatif-on:  #7d690a;
+  --move-shower:  #2e9bf0;  --move-shower-on:  #003f70;
+  --move-own:     #22bb66;  --move-own-on:     #0d542d;
+  --move-reach:   #f0559b;  --move-reach-on:   #730235;
+  --move-prayer:  #94a3b8;  --move-prayer-on:  #263141;
+
   --hue-settings: #5c6470;
 
   --reader-size: 19px;
@@ -92,6 +104,14 @@
   --tile-sponsee: #8c6d46;  --tile-sponsee-on: #fbf6ea;
   --tile-message: #8c6d46;  --tile-message-on: #fbf6ea;
   --tile-write:   #8c6d46;  --tile-write-on:   #fbf6ea;
+
+  --move-breathe: #8c6d46;  --move-breathe-on: #fbf6ea;
+  --move-headon:  #8c6d46;  --move-headon-on:  #fbf6ea;
+  --move-whatif:  #8c6d46;  --move-whatif-on:  #fbf6ea;
+  --move-shower:  #8c6d46;  --move-shower-on:  #fbf6ea;
+  --move-own:     #8c6d46;  --move-own-on:     #fbf6ea;
+  --move-reach:   #8c6d46;  --move-reach-on:   #fbf6ea;
+  --move-prayer:  #8c6d46;  --move-prayer-on:  #fbf6ea;
 }
 
 [data-theme="light"] {
@@ -148,6 +168,14 @@
   --tile-sponsee: #22bb66;  --tile-sponsee-on: #00351a;
   --tile-message: #f0559b;  --tile-message-on: #4d0025;
   --tile-write:   #f7d117;  --tile-write-on:   #4f4300;
+
+  --move-breathe: #0eb5c9;  --move-breathe-on: #04343b;
+  --move-headon:  #8b5cf6;  --move-headon-on:  #1c0050;
+  --move-whatif:  #f7d117;  --move-whatif-on:  #4f4300;
+  --move-shower:  #2e9bf0;  --move-shower-on:  #00294a;
+  --move-own:     #22bb66;  --move-own-on:     #00351a;
+  --move-reach:   #f0559b;  --move-reach-on:   #4d0025;
+  --move-prayer:  #94a3b8;  --move-prayer-on:  #1a212b;
 }
 
 /* The lit tab colours the screen it opened. Set on <html> by showScreen, so a
@@ -424,7 +452,7 @@ button { cursor: pointer; }
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.015em;
-  color: var(--accent);
+  color: var(--text-dim);
 }
 /* The book's own typeface, at the book's own pace — this is a passage to read,
    not a caption to skim. */
@@ -590,6 +618,29 @@ button { cursor: pointer; }
 #craving-offer { margin-bottom: 14px; }
 .do-row:active { background: var(--bg-sunken); }
 .do-icon { flex: none; display: inline-flex; line-height: 1; color: var(--accent); }
+
+/* Only rows that name a move take a chip. .do-icon is shared with the meeting
+   rows, the message send rows and the quiet #broken row, and none of those
+   are a thing to pick between in a hurry. */
+.do-row[data-move] { --move: var(--accent); --move-on: var(--accent-on); }
+.do-row[data-move="breathe"] { --move: var(--move-breathe); --move-on: var(--move-breathe-on); }
+.do-row[data-move="headon"]  { --move: var(--move-headon);  --move-on: var(--move-headon-on); }
+.do-row[data-move="whatif"]  { --move: var(--move-whatif);  --move-on: var(--move-whatif-on); }
+.do-row[data-move="shower"]  { --move: var(--move-shower);  --move-on: var(--move-shower-on); }
+.do-row[data-move="own"]     { --move: var(--move-own);     --move-on: var(--move-own-on); }
+.do-row[data-move="reach"]   { --move: var(--move-reach);   --move-on: var(--move-reach-on); }
+.do-row[data-move="prayer"]  { --move: var(--move-prayer);  --move-on: var(--move-prayer-on); }
+
+.do-row[data-move] .do-icon {
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: var(--move);
+  color: var(--move-on);
+}
+.do-row[data-move] .do-icon svg { width: 21px; height: 21px; stroke-width: 1.8; }
 .do-icon svg {
   width: 24px;
   height: 24px;
@@ -881,15 +932,17 @@ button { cursor: pointer; }
 
 /* ═══════════════════════════════════════════════════════════════ library ══ */
 
-/* Sentence case, in the colour of the tab you are on. All-caps at 12px with a
-   tenth of an em of tracking is a filing cabinet; these are the small signs
-   over each part of a room. */
+/* Sentence case, in the ink colour. All-caps at 12px with a tenth of an em of
+   tracking is a filing cabinet; these are the small signs over each part of a
+   room. They were the accent colour briefly and it was too much — the colour
+   on a screen belongs in the chips and the counts, which are the things worth
+   picking out. A heading is structure, and structure is quiet. */
 .section-heading {
   margin: 28px 0 11px;
   font-size: 14px;
   font-weight: 650;
   letter-spacing: 0.005em;
-  color: var(--accent);
+  color: var(--text);
 }
 .screen-body > .section-heading:first-child { margin-top: 4px; }
 
@@ -1538,19 +1591,35 @@ button { cursor: pointer; }
 .step-item:active { background: var(--bg-raised); }
 .step-item.is-stub { opacity: 0.55; }
 
+/* The twelve wear the Steps tab's own colour. A rainbow across them was the
+   other reading and it would have broken the rule the rest of the app runs on
+   — violet *is* this tab, and a step is not a category. */
 .step-num {
   flex: none;
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--rule-firm, var(--rule));
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--accent);
   border-radius: 50%;
   display: grid;
   place-items: center;
   font-size: 13px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
 }
-.step-item.is-stub .step-num { color: var(--text-dim); }
+.step-item.is-stub .step-num {
+  border-color: var(--rule);
+  border-width: 1px;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+/* Filled once you have put something into it. Colour says which tab you are
+   on; fill says where you have actually been. */
+.step-item.is-worked .step-num {
+  background: var(--accent);
+  color: var(--accent-on);
+}
 
 .step-body { flex: 1; min-width: 0; display: block; }
 .step-name { display: block; font-size: 16px; font-weight: 500; }
