@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=21">
+<link rel="stylesheet" href="css/style.css?v=22">
 </head>
 <body>
 
@@ -677,8 +677,24 @@
 
       </div>
 
-      <h2 class="section-heading">Version history</h2>
-      <div class="panel panel-flush">
+      <!-- The whole stack folds. Twenty-odd releases is a lot of screen to scroll
+           past on the way to About, and most days you do not want any of it. -->
+      <details class="disclosure disclosure-section" id="version-history">
+        <summary>
+          <span>Version history</span>
+          <span class="ver-tag" id="version-history-tag"></span>
+        </summary>
+        <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>The version history folds away</span><span class="ver-tag">2.4</span></summary>
+          <div class="disclosure-body">
+            <p>Twenty-seven releases is a lot of screen to scroll past on the way to anything
+               below it, and most days you do not want any of it. The whole history is one
+               line now, with the version you are running on the end of it. Everything inside
+               still opens one at a time, as before.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Meetings, and the last placeholder</span><span class="ver-tag">2.3</span></summary>
@@ -1226,7 +1242,8 @@
           </div>
         </details>
 
-      </div>
+        </div>
+      </details>
 
       <h2 class="section-heading">About</h2>
       <div class="panel">
@@ -1460,7 +1477,7 @@
 <script src="js/db.js?v=4"></script>
 <script src="js/store.js?v=11"></script>
 <script src="js/backup.js?v=5"></script>
-<script src="js/ui.js?v=20"></script>
-<script src="js/app.js?v=8"></script>
+<script src="js/ui.js?v=21"></script>
+<script src="js/app.js?v=9"></script>
 </body>
 </html>

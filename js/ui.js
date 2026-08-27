@@ -3120,6 +3120,9 @@
         $('set-sponsor-name').value = settings.sponsorName || '';
         $('set-sponsor-phone').value = settings.sponsorPhone || '';
         $('about-version').textContent = 'v' + (global.APP_VERSION || '1.0');
+        // On the folded row, so the version you are running shows without
+        // opening anything — and cannot drift from what is actually running.
+        $('version-history-tag').textContent = global.APP_VERSION || '1.0';
 
         var book = Store.state.book;
         var counts = book.sections.reduce(function (total, section) {

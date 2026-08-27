@@ -385,7 +385,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 244 checks
+node tools/smoke-test.js      # 246 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that

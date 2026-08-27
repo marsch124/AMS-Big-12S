@@ -1296,6 +1296,19 @@ button { cursor: pointer; }
 }
 .disclosure[open] summary::after { transform: translateY(2px) rotate(225deg); }
 
+/* A whole section that folds into one row — the version history, which is
+   otherwise a long stack to scroll past on the way to anything below it. It
+   carries its own panel, since there is no heading above it any more. */
+.disclosure-section {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--bg-raised);
+  padding: 0 14px;
+  margin-top: 26px;
+}
+.disclosure-section > summary { font-weight: 600; }
+.disclosure-list { border-top: 1px solid var(--rule); }
+
 .ver-tag {
   flex: none;
   font-size: 11px;

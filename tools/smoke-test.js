@@ -1554,6 +1554,19 @@ async function openContents(page) {
     check('settings shows what text is loaded',
         (await page.textContent('#book-status')).includes('First Edition (1939)'));
 
+    // The whole version history is one row until it is asked for, and carries
+    // the version actually running rather than a number typed into the markup.
+    check('the version history is folded away, in one row',
+        !(await page.$eval('#version-history', (e) => e.hasAttribute('open'))) &&
+        (await page.textContent('#version-history-tag')) ===
+            (await page.evaluate(() => APP_VERSION)),
+        await page.textContent('#version-history-tag'));
+    await page.click('#version-history > summary');
+    await page.waitForTimeout(150);
+    check('and opens on the whole stack',
+        (await page.$$eval('#version-history .disclosure-list > .disclosure', (e) => e.length)) > 20);
+    await page.click('#version-history > summary');
+
     // ── offline ───────────────────────────────────────────────────────────
     await page.waitForTimeout(500);
     check('service worker registers',
