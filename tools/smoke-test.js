@@ -196,6 +196,25 @@ async function openContents(page) {
         (await page.$$eval('#rules-sponsor-list li', (e) => e.length)) === 0 &&
         await page.isVisible('#rules-sponsor-empty'));
 
+    // A little emphasis, and nothing else.
+    await page.click('[data-rules="sponsee"]');
+    await page.waitForSelector('#rules-sheet:not([hidden])');
+    await page.fill('#rules-sheet-text',
+        'No **alcohol**, ever\nNothing that *triggers*\nBed by _eleven_\nPlain <b>text</b> stays plain');
+    await page.click('#rules-save');
+    await page.waitForSelector('#rules-sheet', { state: 'hidden' });
+
+    const marked = await page.$$eval('#rules-sponsee-list li', (e) => e.map((x) => x.innerHTML));
+    check('two stars make a phrase bold',
+        marked[0] === 'No <strong>alcohol</strong>, ever', marked[0]);
+    check('one star and an underscore make it italic',
+        marked[1] === 'Nothing that <em>triggers</em>' && marked[2] === 'Bed by <em>eleven</em>',
+        marked[1] + ' | ' + marked[2]);
+    check('and anything that looks like a tag is left as text, not run as one',
+        marked[3] === 'Plain &lt;b&gt;text&lt;/b&gt; stays plain', marked[3]);
+    check('the stars themselves do not survive into the reading',
+        (await page.textContent('#rules-sponsee-list')).indexOf('*') === -1);
+
     // A backup written under 2.8 carried one list. It belongs to the sponsor.
     const migrated = await page.evaluate(async () => {
         const settings = Object.assign({}, Store.state.settings);

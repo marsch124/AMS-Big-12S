@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.10 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.11 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -280,6 +280,15 @@ line, because a handful of short lines does not need a row editor and a textarea
 is faster on a phone. Blank lines are dropped on save; an empty list is a choice
 and is kept, so clearing one does not bring the defaults back.
 
+**`richText()` escapes first and formats second, and that order is the whole
+safety of it** (2.11). Nothing typed can become a tag, because the only `<` in
+the output is one the function put there. Martin asked for "rich text"; what he
+got is `**bold**` and `*italics*` rendered in the list, edited in the same plain
+box. A contenteditable editor with a toolbar was the other reading — a great
+deal of fragile machinery on a phone to make one word heavier. If he asks again
+for a toolbar, he has heard the argument and it is his call. Applied only to the
+rules so far; notes and the rest are still plain text.
+
 **They were on the home screen in 2.8 and Martin moved them to Settings** — "I
 can remember them after a couple of days". Do not put them back on the home
 screen without being asked. `loadSettings()` migrates the old single `rules`
@@ -439,7 +448,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    284 end-to-end browser checks
+tools/smoke-test.js    288 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -451,7 +460,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 284 checks, expect 284/284
+node tools/smoke-test.js                  # 288 checks, expect 288/288
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

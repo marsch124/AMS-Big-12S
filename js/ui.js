@@ -25,6 +25,22 @@
             .replace(/"/g, '&quot;');
     }
 
+    /*
+     * A little emphasis, and nothing else. **bold**, *italics*, _italics_.
+     *
+     * Escaped first and formatted second, always in that order: nothing typed
+     * can become a tag, because the only < in the result is one this function
+     * put there. A real rich-text editor was the other way to do this — a
+     * contenteditable box and a toolbar — and it is a great deal of fragile
+     * machinery on a phone for the sake of making one word bold.
+     */
+    function richText(text) {
+        return escapeHtml(text)
+            .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
+            .replace(/(^|\s)_([^_\n]+)_(?=$|\s|[.,;:!?])/g, '$1<em>$2</em>');
+    }
+
     function toast(message, ms) {
         var el = $('toast');
         el.textContent = message;
@@ -3274,7 +3290,7 @@
             list.innerHTML = '';
             rules.forEach(function (rule) {
                 var item = document.createElement('li');
-                item.textContent = rule;
+                item.innerHTML = richText(rule);
                 list.appendChild(item);
             });
             $('rules-' + which + '-empty').hidden = rules.length > 0;

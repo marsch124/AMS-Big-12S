@@ -5,8 +5,8 @@
  * works when the app is served from a GitHub Pages subpath or from the root of
  * a local dev server.
  */
-const APP_VERSION = '2.10';
-const CACHE_NAME = 'ams-big-12s-v35';
+const APP_VERSION = '2.11';
+const CACHE_NAME = 'ams-big-12s-v36';
 
 const SHELL = [
     './',
@@ -17,8 +17,8 @@ const SHELL = [
     'js/db.js?v=4',
     'js/store.js?v=15',
     'js/backup.js?v=5',
-    'js/ui.js?v=27',
-    'js/app.js?v=15',
+    'js/ui.js?v=28',
+    'js/app.js?v=16',
     'data/book.json',
     'data/steps.json',
     'data/daily.json',

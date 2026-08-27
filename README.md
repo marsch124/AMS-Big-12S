@@ -136,6 +136,11 @@ Each is edited as text, one rule to a line. Blank lines are dropped. An empty
 list stays empty: nothing comes back on its own. The sponsor list starts with
 four; delete them if they are not yours.
 
+A little formatting is allowed where a word needs the weight: `**two stars**`
+makes a phrase **bold**, `*one star*` or `_an underscore_` makes it *italic*.
+Everything else is left exactly as typed — text is escaped before it is
+formatted, so nothing that looks like a tag is ever run as one.
+
 ## Meetings
 
 *I'm going to a meeting* opens two things: what you meant to say there, and the
@@ -425,7 +430,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 284 checks
+node tools/smoke-test.js      # 288 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that

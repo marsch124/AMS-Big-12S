@@ -472,7 +472,8 @@
       <div class="panel">
         <p class="panel-note">
           What you have agreed. Two lists, because they are two different conversations —
-          what you keep, and what you have asked of someone else. One rule to a line.
+          what you keep, and what you have asked of someone else. One rule to a line, with
+          <strong>**bold**</strong> and <em>*italics*</em> if a word needs the weight.
         </p>
         <div class="ruleset">
           <h3 class="ruleset-title">With my sponsor</h3>
@@ -759,6 +760,19 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>A little emphasis in the rules</span><span class="ver-tag">2.11</span></summary>
+          <div class="disclosure-body">
+            <p>The rules take a bit of formatting now. <strong>**Two stars**</strong> makes a
+               phrase bold, <em>*one star*</em> or <em>_an underscore_</em> makes it italic.
+               Everything else is left exactly as you typed it.</p>
+            <p>You still write them in a plain box, one to a line. A proper rich-text editor —
+               a toolbar, buttons for bold and italic — is a lot of fragile machinery on a
+               phone for the sake of making one word heavier, and this does the same job in
+               two keystrokes.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Reading without keeping your place</span><span class="ver-tag">2.10</span></summary>
@@ -1542,7 +1556,11 @@
   <p class="sheet-quote" id="rules-sheet-note"></p>
   <textarea id="rules-sheet-text" class="note-input" rows="7"
             placeholder="One rule to a line."></textarea>
-  <p class="hint">One to a line. An empty list is kept empty — nothing comes back on its own.</p>
+  <p class="hint">
+    One to a line. <strong>**Two stars**</strong> makes a phrase bold, <em>*one star*</em> or
+    <em>_an underscore_</em> makes it italic. An empty list is kept empty — nothing comes back
+    on its own.
+  </p>
   <div class="btn-row">
     <button class="btn btn-primary" id="rules-save">Save</button>
     <button class="btn btn-quiet" id="rules-cancel">Cancel</button>
@@ -1675,7 +1693,7 @@
 <script src="js/db.js?v=4"></script>
 <script src="js/store.js?v=15"></script>
 <script src="js/backup.js?v=5"></script>
-<script src="js/ui.js?v=27"></script>
-<script src="js/app.js?v=15"></script>
+<script src="js/ui.js?v=28"></script>
+<script src="js/app.js?v=16"></script>
 </body>
 </html>
