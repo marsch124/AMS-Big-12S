@@ -351,6 +351,47 @@ button { cursor: pointer; }
 
 /* ════════════════════════════════════════════════════════════════ steps ══ */
 
+/* ── Step six: the defects step four named ───────────────────────────────── */
+
+.defect-list { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+
+.defect {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--bg-raised);
+  padding: 13px 14px 4px;
+}
+.defect.is-answered { border-left: 3px solid var(--accent); }
+
+.defect-text { margin: 0; font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
+.defect-from {
+  margin: 5px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.defect-states { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 11px; }
+.defect-states .chip { flex: 0 1 auto; }
+.defect-hint {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  border-left: 2px solid var(--rule-firm, var(--rule));
+  padding-left: 10px;
+}
+.defect-answer {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.defect .card-actions { padding: 10px 0 8px; }
+
 /* ── Step five: a record of the telling ──────────────────────────────────── */
 
 .sitting-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }

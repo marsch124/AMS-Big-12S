@@ -548,10 +548,10 @@
         var body = $('step-work-body');
 
         // Kinds still declared in the data with no renderer show no work section
-        // rather than an empty one. Remaining: carried-defects,
-        // people-worked-with.
+        // rather than an empty one. Remaining: people-worked-with.
         var kinds = ['inventory-tables', 'amends-list', 'amends-progress',
-            'daily-entries', 'daily-practice', 'prayer', 'two-lists', 'sittings'];
+            'daily-entries', 'daily-practice', 'prayer', 'two-lists', 'sittings',
+            'carried-defects'];
         if (!work || kinds.indexOf(work.kind) === -1) {
             holder.hidden = true;
             body.innerHTML = '';
@@ -576,9 +576,121 @@
             body.appendChild(renderTwoLists(step, work));
         } else if (work.kind === 'sittings') {
             body.appendChild(renderSittings(step, work));
+        } else if (work.kind === 'carried-defects') {
+            body.appendChild(renderCarriedDefects(step, work));
         } else {
             body.appendChild(renderDaily(step, work));
         }
+    }
+
+    /* --------------------------------------------------------------- step six */
+
+    /*
+     * The defects named in step four, each asked about once however many times
+     * it was written down. A defect nobody has touched shows no state at all —
+     * "not yet answered" is different from "ready", and the page should not
+     * flatter you by defaulting to either.
+     */
+    function renderCarriedDefects(step, work) {
+        var wrap = document.createElement('div');
+        var defects = Store.carriedDefects(step);
+
+        if (!defects.length) {
+            var empty = document.createElement('div');
+            empty.className = 'notice';
+            empty.innerHTML =
+                '<h2>Nothing carried through yet</h2>' +
+                '<p>This page lists the defects you named in step four — the part you played in a ' +
+                'resentment, and the fault behind a piece of conduct. Write those and they appear ' +
+                'here.</p>';
+            var go = document.createElement('button');
+            go.className = 'btn btn-primary';
+            go.textContent = 'Open step four';
+            go.addEventListener('click', function () { openStep(work.from.stepId); });
+            empty.appendChild(go);
+            wrap.appendChild(empty);
+            return wrap;
+        }
+
+        var answered = defects.filter(function (d) {
+            return d.row && Store.rowState(d.row, step.id);
+        }).length;
+        var tally = document.createElement('p');
+        tally.className = 'hint';
+        tally.textContent = answered + ' of ' + defects.length + ' answered.';
+        wrap.appendChild(tally);
+
+        var list = document.createElement('div');
+        list.className = 'defect-list';
+
+        defects.forEach(function (defect) {
+            var current = defect.row ? Store.rowState(defect.row, step.id) : null;
+            var answer = (defect.row && defect.row.values && defect.row.values.answer) || '';
+
+            var card = document.createElement('div');
+            card.className = 'defect' + (current ? ' is-answered' : '');
+
+            card.innerHTML =
+                '<p class="defect-text">' + escapeHtml(defect.text) + '</p>' +
+                '<p class="defect-from">' + escapeHtml(defect.from.join(' · ')) +
+                    (defect.count > 1 ? ' · written ' + defect.count + ' times' : '') + '</p>';
+
+            var states = document.createElement('div');
+            states.className = 'defect-states';
+            (work.states || []).forEach(function (option) {
+                var on = current === option.id;
+                var b = document.createElement('button');
+                b.className = 'chip' + (on ? ' is-active' : '');
+                b.textContent = option.label;
+                b.addEventListener('click', function () {
+                    // Tapping the one already chosen clears it, so a defect can
+                    // go back to unanswered rather than being stuck.
+                    Store.saveDefect(step, defect, { state: on ? '' : option.id })
+                        .then(function () { renderStepWork(step); });
+                });
+                states.appendChild(b);
+            });
+            card.appendChild(states);
+
+            var chosen = (work.states || []).filter(function (o) { return o.id === current; })[0];
+            if (chosen && chosen.hint) {
+                var hint = document.createElement('p');
+                hint.className = 'defect-hint';
+                hint.textContent = chosen.hint;
+                card.appendChild(hint);
+            }
+
+            if (answer) {
+                var written = document.createElement('p');
+                written.className = 'defect-answer';
+                written.textContent = answer;
+                card.appendChild(written);
+            }
+
+            var actions = document.createElement('div');
+            actions.className = 'card-actions';
+            var write = document.createElement('button');
+            write.className = 'chip';
+            write.textContent = answer ? 'Edit answer' : 'Answer honestly';
+            write.addEventListener('click', function () {
+                openPaste({
+                    title: defect.text,
+                    hint: 'An honest answer, not a tick. What would it cost you to be without this?',
+                    value: answer,
+                    onConfirm: function (value) {
+                        Store.saveDefect(step, defect, { answer: String(value || '') })
+                            .then(function () { renderStepWork(step); });
+                    }
+                });
+            });
+            actions.appendChild(write);
+            card.appendChild(actions);
+
+            list.appendChild(card);
+        });
+
+        wrap.appendChild(list);
+        return wrap;
     }
 
     /* -------------------------------------------------------------- step five */

@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.20 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.21 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -23,12 +23,12 @@ https://claude.ai/code/artifact/b467fb04-03e9-4f26-aa77-7f8f18b8c433
 | Phase 3 | done | Dated notes per step, folded when long |
 | Phase 4 | done | Answerable questions keeping every earlier answer; hide, add your own |
 | Phase 5 | **done** | Writing the twelve. **All twelve are written. 83 references resolve, none ambiguous. No stubs remain.** |
-| Phase 6 | **in progress** | Each step's own work — block 5 below. **Built: `inventory-tables` (4), `amends-list` (8), `amends-progress` (9), `daily-entries` (10), `daily-practice` (11), `prayer` (3, 7), `two-lists` (1, 2), `sittings` (5). Two kinds still declared-only, so two of twelve steps show no work section.** |
+| Phase 6 | **in progress** | Each step's own work — block 5 below. **Built: `inventory-tables` (4), `amends-list` (8), `amends-progress` (9), `daily-entries` (10), `daily-practice` (11), `prayer` (3, 7), `two-lists` (1, 2), `sittings` (5), `carried-defects` (6). One kind still declared-only, so one of twelve steps shows no work section.** |
 | Phase 7 | to do | Progress on the list, copy a step out for a sponsor, docs, v2.0 |
 
 **Audited 2026-08-27 against the running app, not from memory.** Every step page
-was opened in a browser and checked for a work section. Ten of twelve now show one
-(1, 2, 3, 4, 5, 7, 8, 9, 10, 11); two do not (6, 12), because their declared
+was opened in a browser and checked for a work section. Eleven of twelve now show one
+(1–11); only step 12 does not, because its declared
 `work.kind` has no branch in `renderStepWork()`. The dispatcher hides the section
 rather than showing an empty one, so this is invisible unless you go looking.
 
@@ -51,10 +51,20 @@ Also open, all Phase 7:
 - **The plan artifact** (linked above) predates all of this and still reads as
   though nothing is built.
 
-**One smoke check guards the hide-when-unbuilt behaviour**, currently pointed at
-step six. When five is built, repoint it at another unbuilt step rather than
+**One smoke check guards the hide-when-unbuilt behaviour**, now pointed at step
+twelve — the last unbuilt kind. When twelve is built the check has nowhere left
+to point, and only then should it go. When five is built, repoint it at another unbuilt step rather than
 deleting it — it is the only thing proving an unbuilt kind hides its section
 instead of showing an empty one.
+
+**Step six does not annotate step four's rows**, unlike step nine on step
+eight's. The same defect appears in several rows and deserves one answer, so
+`Store.carriedDefects()` groups identical entries case-insensitively and step six
+keeps rows of its own, created lazily on first touch. Cell values are carried
+whole and never split on punctuation — guessing where to cut "selfish,
+frightened" would put words in the reader's mouth. Its `work.from` names
+`columns` rather than a `work`, so the build's field-id collision check skips it,
+which is right: it writes nothing into step four.
 
 **`openInvSheet()` is the one row editor for every table-shaped module.** A spec
 may name its inputs `columns` (step four) or `fields` (step five), and may set
@@ -200,7 +210,7 @@ data/steps.json                     Built steps with references resolved
 tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
-tools/smoke-test.js    154 end-to-end browser checks
+tools/smoke-test.js    164 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -212,7 +222,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 154 checks, expect 154/154
+node tools/smoke-test.js                  # 164 checks, expect 164/164
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

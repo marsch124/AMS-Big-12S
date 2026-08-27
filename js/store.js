@@ -286,6 +286,82 @@
         return inventoryFor(step.id, work.tableId || work.kind);
     }
 
+    /*
+     * Step six asks about the defects named in step four, so it reads two of
+     * step four's columns — the part you played in a resentment, and the fault
+     * behind a piece of conduct.
+     *
+     * Unlike step nine, it cannot annotate step four's rows: the same defect
+     * turns up in several of them, and it deserves one answer rather than one
+     * per row. So identical entries are grouped, and step six keeps rows of its
+     * own carrying the answer and where it got to. Nothing is written until the
+     * reader touches a defect.
+     *
+     * Cell values are carried whole and never split on punctuation. "Selfish,
+     * frightened" is one thing somebody wrote, and guessing where to cut it
+     * would put words in their mouth.
+     */
+    function defectKey(text) {
+        return String(text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    }
+
+    function carriedDefects(step) {
+        var work = workFor(step);
+        if (!work || !work.from || !work.from.columns) return [];
+
+        var fromStep = getStep(work.from.stepId);
+        var fromWork = workFor(fromStep);
+        var mine = inventoryFor(step.id, work.tableId || work.kind);
+
+        var order = [];
+        var byKey = {};
+
+        work.from.columns.forEach(function (spec) {
+            var table = tableIn(fromWork, spec.tableId);
+            inventoryFor(work.from.stepId, spec.tableId).forEach(function (row) {
+                var text = ((row.values || {})[spec.columnId] || '').trim();
+                if (!text) return;
+                var key = defectKey(text);
+                if (!byKey[key]) {
+                    byKey[key] = {
+                        key: key,
+                        text: text,                 // the first spelling written
+                        from: [],
+                        row: mine.filter(function (r) {
+                            return defectKey((r.values || {}).key || '') === key;
+                        })[0] || null
+                    };
+                    order.push(byKey[key]);
+                }
+                var where = (table && table.title) || spec.tableId;
+                if (byKey[key].from.indexOf(where) === -1) byKey[key].from.push(where);
+                byKey[key].count = (byKey[key].count || 0) + 1;
+            });
+        });
+
+        return order;
+    }
+
+    // Lazily creates step six's own row the first time a defect is answered or
+    // marked, so an untouched step four leaves nothing behind.
+    function saveDefect(step, defect, patch) {
+        var work = workFor(step);
+        var tableId = work.tableId || work.kind;
+        var row = defect.row || {
+            stepId: step.id,
+            tableId: tableId,
+            values: { key: defect.key, defect: defect.text }
+        };
+        var values = Object.assign({}, row.values, { key: defect.key, defect: defect.text });
+        if (patch && typeof patch.answer === 'string') values.answer = patch.answer.trim();
+
+        var states = Object.assign({}, row.states || {});
+        if (patch && 'state' in patch) {
+            if (patch.state) states[step.id] = patch.state; else delete states[step.id];
+        }
+        return saveInventoryRow(Object.assign({}, row, { values: values, states: states }));
+    }
+
     // Plain text of a whole table, for taking to the person who will hear it.
     function inventoryAsText(step, tableId) {
         var work = workFor(step);
@@ -746,6 +822,8 @@
         inventoryFor: inventoryFor,
         inventoryCount: inventoryCount,
         rowIsEmpty: rowIsEmpty,
+        carriedDefects: carriedDefects,
+        saveDefect: saveDefect,
         rowState: rowState,
         setRowState: setRowState,
         rowsForWork: rowsForWork,

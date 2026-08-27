@@ -272,13 +272,14 @@ async function shot(page, name) {
             e.map((x) => x.textContent.replace(/\d+$/, '').trim()))).join(' / '));
 
     // A step whose work module has no renderer yet shows no work section at all,
-    // rather than an empty one. Step six (carried-defects) is the check — move
-    // this to another unbuilt step when six is built, do not simply delete it.
+    // rather than an empty one. Step twelve (people-worked-with) is the last one
+    // unbuilt; when it is built this check has nowhere left to point, and only
+    // then should it go.
     await page.click('#step-back');
-    await page.click('.step-item >> nth=5');
+    await page.click('.step-item >> nth=11');
     await page.waitForSelector('#screen-step.is-active');
     check('a step whose work is not built yet shows no work section',
-        (await page.textContent('#step-title')) === 'Step 6' &&
+        (await page.textContent('#step-title')) === 'Step 12' &&
         !(await page.isVisible('#step-work')),
         await page.textContent('#step-title'));
     await page.click('#step-back');
@@ -852,6 +853,82 @@ async function shot(page, name) {
         carried.length === 3 && carriedAnswers.length === 2 &&
         carried.every((n) => !n.sectionId),
         carried.length + ' notes, ' + carriedAnswers.length + ' answers');
+
+    // ── step six: the defects step four named ─────────────────────────────
+    // Seeded through the store: the same fault written twice, and once written
+    // into two different tables. Counts are asserted per defect rather than as
+    // a total, because step four's own tests put rows in first.
+    await page.evaluate(async () => {
+        const rows = [
+            { tableId: 'resentments', values: { who: 'My brother', cause: 'The house',
+                affects: 'Pride', part: 'Impatience' } },
+            { tableId: 'resentments', values: { who: 'Old boss', cause: 'Passed over',
+                affects: 'Security', part: 'impatience' } },
+            { tableId: 'conduct', values: { what: 'Snapped at her', whom: 'My wife',
+                fault: 'Impatience', instead: 'Waited' } },
+            // A fears row, whose columns step six is not told to read.
+            { tableId: 'fears', values: { fear: 'ZZQ-FEAR-MARKER', why: 'ZZQ-WHY-MARKER' } }
+        ];
+        for (const r of rows) await Store.saveInventoryRow(Object.assign({ stepId: 'step04' }, r));
+    });
+
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=5');
+    await page.waitForSelector('#screen-step.is-active');
+    check('step six now has its work section', await page.isVisible('#step-work'));
+
+    const defects = await page.$$eval('.defect', (els) => els.map((e) => ({
+        text: e.querySelector('.defect-text').textContent,
+        from: e.querySelector('.defect-from').textContent
+    })));
+    const impatience = defects.filter((d) => d.text.toLowerCase() === 'impatience');
+    check('the same defect written several times is asked about once',
+        impatience.length === 1, impatience.length + ' entries for it');
+    check('and says where it came from, across both tables',
+        impatience[0].from.indexOf('Resentments') !== -1 &&
+        impatience[0].from.indexOf('Conduct') !== -1 &&
+        impatience[0].from.indexOf('written 3 times') !== -1,
+        impatience[0].from);
+    // Named with markers rather than a phrase: step four's own tests legitimately
+    // write "frightened of being found out" into the part column, which step six
+    // is right to carry, and a looser assertion caught that instead.
+    check('a table step six is not told to read is left out',
+        !defects.some((d) => d.text.indexOf('ZZQ-') !== -1),
+        defects.length + ' defects carried');
+
+    const card = page.locator('.defect', { hasText: 'Impatience' }).first();
+    await card.locator('.chip', { hasText: 'Still holding on' }).click();
+    await page.waitForTimeout(250);
+    check('choosing to hold on shows what the book says about it',
+        (await card.locator('.defect-hint').textContent()).indexOf('not to force it') !== -1);
+
+    await card.locator('.chip', { hasText: 'Ready' }).click();
+    await page.waitForTimeout(250);
+    check('a defect can move to ready',
+        await card.evaluate((e) => e.classList.contains('is-answered')));
+    await card.locator('.chip', { hasText: 'Ready' }).click();
+    await page.waitForTimeout(250);
+    check('and back to unanswered, which is not the same as ready',
+        !(await card.evaluate((e) => e.classList.contains('is-answered'))));
+
+    await card.locator('.chip', { hasText: 'Answer honestly' }).click();
+    await page.waitForSelector('#paste-sheet:not([hidden])');
+    check('answering is titled with the defect itself',
+        (await page.textContent('#paste-title')).toLowerCase() === 'impatience');
+    await page.fill('#paste-body', 'It gets me out of waiting for anyone.');
+    await page.click('#paste-confirm');
+    await page.waitForTimeout(300);
+    check('the answer is kept against that defect',
+        (await card.locator('.defect-answer').textContent()) === 'It gets me out of waiting for anyone.');
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=5');
+    await page.waitForSelector('#screen-step.is-active');
+    check('the answer survives a reload',
+        (await page.locator('.defect', { hasText: 'Impatience' }).first()
+            .locator('.defect-answer').textContent()) === 'It gets me out of waiting for anyone.');
+    await page.click('#step-back');
 
     // ── step five: a record of the telling ────────────────────────────────
     await page.click('.tab[data-screen="steps"]');
