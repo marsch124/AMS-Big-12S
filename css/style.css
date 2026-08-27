@@ -488,6 +488,62 @@ button { cursor: pointer; }
 #meeting-raise .card-list { margin-top: 0; }
 #meeting-raise:empty { display: none; }
 
+/* ══════════════════════════════════════════════════ the two twelves (2.21) ══ */
+
+/* One tab, two lists. A segmented control rather than a seventh tab: six tab
+   labels were already made smaller to fit, and a seventh would have squeezed
+   them again for a list that is read in sittings, not glanced at. */
+.switch {
+  display: flex;
+  gap: 4px;
+  margin: 4px 0 16px;
+  padding: 4px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--bg-sunken);
+}
+.switch-opt {
+  flex: 1;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  padding: 9px 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+.switch-opt.is-active {
+  background: var(--bg-raised);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.10);
+}
+
+.tradlog-card { border-left: 3px solid var(--accent); }
+/* A Tradition that did not hold is still a record, and reads differently
+   without being scolded at — the same treatment a craving that ended in a
+   drink gets. */
+.tradlog-card.is-missed { border-left-color: var(--danger); }
+.tradlog-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.tradlog-which { font-size: 15px; font-weight: 600; }
+.tradlog-when { font-size: 14px; color: var(--text-dim); }
+.tradlog-held {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.tradlog-card.is-missed .tradlog-held { color: var(--danger); }
+.tradlog-what { margin: 7px 0 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+.tradlog-learned {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+}
+
 /* ═══════════════════════════════════════════════════ when it is bad (2.20) ══ */
 
 /* High and prominent, at Martin's ask. The accent border and the weight are
@@ -575,6 +631,10 @@ button { cursor: pointer; }
 .breathe-ring.is-in { transform: scale(1.55); }
 .breathe-ring.is-hold { transform: scale(1.55); }
 .breathe-ring.is-out { transform: scale(1); }
+
+/* The sheet is centred; a chip row defaults to the left and would sit oddly
+   under a ring and a count that are not. */
+.breathe-chips { justify-content: center; margin-top: 10px; }
 
 .breathe-phase {
   font-size: 15px;
@@ -898,6 +958,22 @@ button { cursor: pointer; }
 .notice[hidden] { display: none; }
 .notice h2 { margin: 0 0 6px; font-size: 16px; }
 .notice p { margin: 0 0 12px; font-size: 14px; color: var(--text-dim); }
+/* Said at the top of every Tradition page, because a reader arriving at
+   Tradition 7 will wonder where the words have gone. Quiet, not a warning: it
+   is a fact about which edition this is, not a fault. Dashed and dim so it
+   reads as a footnote rather than as the page's headline, and it must come
+   after .notice above to win on border and background. */
+.notice-quiet {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px dashed var(--rule);
+  border-radius: 10px;
+  background: transparent;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
 
 /* ════════════════════════════════════════════════════════════════ reader ══ */
 

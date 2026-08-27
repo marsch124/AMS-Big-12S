@@ -13,6 +13,9 @@
         lineHeight: 1.65,
         typeface: 'serif',       // serif | sans
         keepAwake: false,
+        // A soft tone at each turn of the breath, so the ring can be followed
+        // with your eyes shut — which is the way most people would rather do it.
+        breathSound: true,
         // Who to ring when it is bad. Kept in settings rather than a store of
         // its own because it is one person and one number, and settings already
         // ride the backup.
@@ -56,6 +59,8 @@
         notes: [],
         bookmarks: [],
         steps: null,           // { title, edition, steps: [] } from data/steps.json
+        traditions: null,        // { title, traditions: [] } from data/traditions.json
+        tradlog: [],             // { id, traditionId, on, what, learned }
         daily: null,             // { passages: [] } from data/daily.json
         stepPrefs: { hidden: {}, custom: {} },  // questions hidden, questions added
         inventory: [],           // step four's rows: { id, stepId, tableId, values, ... }
@@ -906,8 +911,16 @@
         return !!note.stepId;
     }
 
+    // The same again for the Traditions. A tradition note has no sectionId and
+    // no stepId, so without this it would fall straight into Reflections and
+    // the chip's count would read over a list that does not contain it — the
+    // exact defect the first cut of that count had.
+    function isTraditionNote(note) {
+        return !!note.traditionId;
+    }
+
     function isLooseNote(note) {
-        return isStandalone(note) && !isStepNote(note);
+        return isStandalone(note) && !isStepNote(note) && !isTraditionNote(note);
     }
 
     // An answer to one of the step's questions, rather than a note about the
@@ -1063,7 +1076,8 @@
             paraIndex: null,
             anchor: '',
             stepId: null,        // set when written against a step
-            questionId: null,    // set when it answers one of that step's questions
+            traditionId: null,   // set when written against one of the twelve Traditions
+            questionId: null,    // set when it answers a question of that step or Tradition
             tag: '',             // '' | 'sponsor' | 'sponsee'
             discussedAt: null
         }, note, { updatedAt: now });
@@ -1100,6 +1114,190 @@
 
     function deleteNote(id) {
         return DB.remove(DB.STORE_NOTES, id).then(loadNotes);
+    }
+
+    /* ---------------------------------------------------------- traditions */
+
+    /*
+     * The Twelve Traditions.
+     *
+     * The Traditions themselves are not in this app and cannot be: they were
+     * written in 1946 and first printed in the book at the second edition,
+     * which is under copyright to A.A. World Services, and this app carries the
+     * 1939 first edition only. So a Tradition here is named by its topic —
+     * "Membership", "Anonymity" — and everything on its page is either ours
+     * (the explanation, the questions) or quoted from the 1939 text.
+     *
+     * That turns out to be less of a compromise than it sounds. The 1939
+     * Foreword is the seed of half of them: no fees nor dues, the only
+     * requirement for membership, not an organization in the conventional
+     * sense, not allied nor opposed, and the anonymity instruction, all in
+     * three paragraphs written eleven years before anybody drafted a Tradition.
+     */
+    function loadTraditions() {
+        return fetch('data/traditions.json', { cache: 'no-cache' })
+            .then(function (response) {
+                if (!response.ok) throw new Error('traditions.json: HTTP ' + response.status);
+                return response.json();
+            })
+            .then(function (data) { state.traditions = data; return data; })
+            .catch(function (error) {
+                console.warn('Could not load data/traditions.json', error);
+                state.traditions = { traditions: [] };
+                return state.traditions;
+            });
+    }
+
+    function allTraditions() {
+        return (state.traditions && state.traditions.traditions) || [];
+    }
+
+    function getTradition(id) {
+        return allTraditions().filter(function (t) { return t.id === id; })[0] || null;
+    }
+
+    /*
+     * Notes and answers are the same store and the same shape as a step's, told
+     * apart by `traditionId` rather than `stepId`, and an answer by carrying a
+     * `questionId` as well. Question ids cannot collide — a step's are s1-q1
+     * and a Tradition's are t1-q1 — so `stepPrefs` carries the hidden and the
+     * added ones for both without a second store.
+     */
+    function notesForTradition(traditionId) {
+        return state.notes.filter(function (note) {
+            return note.traditionId === traditionId && !note.questionId;
+        });
+    }
+
+    function tradAnswersFor(traditionId, questionId) {
+        return state.notes.filter(function (note) {
+            return note.traditionId === traditionId && note.questionId === questionId;
+        }).sort(function (a, b) {
+            return (b.createdAt || '').localeCompare(a.createdAt || '');
+        });
+    }
+
+    // Works for a question that has since been put away, so an answer on the
+    // Notes tab never loses the question it was answering.
+    function traditionQuestionText(traditionId, questionId) {
+        var tradition = getTradition(traditionId);
+        if (!tradition) return '';
+        var own = (state.stepPrefs.custom[traditionId] || []);
+        var found = (tradition.questions || []).concat(own).filter(function (q) {
+            return q.id === questionId;
+        })[0];
+        return found ? found.text : '';
+    }
+
+    /*
+     * Three things count here as they do on a step, and this is the only place
+     * that decides: notes written on it, questions answered, and log entries
+     * against it. Anything showing progress goes through here rather than
+     * counting one of the three again by hand.
+     */
+    function traditionProgress(traditionId) {
+        var tradition = getTradition(traditionId);
+        if (!tradition) return { notes: 0, answered: 0, questions: 0, log: 0, total: 0 };
+
+        var questions = questionsFor(tradition);
+        var answered = questions.filter(function (question) {
+            return tradAnswersFor(traditionId, question.id).length > 0;
+        }).length;
+        var notes = notesForTradition(traditionId).length;
+        var log = tradLogFor(traditionId).length;
+
+        return {
+            notes: notes,
+            answered: answered,
+            questions: questions.length,
+            log: log,
+            total: notes + answered + log,
+            lastAt: lastTouchedTradition(traditionId)
+        };
+    }
+
+    function lastTouchedTradition(traditionId) {
+        var stamps = state.notes.filter(function (note) {
+            return note.traditionId === traditionId;
+        }).map(function (note) { return note.updatedAt || note.createdAt || ''; });
+
+        tradLogFor(traditionId).forEach(function (row) {
+            stamps.push(row.updatedAt || row.createdAt || '');
+        });
+        stamps.sort();
+        return stamps.length ? stamps[stamps.length - 1] : null;
+    }
+
+    /*
+     * The log: where one of the twelve was seen working, or failing to. Dated by
+     * the day rather than the minute — a business meeting happened on a Tuesday,
+     * and writing it up on Wednesday does not make it Wednesday's. Same
+     * reasoning as the meetings and step five's sittings.
+     *
+     * One shared list rather than twelve, because the interesting question is
+     * usually "when did I last see this happen at all" and because an entry
+     * often belongs to two Traditions and has to be filed under one.
+     */
+    function loadTradLog() {
+        return DB.getAll(DB.STORE_TRADLOG).then(function (rows) {
+            state.tradlog = (rows || []).sort(function (a, b) {
+                var byDay = String(b.on || '').localeCompare(String(a.on || ''));
+                return byDay || String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+            });
+            return state.tradlog;
+        }).catch(function () {
+            state.tradlog = [];
+            return state.tradlog;
+        });
+    }
+
+    function saveTradLog(row) {
+        var what = String(row.what || '').trim();
+        if (!what) return Promise.reject(new Error('There is nothing written down.'));
+
+        var now = new Date().toISOString();
+        var record = {
+            id: row.id || uid('tlog'),
+            traditionId: row.traditionId || '',
+            on: row.on || todayISO(),
+            // Held or missed. Both belong in a record: a log that could only
+            // hold good examples would not be a record of anything.
+            held: row.held === false ? false : true,
+            what: what,
+            learned: String(row.learned || '').trim(),
+            createdAt: row.createdAt || now,
+            updatedAt: now
+        };
+        return DB.put(DB.STORE_TRADLOG, record).then(loadTradLog).then(function () {
+            return record;
+        });
+    }
+
+    function deleteTradLog(id) {
+        return DB.remove(DB.STORE_TRADLOG, id).then(loadTradLog);
+    }
+
+    function tradLogFor(traditionId) {
+        return state.tradlog.filter(function (row) { return row.traditionId === traditionId; });
+    }
+
+    // One sentence, shared by the list screen and by anything else that says
+    // how the log stands, so two places cannot reach different conclusions.
+    function tradLogSummaryLine() {
+        var total = state.tradlog.length;
+        if (!total) return 'Nothing written down yet.';
+        var missed = state.tradlog.filter(function (row) { return row.held === false; }).length;
+        var covered = {};
+        state.tradlog.forEach(function (row) { covered[row.traditionId] = true; });
+        var n = Object.keys(covered).filter(Boolean).length;
+
+        var line = (total === 1 ? 'One entry' : total + ' entries') +
+            ', across ' + (n === 1 ? 'one of the twelve' : n + ' of the twelve') + '.';
+        if (missed) {
+            line += ' ' + (missed === 1 ? 'One of them went the other way.'
+                                        : missed + ' of them went the other way.');
+        }
+        return line;
     }
 
     /* ----------------------------------------------------------- bookmarks */
@@ -2324,6 +2522,7 @@
         return loadSettings()
             .then(loadBook)
             .then(loadSteps)
+            .then(loadTraditions)
             .then(loadDaily)
             .then(loadStepPrefs)
             .then(loadInventory)
@@ -2332,6 +2531,7 @@
             .then(loadCheckins)
             .then(loadBreaks)
             .then(loadMessages)
+            .then(loadTradLog)
             .then(loadMessageDraft)
             .then(loadVisits)
             .then(loadNotes)
@@ -2359,6 +2559,20 @@
 
         loadSteps: loadSteps,
         allSteps: allSteps,
+
+        loadTraditions: loadTraditions,
+        allTraditions: allTraditions,
+        getTradition: getTradition,
+        notesForTradition: notesForTradition,
+        tradAnswersFor: tradAnswersFor,
+        traditionQuestionText: traditionQuestionText,
+        traditionProgress: traditionProgress,
+        loadTradLog: loadTradLog,
+        saveTradLog: saveTradLog,
+        deleteTradLog: deleteTradLog,
+        tradLogFor: tradLogFor,
+        tradLogSummaryLine: tradLogSummaryLine,
+        isTraditionNote: isTraditionNote,
 
         loadDaily: loadDaily,
         passageForDay: passageForDay,

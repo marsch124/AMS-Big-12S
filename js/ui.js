@@ -116,15 +116,15 @@
         // A passing look is over the moment you leave the reader. Browsing, set
         // by hand, is not.
         if (name !== 'reader' && looking) { looking = false; showBrowsingStrip(); }
-        ['home', 'library', 'reader', 'steps', 'step', 'notes', 'search', 'settings',
-         'craving', 'meeting', 'checkin', 'bounce', 'message']
+        ['home', 'library', 'reader', 'steps', 'step', 'tradition', 'notes', 'search',
+         'settings', 'craving', 'meeting', 'checkin', 'bounce', 'message']
             .forEach(function (screen) {
                 $('screen-' + screen).classList.toggle('is-active', screen === name);
             });
         // A step page is pushed from the Steps tab, and the craving and meeting
         // screens from the home screen, so those tabs stay lit while you are
         // inside one.
-        var litTab = name === 'step' ? 'steps'
+        var litTab = (name === 'step' || name === 'tradition') ? 'steps'
             : (name === 'craving' || name === 'meeting' || name === 'checkin' ||
                name === 'bounce' || name === 'message') ? 'home' : name;
         Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
@@ -150,7 +150,7 @@
         if (name === 'library') renderLibrary();
         if (name === 'notes') renderNotes();
         if (name === 'settings') renderSettings();
-        if (name === 'steps') renderSteps();
+        if (name === 'steps') renderTwelves();
         if (name === 'search') setTimeout(function () { $('search-input').focus(); }, 60);
     }
 
@@ -750,6 +750,71 @@
      * `closeSheets()` is not enough to stop it: the sheet closing has to stop
      * the clock as well or it goes on counting into an empty room.
      */
+    /*
+     * A tone at each turn of the breath (2.21), so the ring can be followed with
+     * your eyes shut. Generated rather than bundled: no audio files to ship, and
+     * it works with the network off like the rest of the app.
+     *
+     * The three pitches trace the shape of the breath — up on the way in, held
+     * above it, and down below both on the way out — so which phase you are in
+     * is audible without a word being said.
+     *
+     * The gain is ramped rather than switched. A square edge on a gain node is
+     * an audible click, and a click every four seconds is worse than silence in
+     * the middle of a craving.
+     */
+    var BREATH_TONES = { in: 392, hold: 523.25, out: 293.66 };
+    var audioCtx = null;
+
+    function breathAudio() {
+        if (audioCtx) return audioCtx;
+        var Ctx = global.AudioContext || global.webkitAudioContext;
+        if (!Ctx) return null;
+        try { audioCtx = new Ctx(); } catch (error) { audioCtx = null; }
+        return audioCtx;
+    }
+
+    /*
+     * iOS starts an AudioContext suspended and will only let a user gesture
+     * resume it. The Start button is that gesture, so this runs from the click
+     * handler — a resume attempted from inside the timer would be refused and
+     * the whole exercise would run silently.
+     */
+    function wakeBreathAudio() {
+        var ctx = breathAudio();
+        if (ctx && ctx.state === 'suspended') ctx.resume().catch(function () {});
+    }
+
+    function breathTone(phaseId) {
+        if (!Store.state.settings.breathSound) return;
+        var ctx = breathAudio();
+        if (!ctx || ctx.state === 'suspended') return;
+
+        try {
+            var now = ctx.currentTime;
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = BREATH_TONES[phaseId] || BREATH_TONES.in;
+            // exponentialRamp cannot reach zero, hence the near-silent floor.
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.09, now + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.6);
+        } catch (error) { /* a phone that will not make a sound still breathes */ }
+    }
+
+    function paintBreathSound() {
+        var on = !!Store.state.settings.breathSound;
+        var button = $('breathe-sound');
+        button.classList.toggle('is-active', on);
+        button.textContent = on ? 'Sound on' : 'Sound off';
+        button.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
     var breathTimer = null;
     var breathPhase = 0;
     var breathLeft = 0;
@@ -764,6 +829,7 @@
             'In for four, hold for four, out for six. Follow the ring.';
         $('breathe-start').textContent = 'Start';
         $('breathe-ring').className = 'breathe-ring';
+        paintBreathSound();
         openSheet('breathe-sheet');
     }
 
@@ -777,6 +843,7 @@
         breathLeft = Store.breathCycle()[0].seconds;
         $('breathe-start').textContent = 'Stop';
         paintBreath();
+        breathTone(Store.breathCycle()[0].id);
         breathTimer = setTimeout(tickBreath, 1000);
     }
 
@@ -801,6 +868,9 @@
             breathPhase++;
             if (breathPhase >= cycle.length) { breathPhase = 0; breathCycles++; }
             breathLeft = cycle[breathPhase].seconds;
+            // Only on the turn. A tone every second would be a metronome, and
+            // nobody wants to be hurried while they are trying to settle.
+            breathTone(cycle[breathPhase].id);
         }
         paintBreath();
         breathTimer = setTimeout(tickBreath, 1000);
@@ -2151,15 +2221,21 @@
 
         var stepId = options.stepId || (existing && existing.stepId) || null;
         var step = stepId ? Store.getStep(stepId) : null;
+        // A note may belong to one of the Traditions instead. Same store, same
+        // sheet; only which id it carries differs.
+        var traditionId = options.traditionId || (existing && existing.traditionId) || null;
+        var tradition = traditionId ? Store.getTradition(traditionId) : null;
         var questionId = options.questionId || (existing && existing.questionId) || null;
         var questionText = options.questionText || '';
+        var owner = step ? 'Step ' + step.number
+            : tradition ? 'Tradition ' + tradition.number : '';
 
         $('note-sheet-title').textContent = section
             ? 'Note on this passage'
             : questionId
-                ? 'Step ' + step.number + ' — ' + (existing ? 'your answer' : 'answering')
-                : step
-                    ? 'Step ' + step.number + ' — ' + (existing ? 'your note' : 'a new note')
+                ? owner + ' — ' + (existing ? 'your answer' : 'answering')
+                : owner
+                    ? owner + ' — ' + (existing ? 'your note' : 'a new note')
                     : (existing ? 'Your note' : 'Something on your mind');
         // The question stands where the passage would: what is being answered.
         var shown = quote || questionText;
@@ -2171,6 +2247,8 @@
                 ? 'Your answer today. Answering again later keeps this one — it does not replace it.'
                 : step
                 ? 'Where you are with this step today. Dated, and kept — a later note sits above this one rather than replacing it.'
+                : tradition
+                ? 'Where you are with this one today. Dated, and kept — a later note sits above this one rather than replacing it.'
                 : 'A question for your sponsor, something to raise with your sponsee, or a thought of your own.';
         $('note-sheet-body').value = existing ? existing.body : '';
         $('note-delete').hidden = !existing;
@@ -2184,6 +2262,7 @@
                 sectionId: sectionId || null,
                 paraIndex: section ? paraIndex : null,
                 stepId: stepId,
+                traditionId: traditionId,
                 questionId: questionId,
                 body: body,
                 tag: noteTag,
@@ -2349,6 +2428,323 @@
 
         renderStepQuestions(step);
         renderStepWork(step);
+    }
+
+    /* --------------------------------------------------------- traditions */
+
+    /*
+     * The Twelve Traditions, on the Steps tab beside the Twelve Steps (2.21).
+     *
+     * A Tradition page is a step page with one thing deliberately missing: the
+     * wording. The Traditions were written in 1946 and first printed in the
+     * book at the second edition, which is under copyright and out of bounds
+     * for this app, so a Tradition here is named by its topic and everything on
+     * the page is either ours or quoted from the 1939 text. The page says so
+     * rather than leaving a hole where a quotation would be on a step.
+     */
+
+    // Which of the two twelves the tab is showing. Remembered between visits:
+    // somebody working the Traditions this month should not have to switch
+    // every time they come back.
+    var TWELVES_KEY = 'ams-big-12s:twelves';
+    var twelvesShowing = 'steps';
+
+    function loadTwelvesChoice() {
+        try {
+            var saved = localStorage.getItem(TWELVES_KEY);
+            if (saved === 'steps' || saved === 'traditions') twelvesShowing = saved;
+        } catch (error) { /* a remembered tab is not worth failing a boot over */ }
+    }
+
+    function showTwelves(which) {
+        twelvesShowing = which === 'traditions' ? 'traditions' : 'steps';
+        try { localStorage.setItem(TWELVES_KEY, twelvesShowing); } catch (error) {}
+        renderTwelves();
+    }
+
+    function renderTwelves() {
+        var onTraditions = twelvesShowing === 'traditions';
+        $('twelves-title').textContent = onTraditions
+            ? 'The Twelve Traditions' : 'The Twelve Steps';
+        $('twelves-steps').hidden = onTraditions;
+        $('twelves-traditions').hidden = !onTraditions;
+
+        Array.prototype.forEach.call(
+            document.querySelectorAll('#twelves-switch .switch-opt'), function (opt) {
+                var on = opt.dataset.twelve === twelvesShowing;
+                opt.classList.toggle('is-active', on);
+                opt.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+
+        if (onTraditions) renderTraditions(); else renderSteps();
+    }
+
+    function renderTraditions() {
+        var data = Store.state.traditions || {};
+        $('steps-edition').textContent = data.edition || '';
+        $('traditions-note').textContent = data.wordingNote || '';
+
+        var list = $('tradlist');
+        list.innerHTML = '';
+
+        Store.allTraditions().forEach(function (tradition) {
+            var done = Store.traditionProgress(tradition.id);
+            var item = document.createElement('button');
+            item.className = 'step-item';
+            item.innerHTML =
+                '<span class="step-num">' + tradition.number + '</span>' +
+                '<span class="step-body">' +
+                  '<span class="step-name">' + escapeHtml(tradition.topic) + '</span>' +
+                  '<span class="step-line">' +
+                      escapeHtml(firstWords(tradition.explanation[0] || '', 12)) + '</span>' +
+                  (done.total ? '<span class="step-progress">' +
+                      escapeHtml(traditionProgressLine(done)) + '</span>' : '') +
+                '</span>' +
+                (done.lastAt ? '<span class="step-when">' +
+                    escapeHtml(shortDate(done.lastAt)) + '</span>' : '') +
+                '<span class="step-go">›</span>';
+            item.addEventListener('click', function () { openTradition(tradition.id); });
+            list.appendChild(item);
+        });
+
+        renderTradLogList();
+    }
+
+    // Each part counts exactly what its own page shows — the same rule the step
+    // list follows, and the reason Store.traditionProgress() is the only place
+    // that decides what "worked on" means.
+    function traditionProgressLine(done) {
+        var parts = [];
+        if (done.answered) parts.push(done.answered + ' of ' + done.questions + ' answered');
+        if (done.notes) parts.push(done.notes + (done.notes === 1 ? ' note' : ' notes'));
+        if (done.log) parts.push(done.log + (done.log === 1 ? ' seen' : ' seen'));
+        return parts.join(' · ');
+    }
+
+    function openTradition(traditionId) {
+        var tradition = Store.getTradition(traditionId);
+        if (!tradition) return;
+        current.traditionId = traditionId;
+        renderTradition(tradition);
+        showScreen('tradition');
+        $('tradition-body').scrollTop = 0;
+    }
+
+    function renderTradition(tradition) {
+        if (!tradition) return;
+        $('tradition-title').textContent = 'Tradition ' + tradition.number;
+        $('tradition-sub').textContent = tradition.topic;
+
+        // Said on every page rather than once in a note somewhere, because a
+        // reader arriving at Tradition 7 will wonder where the words are.
+        $('tradition-wording').textContent =
+            'The wording is not printed here. The Traditions were written in 1946 and are ' +
+            'not in the 1939 edition this app carries. What follows is ours, and the ' +
+            'passages are the book’s.';
+
+        renderTraditionJournal(tradition);
+
+        $('tradition-explanation').innerHTML = tradition.explanation.map(function (para) {
+            return '<p>' + escapeHtml(para) + '</p>';
+        }).join('');
+
+        renderTraditionRefs(tradition);
+        renderQuestions(tradition, QUESTION_SPECS.tradition);
+        renderTraditionLog(tradition);
+    }
+
+    function renderTraditionRefs(tradition) {
+        var refs = $('tradition-references');
+        refs.innerHTML = '';
+
+        var live = 0;
+        tradition.references.forEach(function (ref) {
+            // Resolved again at runtime, trusting the anchor over the stored
+            // index, so a reader who imported their own copy keeps the link.
+            var index = Store.resolveStepRef(ref);
+            var section = Store.getSection(ref.sectionId);
+            var row = document.createElement('button');
+
+            if (index === null || !section) {
+                row.className = 'ref-item is-missing';
+                row.disabled = true;
+                row.innerHTML =
+                    '<span class="ref-label">' + escapeHtml(ref.label) + '</span>' +
+                    '<span class="ref-why">Not found in the text now loaded.</span>';
+            } else {
+                live++;
+                row.className = 'ref-item';
+                row.innerHTML =
+                    '<span class="ref-label">' + escapeHtml(ref.label) + '</span>' +
+                    '<span class="ref-where">' + escapeHtml(section.title) + '</span>' +
+                    (ref.why ? '<span class="ref-why">' + escapeHtml(ref.why) + '</span>' : '') +
+                    '<span class="ref-quote">' +
+                        escapeHtml(firstWords(section.paragraphs[index], 20)) + '</span>';
+                row.addEventListener('click', function () {
+                    openReader(ref.sectionId,
+                        { paraIndex: index, highlight: true, justLooking: true });
+                });
+            }
+            refs.appendChild(row);
+        });
+
+        // Three of the twelve have almost no 1939 ground, and saying so is
+        // better than letting the reader think the list is thin by accident.
+        $('tradition-ground').textContent = live
+            ? (live === 1 ? 'One passage' : live + ' passages') +
+              ' the 1939 book gives this one. It was written before the Traditions existed, ' +
+              'so what is here is the ground rather than the rule.'
+            : 'The 1939 book does not speak to this one. It was written before there were ' +
+              'groups for it to be about.';
+    }
+
+    function renderTraditionJournal(tradition) {
+        var entries = Store.notesForTradition(tradition.id).slice().sort(function (a, b) {
+            return (b.createdAt || '').localeCompare(a.createdAt || '');
+        });
+
+        $('tradition-journal-hint').textContent = entries.length
+            ? entries.length + (entries.length === 1 ? ' note' : ' notes') +
+              ', newest first. Nothing here is overwritten.'
+            : 'Nothing yet. A note each time this one comes up, and a later one sits above ' +
+              'the last rather than on top of it.';
+
+        var list = $('tradition-entries');
+        list.innerHTML = '';
+        entries.forEach(function (entry) {
+            list.appendChild(noteCard(Store.resolveNote(entry)));
+        });
+    }
+
+    /* ------------------------------------------------- the Traditions log */
+
+    /*
+     * Where one of the twelve was seen holding, or not holding. One shared list
+     * rather than twelve, because the useful question is usually "when did I
+     * last see this at all", and because a real incident often belongs to two
+     * of them and has to be filed under one.
+     *
+     * `held: false` is not an oversight, for the same reason a craving that
+     * ended in a drink is kept: a log that could only record the Traditions
+     * working would not be a record of anything.
+     */
+    var tradLogEditing = null;
+    var tradLogHeld = true;
+
+    function renderTradLogList() {
+        var box = $('tradlog-list');
+        box.innerHTML = '';
+        $('tradlog-summary').textContent = Store.tradLogSummaryLine();
+
+        Store.state.tradlog.slice(0, 12).forEach(function (row) {
+            box.appendChild(tradLogCard(row, true));
+        });
+
+        if (Store.state.tradlog.length > 12) {
+            var more = document.createElement('p');
+            more.className = 'hint';
+            more.textContent = 'Showing the last 12 of ' + Store.state.tradlog.length + '.';
+            box.appendChild(more);
+        }
+    }
+
+    function renderTraditionLog(tradition) {
+        var rows = Store.tradLogFor(tradition.id);
+        var box = $('tradition-log');
+        box.innerHTML = '';
+
+        $('tradition-log-hint').textContent = rows.length
+            ? rows.length === 1 ? 'One time you wrote down.' : rows.length + ' times you wrote down.'
+            : 'Nothing yet. When this one holds — or does not — write it down while you ' +
+              'still remember what actually happened.';
+
+        rows.forEach(function (row) { box.appendChild(tradLogCard(row, false)); });
+    }
+
+    // One card on two screens, so there is one to keep right rather than two.
+    // `withWhich` names the Tradition, which the Tradition's own page does not
+    // need and the shared list cannot do without.
+    function tradLogCard(row, withWhich) {
+        var tradition = Store.getTradition(row.traditionId);
+        var card = document.createElement('button');
+        card.className = 'card tradlog-card' + (row.held === false ? ' is-missed' : '');
+        card.innerHTML =
+            '<span class="tradlog-head">' +
+                (withWhich && tradition
+                    ? '<span class="tradlog-which">' + tradition.number + '. ' +
+                      escapeHtml(tradition.topic) + '</span>' : '') +
+                '<span class="tradlog-when">' +
+                    escapeHtml(Store.meetingDayText(row.on)) + '</span>' +
+                '<span class="tradlog-held">' +
+                    (row.held === false ? 'Did not hold' : 'Held') + '</span>' +
+            '</span>' +
+            '<p class="tradlog-what">' + escapeHtml(row.what) + '</p>' +
+            (row.learned ? '<p class="tradlog-learned">' + escapeHtml(row.learned) + '</p>' : '');
+        card.addEventListener('click', function () { openTradLogSheet(row); });
+        return card;
+    }
+
+    function setTradLogHeld(held) {
+        tradLogHeld = !!held;
+        Array.prototype.forEach.call(
+            document.querySelectorAll('#tradlog-held .chip'), function (chip) {
+                chip.classList.toggle('is-active',
+                    (chip.dataset.held === 'yes') === tradLogHeld);
+            });
+    }
+
+    function openTradLogSheet(row, presetTraditionId) {
+        tradLogEditing = row || null;
+        $('tradlog-sheet-title').textContent = row ? 'This one' : 'Where you saw it';
+
+        var which = $('tradlog-sheet-which');
+        which.innerHTML = '';
+        Store.allTraditions().forEach(function (tradition) {
+            var option = document.createElement('option');
+            option.value = tradition.id;
+            option.textContent = tradition.number + '. ' + tradition.topic;
+            which.appendChild(option);
+        });
+        which.value = (row && row.traditionId) || presetTraditionId ||
+            (Store.allTraditions()[0] || {}).id || '';
+
+        $('tradlog-sheet-on').value = (row && row.on) || Store.todayISO();
+        $('tradlog-sheet-on').max = Store.todayISO();
+        $('tradlog-sheet-what').value = (row && row.what) || '';
+        $('tradlog-sheet-learned').value = (row && row.learned) || '';
+        setTradLogHeld(row ? row.held !== false : true);
+        $('tradlog-sheet-delete').hidden = !row;
+        openSheet('tradlog-sheet');
+    }
+
+    function saveTradLogSheet() {
+        var record = {
+            traditionId: $('tradlog-sheet-which').value,
+            on: $('tradlog-sheet-on').value || Store.todayISO(),
+            held: tradLogHeld,
+            what: $('tradlog-sheet-what').value,
+            learned: $('tradlog-sheet-learned').value
+        };
+        if (tradLogEditing) {
+            record.id = tradLogEditing.id;
+            record.createdAt = tradLogEditing.createdAt;
+        }
+        Store.saveTradLog(record).then(function () {
+            tradLogEditing = null;
+            closeSheets();
+            afterTradLogChange();
+            toast('Written down');
+        }).catch(function (error) { toast(error.message); });
+    }
+
+    // Both screens show this list, and which one is underneath depends on how
+    // the sheet was opened. Repainting the wrong one leaves a stale count.
+    function afterTradLogChange() {
+        if (current.screen === 'tradition') {
+            renderTradition(Store.getTradition(current.traditionId));
+        } else {
+            renderTwelves();
+        }
     }
 
     /* ---------------------------------------------------- the step's work */
@@ -3795,12 +4191,57 @@
         });
     }
 
+    /*
+     * One question renderer for both twelves (2.21). A step's questions and a
+     * Tradition's are the same thing in the same store — answered again rather
+     * than over, history kept, hideable, and addable — and told apart only by
+     * which id the answer carries. Two copies of ninety lines would have been
+     * two copies to keep right.
+     *
+     * spec.idKey     'stepId' or 'traditionId', the field an answer carries
+     * spec.holder    where the questions are drawn
+     * spec.repaint   redraw the page this list is on
+     */
+    var QUESTION_SPECS = {
+        step: {
+            idKey: 'stepId',
+            holder: 'step-questions',
+            addBtn: 'step-add-question',
+            hiddenBtn: 'step-show-hidden',
+            hiddenList: 'step-hidden-questions',
+            addHint: 'However your sponsor puts it, or whatever you want to come back to on this step.',
+            answersFor: function (id, questionId) { return Store.answersFor(id, questionId); },
+            repaint: function () { renderStep(Store.getStep(current.stepId)); }
+        },
+        tradition: {
+            idKey: 'traditionId',
+            holder: 'tradition-questions',
+            addBtn: 'tradition-add-question',
+            hiddenBtn: 'tradition-show-hidden',
+            hiddenList: 'tradition-hidden-questions',
+            addHint: 'However it comes up in your group, or whatever you want to come back to on this one.',
+            answersFor: function (id, questionId) { return Store.tradAnswersFor(id, questionId); },
+            repaint: function () { renderTradition(Store.getTradition(current.traditionId)); }
+        }
+    };
+
+    // What openNoteSheet needs to file an answer against the right owner.
+    function answerTarget(spec, owner, q) {
+        var target = { questionId: q.id, questionText: q.text };
+        target[spec.idKey] = owner.id;
+        return target;
+    }
+
     function renderStepQuestions(step) {
-        var holder = $('step-questions');
+        renderQuestions(step, QUESTION_SPECS.step);
+    }
+
+    function renderQuestions(owner, spec) {
+        var holder = $(spec.holder);
         holder.innerHTML = '';
 
-        Store.questionsFor(step).forEach(function (q, index) {
-            var answers = Store.answersFor(step.id, q.id);
+        Store.questionsFor(owner).forEach(function (q, index) {
+            var answers = spec.answersFor(owner.id, q.id);
             var block = document.createElement('div');
             block.className = 'question';
 
@@ -3836,8 +4277,7 @@
             answer.className = 'chip';
             answer.textContent = answers.length ? 'Answer again' : 'Answer';
             answer.addEventListener('click', function () {
-                openNoteSheet(null, null, null,
-                    { stepId: step.id, questionId: q.id, questionText: q.text });
+                openNoteSheet(null, null, null, answerTarget(spec, owner, q));
             });
             actions.appendChild(answer);
 
@@ -3846,8 +4286,7 @@
                 edit.className = 'chip';
                 edit.textContent = 'Edit latest';
                 edit.addEventListener('click', function () {
-                    openNoteSheet(null, null, answers[0],
-                        { stepId: step.id, questionId: q.id, questionText: q.text });
+                    openNoteSheet(null, null, answers[0], answerTarget(spec, owner, q));
                 });
                 actions.appendChild(edit);
             }
@@ -3871,14 +4310,14 @@
             put.addEventListener('click', function () {
                 if (q.own) {
                     if (!confirm('Delete this question? Answers written against it are kept.')) return;
-                    Store.deleteQuestion(step.id, q.id).then(function () {
+                    Store.deleteQuestion(owner.id, q.id).then(function () {
                         toast('Question deleted');
-                        renderStep(Store.getStep(step.id));
+                        spec.repaint();
                     });
                 } else {
                     Store.setQuestionHidden(q.id, true).then(function () {
                         toast('Put away — answers kept');
-                        renderStep(Store.getStep(step.id));
+                        spec.repaint();
                     });
                 }
             });
@@ -3889,28 +4328,28 @@
             pending.forEach(clampAnswer);
         });
 
-        renderHiddenQuestions(step);
+        renderHiddenQuestions(owner, spec);
 
-        $('step-add-question').onclick = function () {
+        $(spec.addBtn).onclick = function () {
             openPaste({
                 title: 'A question of your own',
-                hint: 'However your sponsor puts it, or whatever you want to come back to on this step.',
+                hint: spec.addHint,
                 placeholder: 'What am I still not willing to look at?',
                 onConfirm: function (value) {
                     if (!value.trim()) return;
-                    Store.addQuestion(step.id, value).then(function () {
+                    Store.addQuestion(owner.id, value).then(function () {
                         toast('Question added');
-                        renderStep(Store.getStep(step.id));
+                        spec.repaint();
                     });
                 }
             });
         };
     }
 
-    function renderHiddenQuestions(step) {
-        var hidden = Store.hiddenQuestionsFor(step);
-        var button = $('step-show-hidden');
-        var list = $('step-hidden-questions');
+    function renderHiddenQuestions(owner, spec) {
+        var hidden = Store.hiddenQuestionsFor(owner);
+        var button = $(spec.hiddenBtn);
+        var list = $(spec.hiddenList);
 
         button.hidden = !hidden.length;
         if (!hidden.length) { list.hidden = true; list.innerHTML = ''; return; }
@@ -3933,7 +4372,7 @@
             back.addEventListener('click', function () {
                 Store.setQuestionHidden(q.id, false).then(function () {
                     toast('Back on the list');
-                    renderStep(Store.getStep(step.id));
+                    spec.repaint();
                 });
             });
             row.appendChild(back);
@@ -4582,6 +5021,7 @@
     /* ---------------------------------------------------------------- wire */
 
     function bind() {
+        loadTwelvesChoice();
         $('tab-version').textContent = 'v' + (global.APP_VERSION || '1.0');
 
         Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
@@ -4704,6 +5144,43 @@
             });
         });
 
+        // ── the two twelves ────────────────────────────────────────────────
+        Array.prototype.forEach.call(
+            document.querySelectorAll('#twelves-switch .switch-opt'), function (opt) {
+                opt.addEventListener('click', function () { showTwelves(opt.dataset.twelve); });
+            });
+        $('tradition-back').addEventListener('click', function () {
+            showTwelves('traditions');
+            showScreen('steps');
+        });
+        $('tradition-add-entry').addEventListener('click', function () {
+            openNoteSheet(null, null, null, { traditionId: current.traditionId });
+        });
+        $('tradition-log-add').addEventListener('click', function () {
+            openTradLogSheet(null, current.traditionId);
+        });
+        $('tradlog-add').addEventListener('click', function () { openTradLogSheet(null); });
+        Array.prototype.forEach.call(
+            document.querySelectorAll('#tradlog-held .chip'), function (chip) {
+                chip.addEventListener('click', function () {
+                    setTradLogHeld(chip.dataset.held === 'yes');
+                });
+            });
+        $('tradlog-sheet-save').addEventListener('click', saveTradLogSheet);
+        $('tradlog-sheet-cancel').addEventListener('click', function () {
+            tradLogEditing = null;
+            closeSheets();
+        });
+        $('tradlog-sheet-delete').addEventListener('click', function () {
+            if (!tradLogEditing) return;
+            if (!confirm('Delete this one? It comes off the count as well.')) return;
+            Store.deleteTradLog(tradLogEditing.id).then(function () {
+                tradLogEditing = null;
+                closeSheets();
+                afterTradLogChange();
+            });
+        });
+
         // ── saying something ───────────────────────────────────────────────
         $('message-back').addEventListener('click', function () { showScreen('home'); });
         $('message-nobody').addEventListener('click', function () {
@@ -4763,7 +5240,21 @@
                     : 'Start again whenever you like.';
                 return;
             }
+            // The tap is the gesture iOS needs before it will make a sound.
+            wakeBreathAudio();
             startBreathing();
+        });
+        $('breathe-sound').addEventListener('click', function () {
+            Store.saveSettings({ breathSound: !Store.state.settings.breathSound })
+                .then(function () {
+                    paintBreathSound();
+                    // Turning it on mid-exercise should be audible at once
+                    // rather than at the next turn of the breath.
+                    if (Store.state.settings.breathSound) {
+                        wakeBreathAudio();
+                        breathTone(Store.breathCycle()[breathPhase].id);
+                    }
+                });
         });
         $('breathe-close').addEventListener('click', closeSheets);
         $('craving-message').addEventListener('click', function () { openMessage(); });
@@ -5087,6 +5578,9 @@
         renderHome: renderHome,
         renderSteps: renderSteps,
         openStep: openStep,
+        renderTwelves: renderTwelves,
+        showTwelves: showTwelves,
+        openTradition: openTradition,
         renderNotes: renderNotes,
         renderSettings: renderSettings,
         toast: toast

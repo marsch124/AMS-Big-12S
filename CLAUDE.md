@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.20 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.21 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,98 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## The Twelve Traditions (2.21)
+
+**The wording is not in this app and must never be.** The Traditions were written
+in 1946, adopted in 1950, and first printed in the book at the **second edition
+(1955)**; the standard commentary is the **1952 Twelve Steps and Twelve
+Traditions**, already out of bounds by name in the step 6/7 note above. Both
+belong to A.A.W.S. and neither is the 1939 first edition. Checked against the
+text rather than assumed: 106,067 words contain no "singleness of purpose", no
+"group conscience", no "common welfare", no "self-supporting", no "outside
+issues". So each Tradition is named by its **topic** and nothing else.
+`build-traditions.js` **refuses to build** a tradition carrying a `text` field —
+that guard is the whole point of the file, do not soften it. Martin was shown
+the alternatives on 2026-08-27 (leave it out, import his own copy locally, or
+pursue an A.A.W.S. reprint licence himself) and chose to leave it out entirely.
+
+**The 1939 Foreword is the seed of half of them**, which is why this section is
+worth having at all. ¶4 — "not an organization in the conventional sense … no
+fees nor dues … the only requirement for membership … not allied … nor do we
+oppose anyone" — grounds 3, 6, 7, 9 and 10. ¶1's "our alcoholic work is an
+**avocation**" is 8, and 11 and 12. ¶2 is 11 in all but name. ch07 ¶45 ("never
+show intolerance or hatred of drinking as an institution") is the best 10 in the
+book. **Traditions 2 and 4 are genuinely thin** and `renderTraditionRefs()` says
+how many passages there are rather than letting the reader think the list is
+short by accident.
+
+**They share the Steps tab; there is no seventh tab.** Six labels had already
+been shrunk once to fit six tabs. `#twelves-switch` flips between `#twelves-steps`
+and `#twelves-traditions`, and the choice is remembered in `localStorage` under
+`ams-big-12s:twelves` — somebody working the Traditions this month should not
+have to switch every time. `showScreen('steps')` calls `renderTwelves()`, never
+`renderSteps()` directly, or the tab would forget.
+
+**`renderQuestions(owner, spec)` serves both twelves, and that refactor was the
+point.** A step's questions and a Tradition's are the same thing in the same
+store — answered again rather than over, history kept, hideable, addable — told
+apart only by whether the answer carries `stepId` or `traditionId`.
+`QUESTION_SPECS` holds the two differences. Do not fork it back into two
+renderers; ninety lines in two copies is ninety lines to keep right twice.
+`questionsFor`, `hiddenQuestionsFor`, `addQuestion`, `deleteQuestion` and
+`setQuestionHidden` all key off ids and needed no change. Question ids cannot
+collide — a step's are `s1-q1`, a Tradition's `t1-q1` — so `meta.stepPrefs`
+carries the hidden and added ones for both.
+
+**`isLooseNote()` now excludes tradition notes too, and that was a required
+change, not a tidy-up.** A tradition note has no `sectionId` and no `stepId`, so
+without `isTraditionNote()` it would have fallen straight into Reflections and
+the chip's count would have read over a list that did not contain it — the exact
+defect the first cut of that count had. A smoke check holds the count against
+its own list.
+
+**The log is one shared list, not twelve** (`tradlog`, `DB_VERSION` 8, the
+seventh store to follow the pattern: guarded upgrade, carried by `backup.js`
+both ways, a check that an older backup does not empty it). One list because the
+useful question is usually "when did I last see this at all", and because a real
+incident often belongs to two Traditions and has to be filed under one.
+**`held: false` is not an oversight** — same rule as `outcome: 'drank'` on the
+craving log: a record that could only hold the good ones is not a record.
+`tradLogCard(row, withWhich)` is one card on two screens; do not fork a smaller
+one for the Tradition page.
+
+**`Store.traditionProgress()` is the only place that decides** what counts as
+having worked one — notes, answers and log entries together, the same rule
+`stepProgress()` follows and for the same reason.
+
+## The breathing tones (2.21)
+
+**Generated, never bundled.** `BREATH_TONES` plus an `AudioContext`: no audio
+files to ship, nothing to fetch, and it works with the signal off like the rest
+of the app. Three pitches tracing the shape of a breath — 392 up, 523 held above
+it, 294 down below both — so which phase you are in is audible with your eyes
+shut, which is how anybody would rather do it.
+
+**The gain is ramped, never switched.** A square edge on a gain node is an
+audible click, and a click every four seconds is worse than silence in the middle
+of a craving. `exponentialRampToValueAtTime` cannot reach zero, hence the
+0.0001 floor at each end.
+
+**`wakeBreathAudio()` runs from the Start click and nowhere else.** iOS starts an
+AudioContext suspended and only a user gesture may resume it; a resume attempted
+from inside the timer would be refused and the whole exercise would run silently.
+
+**One tone on the turn of the breath, never one a second.** It fires from
+`startBreathing()` and from the phase change in `tickBreath()`, not from
+`paintBreath()`, which runs every second. A metronome is the opposite of what
+this is for. A smoke check holds the count at no more than one per turn, and
+holds silence absolutely when the switch is off — that half must pass whatever
+the browser decides about autoplay.
+
+**`settings.breathSound` rides the backup** like every other setting, and the
+switch is on the sheet rather than in Settings because that is where somebody
+decides they want it quiet.
 
 ## When it is bad (2.20)
 
@@ -675,6 +767,17 @@ last thirty days, how many you spoke at. No streaks, no targets, nothing about
 
 ## Non-negotiables
 
+**The disclaimer lives in the app, not only in the README** (2.21). `#settings-disclaimer`,
+above About rather than under it: somebody looking for who is answerable should
+find the answer before they find the typesetting notes. It states four things and
+all four are Martin's own framing — built for his own use, no responsibility
+taken whatsoever, the two sources (public-domain 1939 text and his own experience
+of the programme, neither of them A.A.), and that copyrighted material is left
+out rather than reproduced. The one line in it that is a fact rather than a
+position is the doctor, and it matches `BOUNCE_PLAN`'s day one word for word in
+substance. Keep them agreeing. The affiliation line is stated **once** on that
+screen — a smoke check holds that, because it used to be in About as well.
+
 **Never write book text from memory.** People quote this book precisely. A
 plausible paraphrase is worse than a blank page, because nothing signals which
 sentences drifted. Text only ever enters via a real source file.
@@ -703,7 +806,7 @@ sw.js               Service worker: offline shell + book cache
 css/style.css       Themes (sepia/light/dark/auto), reader typography
 js/parser.js        Plain text → sections. Shared with tools/build-book.js
 js/db.js            IndexedDB wrapper (meta, book, notes, bookmarks, inventory,
-                    cravings, meetings, checkins, breaks, messages)
+                    cravings, meetings, checkins, breaks, messages, tradlog)
 js/store.js         Book, settings, position, notes, bookmarks, search
 js/backup.js        Export / restore
 js/ui.js            Screens, rendering, all event wiring
@@ -712,13 +815,16 @@ data/book.json                      Parsed book the app reads (~577 KB)
 data/alcoholics-anonymous-1939.txt  Source text book.json was built from
 data/steps.source.json              Step material, written by hand
 data/steps.json                     Built steps with references resolved
+data/traditions.source.json         Traditions material, written by hand
+data/traditions.json                Built Traditions with references resolved
 data/daily.source.json              Home-screen passages, chosen by hand
 data/daily.json                     Those passages, verified against the book
 tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
+tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    402 end-to-end browser checks
+tools/smoke-test.js    442 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -730,7 +836,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 402 checks, expect 402/402
+node tools/smoke-test.js                  # 442 checks, expect 442/442
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

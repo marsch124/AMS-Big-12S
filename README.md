@@ -36,6 +36,9 @@ without a signal.
 - 🗣 **Things to bring up** — mark anything for your sponsor, a sponsee or a meeting, keep a
   running count of what is still waiting, tick it off afterwards, and copy the list out first
 - 💭 **Notes of your own** — write down what did not come from a page at all
+- ⚖️ **The twelve Traditions** — on the same tab as the Steps: what each asks of a group,
+  the 1939 passages it grew out of, six questions apiece, and a log of where each one held
+  or did not. Their wording is not bundled, and cannot be — see below
 - 🪜 **The twelve steps** — a page each: the passages of the book that describe them,
   questions to take to a sponsor that keep every earlier answer dated, dated notes on every
   pass, and the work that step actually asks for — inventory tables, an amends list two
@@ -112,7 +115,7 @@ what the first minute of one of these is for.
 
 | | |
 |---|---|
-| **Breathe** | A ring to follow: four in, hold four, six out. The long end is the out breath, because that is the half that settles a body down. Stop it whenever. |
+| **Breathe** | A ring to follow: four in, hold four, six out. The long end is the out breath, because that is the half that settles a body down. A soft tone on the turn of each breath, so you can follow it with your eyes shut — generated rather than bundled, so it works offline, and there is a switch if you would rather it were quiet. Stop it whenever. |
 | **Meet it head on** | Do not argue with it. A few lines, opening where they stand. |
 | **Think it through — what happens if** | Past the first one, to the morning after. |
 | **Get in the shower** | Cold if you can stand it. |
@@ -302,6 +305,59 @@ Any note, from a page or not, can be marked **Bring this up with — my sponsor*
 
 **Reflections** gathers everything written that did not come from a page,
 whoever it was for.
+
+## The Twelve Traditions
+
+They share the **Steps** tab, behind a switch that remembers which twelve you
+were working. A seventh tab would have squeezed six labels that had already been
+made smaller once.
+
+### Why the wording is not here
+
+The Traditions were written in 1946, adopted in 1950, and first appeared in
+*Alcoholics Anonymous* at the **second edition (1955)**. The standard commentary
+is the **1952 _Twelve Steps and Twelve Traditions_**. Both belong to A.A. World
+Services, and neither is the 1939 first edition this app carries — so their
+wording is not bundled and must not be. `build-traditions.js` **refuses to
+build** a tradition that carries a `text` field, so the decision cannot be
+undone by accident later.
+
+Searched, not assumed: the 1939 text contains no "singleness of purpose", no
+"group conscience", no "common welfare", no "self-supporting" and no "outside
+issues".
+
+### What is here instead
+
+The 1939 Foreword turns out to be the seed of half of them, in three paragraphs:
+
+> We are not an organization in the conventional sense of the word. There are no
+> fees nor dues whatsoever. The only requirement for membership is an honest
+> desire to stop drinking. We are not allied with any particular faith, sect or
+> denomination, nor do we oppose anyone.
+
+That single paragraph is the ground under Traditions 3, 6, 7, 9 and 10. The
+paragraph before it — "our alcoholic work is an avocation" — is Tradition 8, and
+the one after it, on signing yourself a member rather than by name, is Tradition
+11 in all but name.
+
+So each page carries:
+
+- **What it asks of a group**, in plain terms. Ours, in the same register as the
+  step explanations, and not official A.A. material.
+- **The 1939 passages behind it** — 33 in all, every one resolved against the
+  bundled text at build time and again at runtime, so an imported copy keeps the
+  links. Traditions 2 and 4 are thin, and those pages say so rather than reach.
+- **Six questions**, ours, answerable as often as you like. Answering again
+  keeps the earlier answer underneath, dated, exactly as on a step.
+- **Notes**, dated and never overwritten.
+
+### The log
+
+**Where you have seen them** — where one of the twelve held, or did not. Both go
+in: a log that could only record the Traditions working would not be a record of
+anything, which is the same reason a craving that ended in a drink is kept. An
+entry sits under the Tradition it belongs to and in the shared list, with the
+day it happened rather than the day it was written up.
 
 ## Working the steps
 
@@ -532,6 +588,8 @@ python3 -m http.server 7801
 │   ├── alcoholics-anonymous-1939.txt  The source text it was built from
 │   ├── steps.source.json              The step material, written by hand
 │   ├── steps.json                     Built steps, with book references resolved
+│   ├── traditions.source.json         The Traditions material, written by hand
+│   ├── traditions.json                Built Traditions, with references resolved
 │   ├── daily.source.json              The passages for the home screen, chosen by hand
 │   └── daily.json                     Those passages, verified against the book
 └── tools/
@@ -566,6 +624,7 @@ backup, and the whole book is readable with the network switched off.
 | Every row of every step's work | IndexedDB, in its own store — structured records, not prose |
 | Questions you put away or added | IndexedDB, carried explicitly by the backup |
 | Messages you have sent from the app | IndexedDB, in its own store, carried by the backup |
+| The Traditions log | IndexedDB, in its own store, carried by the backup |
 | Settings, reading position | IndexedDB, mirrored to `localStorage` for a fast first paint |
 | An unsent message still in the box | `localStorage` only — a synchronous write survives the app being killed, and a draft is not a record to move to a new phone |
 | App shell and bundled text | Cache Storage, via the service worker |
@@ -579,6 +638,30 @@ No account, no analytics, no network calls after the app has loaded. Your notes
 are yours and stay on your phone.
 
 ## Disclaimer
+
+Also in the app, under **Settings → Disclaimer**.
+
+This app was built by one person for their own use, and is offered exactly as it
+is. **No responsibility is taken for anything that follows from using it** — not
+for anybody's recovery, not for the suggestions in it, and not for what it does
+or fails to do.
+
+**What is in it comes from two places, and neither of them is A.A.** The quoted
+passages are from *Alcoholics Anonymous*, first edition, 1939, which is in the
+public domain in the United States. Everything else — the explanations, the
+questions, the things to do when a craving comes, the plan for the days after a
+break — is one member's own experience of the programme, written down. It is not
+official A.A. material, it has been approved by nobody, and it is meant to be
+argued with rather than obeyed.
+
+**Where the material would have to be copyrighted, it is left out rather than
+reproduced.** The Twelve Traditions as they are worded, the 1952 *Twelve Steps
+and Twelve Traditions*, and every edition of the book after the first belong to
+A.A. World Services and are deliberately not here.
+
+**Nothing here is medical advice.** Coming off drink can be dangerous, and an app
+is not the thing that helps with that. If you are physically unwell, ring a
+doctor first.
 
 Not affiliated with, endorsed by, or connected to Alcoholics Anonymous World
 Services, Inc. "Alcoholics Anonymous" is a registered trademark of A.A.W.S.,

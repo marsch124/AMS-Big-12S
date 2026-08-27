@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=33">
+<link rel="stylesheet" href="css/style.css?v=34">
 </head>
 <body>
 
@@ -275,16 +275,38 @@
   </section>
 
   <!-- ════════════════════════════════════════════════════════════ Steps ── -->
+  <!-- Two twelves on one tab, not two tabs. They are the parallel lists, and a
+       seventh tab would have squeezed six labels that were already made smaller
+       to fit. The switch remembers which side you were on. -->
   <section class="screen" id="screen-steps">
     <header class="topbar">
       <div class="topbar-titles">
-        <h1 class="topbar-title">The Twelve Steps</h1>
+        <h1 class="topbar-title" id="twelves-title">The Twelve Steps</h1>
         <p class="topbar-sub" id="steps-edition"></p>
       </div>
     </header>
     <div class="screen-body">
-      <nav class="steplist" id="steplist"></nav>
-      <p class="hint" id="steps-note"></p>
+      <div class="switch" id="twelves-switch" role="tablist">
+        <button class="switch-opt is-active" data-twelve="steps" role="tab">Steps</button>
+        <button class="switch-opt" data-twelve="traditions" role="tab">Traditions</button>
+      </div>
+
+      <div id="twelves-steps">
+        <nav class="steplist" id="steplist"></nav>
+        <p class="hint" id="steps-note"></p>
+      </div>
+
+      <div id="twelves-traditions" hidden>
+        <p class="hint" id="traditions-note"></p>
+        <nav class="steplist" id="tradlist"></nav>
+
+        <h2 class="section-heading">Where you have seen them</h2>
+        <p class="hint" id="tradlog-summary"></p>
+        <div class="btn-row">
+          <button class="btn btn-quiet btn-block" id="tradlog-add">Write one down</button>
+        </div>
+        <div class="card-list" id="tradlog-list"></div>
+      </div>
     </div>
   </section>
 
@@ -341,6 +363,58 @@
         <button class="btn btn-quiet btn-block" id="step-copy">Copy this step out</button>
         <p class="hint">For a sponsor, before a call. You choose what goes, and you see it
            before it leaves.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════ A single Tradition ── -->
+  <!-- No wording at the top, unlike a step page, and that is the point rather
+       than an omission: the Traditions were written in 1946 and are not in the
+       1939 edition this app carries. What is here is the topic, our own reading
+       of it, the 1939 passages the Tradition was later built on, and questions
+       that are ours. -->
+  <section class="screen" id="screen-tradition">
+    <header class="topbar">
+      <button class="icon-btn" id="tradition-back" aria-label="Back to the twelve Traditions">‹</button>
+      <div class="topbar-titles">
+        <h1 class="topbar-title" id="tradition-title"></h1>
+        <p class="topbar-sub" id="tradition-sub"></p>
+      </div>
+    </header>
+    <div class="screen-body" id="tradition-body">
+      <p class="notice notice-quiet" id="tradition-wording"></p>
+
+      <section class="step-journal">
+        <div class="journal-head">
+          <h2 class="section-heading">Notes on this Tradition</h2>
+          <button class="btn btn-quiet btn-small" id="tradition-add-entry">Add a note</button>
+        </div>
+        <p class="hint" id="tradition-journal-hint"></p>
+        <div class="card-list" id="tradition-entries"></div>
+      </section>
+
+      <h2 class="section-heading">What it asks of a group</h2>
+      <div class="step-prose" id="tradition-explanation"></div>
+
+      <h2 class="section-heading">In the 1939 book</h2>
+      <p class="hint" id="tradition-ground"></p>
+      <div class="reflist" id="tradition-references"></div>
+
+      <h2 class="section-heading">Questions to work through</h2>
+      <p class="hint">Ours, not official A.A. material, and yours to disagree with.</p>
+      <div class="questionlist" id="tradition-questions"></div>
+      <div class="btn-row">
+        <button class="btn btn-quiet btn-small" id="tradition-add-question">Add a question of your own</button>
+        <button class="btn btn-quiet btn-small" id="tradition-show-hidden" hidden></button>
+      </div>
+      <div class="hiddenlist" id="tradition-hidden-questions" hidden></div>
+
+      <h2 class="section-heading">Where you have seen it</h2>
+      <p class="hint" id="tradition-log-hint"></p>
+      <div class="card-list" id="tradition-log"></div>
+      <div class="btn-row">
+        <button class="btn btn-quiet btn-block" id="tradition-log-add">Write one down</button>
       </div>
     </div>
   </section>
@@ -896,6 +970,33 @@
         </details>
 
         <details class="disclosure">
+          <summary>The Twelve Traditions</summary>
+          <div class="disclosure-body">
+            <p>The <strong>Steps</strong> tab holds both twelves. The switch at the top moves
+               between them and remembers where you were.</p>
+            <p><strong>The Traditions themselves are not printed here.</strong> They were
+               written in 1946 and are not in the 1939 edition this app carries, so each is
+               named by what it is about — <em>Membership</em>, <em>Self-support</em>,
+               <em>Anonymity</em> — and the page says so at the top rather than leaving a gap
+               where a quotation sits on a step page.</p>
+            <p>What each page does carry is <strong>what it asks of a group</strong> in plain
+               terms, <strong>the 1939 passages it grew out of</strong>, and
+               <strong>six questions</strong>. The passages are the interesting part: the
+               Foreword of the first edition already says there are no fees nor dues, that the
+               only requirement for membership is an honest desire to stop drinking, and that
+               this is not an organisation in the conventional sense — years before anybody
+               drafted a Tradition. Three of the twelve have almost nothing in 1939, and those
+               pages say so instead of reaching.</p>
+            <p><strong>Notes and answers</strong> work exactly as they do on a step. Answering
+               again keeps the earlier answer underneath, dated.</p>
+            <p><strong>Where you have seen them</strong> is the log. Write down where one of
+               the twelve held — or did not — while you still remember what actually happened.
+               Both kinds go in, and the entry sits under the Tradition it belongs to as well
+               as in the shared list.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
           <summary>When a craving comes</summary>
           <div class="disclosure-body">
             <p><strong>I have a craving</strong> sits at the top of the home screen, above
@@ -1070,6 +1171,38 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>The Twelve Traditions</span><span class="ver-tag">2.21</span></summary>
+          <div class="disclosure-body">
+            <p>The Steps tab now carries both twelves. A switch at the top moves between
+               them, and it remembers which one you were working.</p>
+            <p><strong>The wording of the Traditions is not here, and that is deliberate.</strong>
+               They were written in 1946, adopted in 1950, and first printed in the book at the
+               second edition in 1955 — none of which is the 1939 first edition this app
+               carries, and all of which belongs to A.A. World Services. So each one is named
+               by its topic, and everything on its page is either ours or quoted from 1939.</p>
+            <p>That turned out to be far less of a loss than it sounds. The 1939 Foreword is
+               the seed of half of them, in three paragraphs: no fees nor dues, the only
+               requirement for membership, not an organisation in the conventional sense, not
+               allied nor opposed, and the instruction to sign yourself a member rather than
+               by name.</p>
+            <ul>
+              <li><strong>Twelve pages</strong>, each with what it asks of a group, the 1939
+                  passages behind it, and six questions of our own.</li>
+              <li><strong>Thirty-three passages</strong>, every one resolved against the
+                  bundled text and checked at build time like the step references.</li>
+              <li><strong>Notes and answers</strong> exactly as on a step: dated, kept, and
+                  answering again never writes over what you said last time.</li>
+              <li><strong>A log</strong> — where one of the twelve held, or did not. Both go
+                  in. A record that could only hold the good ones would not be a record.</li>
+            </ul>
+            <p>Also: <strong>the breathing ring has a voice now.</strong> A soft tone on the
+               turn of each breath, so it can be followed with your eyes shut. It is generated
+               rather than bundled, so it still works with the signal off, and there is a
+               switch on the sheet if you would rather it were quiet.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>When it is bad</span><span class="ver-tag">2.20</span></summary>
@@ -1911,6 +2044,44 @@
         </div>
       </details>
 
+      <!-- Above About rather than buried under it. Somebody looking for who is
+           answerable for this app should find the answer before they find the
+           typesetting notes. -->
+      <h2 class="section-heading" id="settings-disclaimer">Disclaimer</h2>
+      <div class="panel">
+        <p class="panel-note">
+          This app was built by one person for their own use, and it is offered exactly as
+          it is. <strong>No responsibility is taken for anything that follows from using
+          it</strong> &mdash; not for anybody&rsquo;s recovery, not for the suggestions in it,
+          and not for what it does or fails to do.
+        </p>
+        <p class="panel-note">
+          <strong>What is in it comes from two places, and neither of them is A.A.</strong>
+          The quoted passages are from <em>Alcoholics Anonymous</em>, first edition, 1939,
+          which is in the public domain in the United States. Everything else &mdash; the
+          explanations, the questions, the things to do when a craving comes, the plan for
+          the days after a break &mdash; is one member&rsquo;s own experience of the
+          programme, written down. It is not official A.A. material, it has been approved by
+          nobody, and it is meant to be argued with rather than obeyed.
+        </p>
+        <p class="panel-note">
+          <strong>Where the material would have to be copyrighted, it is left out rather
+          than reproduced.</strong> That is why the Tradition pages name a topic and quote
+          1939 instead of printing the Traditions: their wording, the 1952 book and every
+          edition after the first belong to A.A. World Services and are deliberately not
+          here.
+        </p>
+        <p class="panel-note">
+          <strong>Nothing here is medical advice.</strong> Coming off drink can be dangerous,
+          and an app is not the thing that helps with that. If you are physically unwell,
+          ring a doctor first.
+        </p>
+        <p class="panel-note">
+          Not affiliated with, endorsed by or connected to Alcoholics Anonymous World
+          Services, Inc.
+        </p>
+      </div>
+
       <h2 class="section-heading">About</h2>
       <div class="panel">
         <p class="panel-note">
@@ -1928,10 +2099,6 @@
         <p class="panel-note">
           Dover&rsquo;s 2011 introduction and biographical notes remain under copyright and
           are deliberately <strong>not</strong> included here. Only the 1939 text is.
-        </p>
-        <p class="panel-note">
-          Not affiliated with, endorsed by or connected to Alcoholics Anonymous World
-          Services, Inc.
         </p>
       </div>
 
@@ -2196,6 +2363,36 @@
 
 <!-- Deliberately bare. A ring, a word and a number, and one way out of it.
      Anything else on this sheet is something to read while trying not to. -->
+<div class="sheet sheet-tall" id="tradlog-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title" id="tradlog-sheet-title">Where you saw it</h2>
+  <p class="hint">A meeting, a business meeting, a conversation — where one of the twelve
+     held, or did not. Both are worth writing down.</p>
+  <label class="row">
+    <span>Which one</span>
+    <select id="tradlog-sheet-which" class="row-input"></select>
+  </label>
+  <label class="row">
+    <span>When</span>
+    <input type="date" id="tradlog-sheet-on" class="row-input">
+  </label>
+  <div class="chip-row" id="tradlog-held">
+    <button class="chip is-active" data-held="yes">It held</button>
+    <button class="chip" data-held="no">It did not</button>
+  </div>
+  <p class="sheet-label">What happened</p>
+  <textarea id="tradlog-sheet-what" class="note-input" rows="4"
+            placeholder="What actually happened, rather than what it means."></textarea>
+  <p class="sheet-label">What you took from it</p>
+  <textarea id="tradlog-sheet-learned" class="note-input" rows="3"
+            placeholder="Optional."></textarea>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="tradlog-sheet-save">Save</button>
+    <button class="btn btn-quiet" id="tradlog-sheet-delete" hidden>Delete</button>
+    <button class="btn btn-quiet" id="tradlog-sheet-cancel">Cancel</button>
+  </div>
+</div>
+
 <div class="sheet sheet-breathe" id="breathe-sheet" hidden>
   <div class="sheet-handle"></div>
   <h2 class="sheet-title">Breathe</h2>
@@ -2206,6 +2403,9 @@
     </div>
   </div>
   <p class="hint" id="breathe-note">In for four, hold for four, out for six. Follow the ring.</p>
+  <div class="chip-row breathe-chips">
+    <button class="chip is-active" id="breathe-sound" aria-pressed="true">Sound on</button>
+  </div>
   <div class="btn-row">
     <button class="btn btn-primary" id="breathe-start">Start</button>
     <button class="btn btn-quiet" id="breathe-close">Close</button>
@@ -2270,10 +2470,10 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="js/parser.js?v=1"></script>
-<script src="js/db.js?v=7"></script>
-<script src="js/store.js?v=23"></script>
-<script src="js/backup.js?v=9"></script>
-<script src="js/ui.js?v=37"></script>
-<script src="js/app.js?v=24"></script>
+<script src="js/db.js?v=8"></script>
+<script src="js/store.js?v=24"></script>
+<script src="js/backup.js?v=10"></script>
+<script src="js/ui.js?v=38"></script>
+<script src="js/app.js?v=25"></script>
 </body>
 </html>

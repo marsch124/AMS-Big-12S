@@ -1,0 +1,696 @@
+{
+  "schema": 1,
+  "title": "The Twelve Traditions",
+  "edition": "Grounded in Alcoholics Anonymous, 1939 first edition",
+  "wordingNote": "The Traditions themselves are not printed here. They were written in 1946, adopted in 1950, and first appeared in the book at the second edition in 1955 — all of which is under copyright to A.A. World Services, and none of which is in the 1939 first edition this app carries. What is quoted here is the 1939 text alone, which turns out to contain a great deal of the ground the Traditions were later built on.",
+  "authorNote": "The topics, explanations and questions are written for this app. They are not official A.A. material, they are not from the 1952 book Twelve Steps and Twelve Traditions, and they are meant to be edited. Only the linked passages come from the book.",
+  "traditions": [
+    {
+      "id": "trad01",
+      "number": 1,
+      "topic": "Unity",
+      "explanation": [
+        "This is the one the other eleven exist to protect, and it is about survival rather than comfort. The argument is blunt: an alcoholic on their own dies, and what keeps them alive is other alcoholics. Break the fellowship and you have taken away the medicine.",
+        "The 1939 book has no word for this yet. What it has instead is a description of people who would not otherwise be in a room together — “people who normally would not mix” — held there by having been in the same danger. That is the whole of it, set down before anybody thought to call it a principle.",
+        "Where it bites is the meeting you want to walk out of, over the person you would cross a road to avoid. Personal welfare follows common welfare, in that order and not the other way round. It is not a request to be nice. It is a statement about what happens if the room stops existing."
+      ],
+      "references": [
+        {
+          "sectionId": "ch02",
+          "anchor": "We are average Americans",
+          "label": "“People who normally would not mix”",
+          "why": "The fellowship described before it had a name for itself — and the reason it holds.",
+          "paraIndex": 1
+        },
+        {
+          "sectionId": "ch01",
+          "anchor": "We commenced to make many fast friends",
+          "label": "A fellowship has grown up among us",
+          "why": "Bill counting what it had already done, in one western city, in 1939.",
+          "paraIndex": 70
+        },
+        {
+          "sectionId": "ch11",
+          "anchor": "But life among Alcoholics Anonymous is more than attending gatherings",
+          "label": "More than attending gatherings",
+          "why": "What belonging to it actually consists of, which is not meetings.",
+          "paraIndex": 43
+        }
+      ],
+      "questions": [
+        {
+          "id": "t1-q1",
+          "text": "Where in this fellowship are you the difficult one?"
+        },
+        {
+          "id": "t1-q2",
+          "text": "Name the person you would rather was not at your meeting. What would it cost you if they left and did not come back?"
+        },
+        {
+          "id": "t1-q3",
+          "text": "When have you put being right ahead of the room staying together?"
+        },
+        {
+          "id": "t1-q4",
+          "text": "What do you actually owe a group that keeps you alive?"
+        },
+        {
+          "id": "t1-q5",
+          "text": "Where does your recovery depend on people you did not choose and would not have picked?"
+        },
+        {
+          "id": "t1-q6",
+          "text": "If this fellowship came apart, what would you lose first — specifically?"
+        }
+      ]
+    },
+    {
+      "id": "trad02",
+      "number": 2,
+      "topic": "Group conscience",
+      "explanation": [
+        "This is the one the 1939 book does not have. It is the newest ground in the Traditions — how a group decides anything, and who is in charge — and in 1939 there were about a hundred members and almost nothing that would now be called a group, so the question had not yet arisen.",
+        "What the book does have is the same instinct pointed at one person rather than a room. Told what to do about a man who would rather recover some other way, it says encourage him to follow his own conscience, and adds that we have no monopoly. Authority is declined there, in a sentence, years before anybody wrote it down as a principle.",
+        "The practical shape of it is that nobody in this gets to be the boss, and the people who look like they are in charge are doing a job rather than holding a rank. That is easy to agree with and hard to sit through."
+      ],
+      "references": [
+        {
+          "sectionId": "ch07",
+          "anchor": "If he thinks he can do the job in some other way",
+          "label": "“Encourage him to follow his own conscience”",
+          "why": "The nearest 1939 comes: authority declined, but over one man rather than a group.",
+          "paraIndex": 20
+        },
+        {
+          "sectionId": "ch11",
+          "anchor": "Our book is meant to be suggestive only",
+          "label": "“Suggestive only”",
+          "why": "A book that has just told you exactly what to do, declining to be the last word on it.",
+          "paraIndex": 53
+        }
+      ],
+      "questions": [
+        {
+          "id": "t2-q1",
+          "text": "Where do you behave as though you were in charge of something nobody put you in charge of?"
+        },
+        {
+          "id": "t2-q2",
+          "text": "When did a decision you argued against turn out to be right?"
+        },
+        {
+          "id": "t2-q3",
+          "text": "Who in your group has authority that nobody gave them — including you?"
+        },
+        {
+          "id": "t2-q4",
+          "text": "What is the difference between leading and being obeyed, in a room you actually go to?"
+        },
+        {
+          "id": "t2-q5",
+          "text": "Where have you mistaken being longest sober for being right?"
+        },
+        {
+          "id": "t2-q6",
+          "text": "What will you do if the group decides against you next week?"
+        }
+      ]
+    },
+    {
+      "id": "trad03",
+      "number": 3,
+      "topic": "Membership",
+      "explanation": [
+        "The shortest ground in the book, and the only Tradition stated outright in 1939: the only requirement for membership is an honest desire to stop drinking. It sits in the Foreword, four sentences from the top, before anybody had thought of Traditions at all.",
+        "Everything people want to add is already excluded by that sentence. Not sober yet, not sure about God, no money, no job, difficult, in and out, back again after a year — none of it is a qualification, and none of it can be turned into one.",
+        "The book says it again from the other end, in the chapter on working with others: burn the idea into the consciousness of every man that he can get well regardless of anyone. Regardless of anyone. That includes you, and it includes whoever is currently deciding who belongs."
+      ],
+      "references": [
+        {
+          "sectionId": "foreword",
+          "anchor": "We are not an organization in the conventional sense of the word",
+          "label": "The Foreword's own sentence",
+          "why": "“The only requirement for membership is an honest desire to stop drinking.” In the 1939 text.",
+          "paraIndex": 4
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "Burn the idea into the consciousness of every man",
+          "label": "“Regardless of anyone”",
+          "why": "The same thing said from the other end, and it cuts out the gatekeeper as well.",
+          "paraIndex": 29
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "For the type of alcoholic who is able and willing to get well",
+          "label": "Who actually wants this",
+          "why": "Cold-eyed about who is ready, and it still adds no requirement.",
+          "paraIndex": 27
+        }
+      ],
+      "questions": [
+        {
+          "id": "t3-q1",
+          "text": "Who have you quietly decided is not really one of us?"
+        },
+        {
+          "id": "t3-q2",
+          "text": "What requirement have you added that the book does not have?"
+        },
+        {
+          "id": "t3-q3",
+          "text": "When were you the one somebody else nearly turned away?"
+        },
+        {
+          "id": "t3-q4",
+          "text": "What do you do with the person who keeps coming back drunk — in practice, not in principle?"
+        },
+        {
+          "id": "t3-q5",
+          "text": "Where does your welcome run out? Answer honestly."
+        },
+        {
+          "id": "t3-q6",
+          "text": "Who would still be here if somebody had let them in sooner?"
+        }
+      ]
+    },
+    {
+      "id": "trad04",
+      "number": 4,
+      "topic": "Autonomy",
+      "explanation": [
+        "Each group runs its own affairs, except in matters touching other groups or the whole. The 1939 book has no groups to be autonomous, but it has the attitude, and it puts it near the very end: our book is meant to be suggestive only. We realize we know only a little.",
+        "That is a remarkable thing to write at the close of two hundred pages of precise instruction. It says the instructions are not the point and the results are, and it leaves the door open for the thing to be done differently somewhere else by people it will never meet.",
+        "The exception is the whole of the difficulty. A group may do as it likes right up to the moment its liking costs another group something, and working out where that line falls, in a real room, about a real decision, is the work."
+      ],
+      "references": [
+        {
+          "sectionId": "ch11",
+          "anchor": "Our book is meant to be suggestive only",
+          "label": "“We realize we know only a little”",
+          "why": "The book declining to be the final authority on its own method.",
+          "paraIndex": 53
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "If he thinks he can do the job in some other way",
+          "label": "Another way of doing it",
+          "why": "The same latitude, offered to a man who wants to recover differently.",
+          "paraIndex": 20
+        }
+      ],
+      "questions": [
+        {
+          "id": "t4-q1",
+          "text": "Where have you insisted on the way it is done at your meeting?"
+        },
+        {
+          "id": "t4-q2",
+          "text": "What does your group do differently from the one down the road? Does it actually matter?"
+        },
+        {
+          "id": "t4-q3",
+          "text": "When has doing it your way cost somebody else something?"
+        },
+        {
+          "id": "t4-q4",
+          "text": "What in your practice is principle, and what is only habit wearing principle's coat?"
+        },
+        {
+          "id": "t4-q5",
+          "text": "Where would you accept “suggestive only”, and where would you refuse it?"
+        },
+        {
+          "id": "t4-q6",
+          "text": "What would you defend if your group were told to change it tomorrow?"
+        }
+      ]
+    },
+    {
+      "id": "trad05",
+      "number": 5,
+      "topic": "Primary purpose",
+      "explanation": [
+        "One thing: carry the message to the alcoholic who still suffers. Not to be a well-run organisation, not to mend families, not to improve anybody. One thing.",
+        "This is the ground the 1939 book covers most heavily, because it is the twelfth step and the whole of Working With Others. And it puts it as self-interest before it puts it as duty: nothing will so much insure immunity from drinking as intensive work with other alcoholics. It works when other activities fail. You are not doing anybody a favour.",
+        "A group with more than one purpose has a second purpose it will eventually choose over the first. That is the argument, and there is nothing sentimental in it."
+      ],
+      "references": [
+        {
+          "sectionId": "ch07",
+          "anchor": "Practical experience shows that nothing will so much insure immunity",
+          "label": "“Carry this message to other alcoholics”",
+          "why": "The twelfth suggestion, and the reason given for it is your own survival.",
+          "paraIndex": 0
+        },
+        {
+          "sectionId": "ch05",
+          "anchor": "12.Having had a spiritual experience as the result of these steps",
+          "label": "The twelfth step itself",
+          "why": "As the 1939 edition prints it — “spiritual experience”, where later editions read “awakening”.",
+          "paraIndex": 17
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "Never avoid these responsibilities",
+          "label": "“The foundation stone of your recovery”",
+          "why": "Helping others put as the ground you stand on rather than a good deed.",
+          "paraIndex": 24
+        },
+        {
+          "sectionId": "ch11",
+          "anchor": "But life among Alcoholics Anonymous is more than attending gatherings",
+          "label": "What it looks like in a week",
+          "why": "The purpose carried out in ordinary life rather than in a meeting.",
+          "paraIndex": 43
+        }
+      ],
+      "questions": [
+        {
+          "id": "t5-q1",
+          "text": "What else has your group quietly started to be for?"
+        },
+        {
+          "id": "t5-q2",
+          "text": "When did you last do something that only carried the message, with nothing in it for you socially?"
+        },
+        {
+          "id": "t5-q3",
+          "text": "Who is the alcoholic who still suffers, this week? Name them."
+        },
+        {
+          "id": "t5-q4",
+          "text": "What do you do instead of twelfth-step work when you do not want to do it?"
+        },
+        {
+          "id": "t5-q5",
+          "text": "Where have you turned helping somebody into a performance?"
+        },
+        {
+          "id": "t5-q6",
+          "text": "“It works when other activities fail.” Has it, for you? When exactly?"
+        }
+      ]
+    },
+    {
+      "id": "trad06",
+      "number": 6,
+      "topic": "Outside enterprises",
+      "explanation": [
+        "Never endorse, finance or lend the name to any related facility or outside enterprise. The reasoning is that money, property and prestige are the three things that reliably pull people off the one purpose, and a name attached to an outside venture is a name that can be spent.",
+        "1939 states the first half of it plainly and in the same breath as the membership requirement: we are not allied with any particular faith, sect or denomination, nor do we oppose anyone. That is the same instinct — do not attach this to anything that can fall over, and do not pick fights on its behalf.",
+        "It matters most where the outside body is good. Nobody is ever tempted to endorse something bad."
+      ],
+      "references": [
+        {
+          "sectionId": "foreword",
+          "anchor": "We are not an organization in the conventional sense of the word",
+          "label": "“Not allied … nor do we oppose anyone”",
+          "why": "The refusal to be attached to anything else, written in 1939.",
+          "paraIndex": 4
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "He may be broke and homeless",
+          "label": "Help, and its limits",
+          "why": "Practical help offered, with a plain warning about what it must not cost.",
+          "paraIndex": 23
+        }
+      ],
+      "questions": [
+        {
+          "id": "t6-q1",
+          "text": "What have you attached this thing's name to, out loud, that was not this thing?"
+        },
+        {
+          "id": "t6-q2",
+          "text": "Where would an endorsement be easy because the cause is genuinely good?"
+        },
+        {
+          "id": "t6-q3",
+          "text": "What does your group own, and what does owning it cost in attention?"
+        },
+        {
+          "id": "t6-q4",
+          "text": "When did money or property last take up meeting time that belonged to somebody's recovery?"
+        },
+        {
+          "id": "t6-q5",
+          "text": "Where do you use your sobriety as a credential?"
+        },
+        {
+          "id": "t6-q6",
+          "text": "If somebody offered your group something valuable tomorrow, what would it divert?"
+        }
+      ]
+    },
+    {
+      "id": "trad07",
+      "number": 7,
+      "topic": "Self-support",
+      "explanation": [
+        "Pay your own way, and decline outside contributions. The 1939 statement of the first half is four words long — there are no fees nor dues whatsoever — and it sits in the same sentence as the membership requirement, which is not an accident. Money and who belongs are the same question.",
+        "The second half, declining money from outside, the book only reaches sideways. Working With Others is oddly cold about charity: for the alcoholic who is able and willing to get well, little charity, in the ordinary sense of the word, is needed or wanted. It also tells you to help a man who is broke, and in the next breath not to deprive your own family doing it.",
+        "The point was never thrift. A body that takes money from outside will in the end be answerable to outside, and this one cannot afford to be answerable to anybody."
+      ],
+      "references": [
+        {
+          "sectionId": "foreword",
+          "anchor": "We are not an organization in the conventional sense of the word",
+          "label": "“No fees nor dues whatsoever”",
+          "why": "In the same sentence as who may belong, which is the whole of the argument.",
+          "paraIndex": 4
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "For the type of alcoholic who is able and willing to get well",
+          "label": "“Little charity … is needed or wanted”",
+          "why": "Unsentimental about money as a substitute for the actual work.",
+          "paraIndex": 27
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "He may be broke and homeless",
+          "label": "Help him, and do not rob your family to do it",
+          "why": "Where generosity stops being generous.",
+          "paraIndex": 23
+        }
+      ],
+      "questions": [
+        {
+          "id": "t7-q1",
+          "text": "What do you actually put in, against what you take out?"
+        },
+        {
+          "id": "t7-q2",
+          "text": "Where have you let somebody else carry the cost of your recovery?"
+        },
+        {
+          "id": "t7-q3",
+          "text": "When has money last made you feel owed something?"
+        },
+        {
+          "id": "t7-q4",
+          "text": "What would change at your meeting if one person paid for everything?"
+        },
+        {
+          "id": "t7-q5",
+          "text": "Where does helping somebody financially blur into managing them?"
+        },
+        {
+          "id": "t7-q6",
+          "text": "What are you not paying your own way for, right now?"
+        }
+      ]
+    },
+    {
+      "id": "trad08",
+      "number": 8,
+      "topic": "Never professional",
+      "explanation": [
+        "The work stays unpaid. Service centres may employ people; carrying the message is not a job. The line is between hiring somebody to answer a telephone and being paid to do the twelfth step.",
+        "1939 draws it in a single word, in the Foreword, and it is easy to read past: we would like it understood that our alcoholic work is an avocation. Not a vocation. A thing done alongside a life rather than for a living.",
+        "The reason is not that money is dirty. It is that the moment you are paid for it, you have something to lose by the other person getting well, and the whole transaction has changed underneath you without anybody deciding to change it."
+      ],
+      "references": [
+        {
+          "sectionId": "foreword",
+          "anchor": "It is important that we remain anonymous because we are too few",
+          "label": "“Our alcoholic work is an avocation”",
+          "why": "One word, doing all the work — a thing done beside your living, not for it.",
+          "paraIndex": 1
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "Practical experience shows that nothing will so much insure immunity",
+          "label": "Why you do it at all",
+          "why": "The payment named in 1939 is not money: it is your own immunity.",
+          "paraIndex": 0
+        }
+      ],
+      "questions": [
+        {
+          "id": "t8-q1",
+          "text": "Where do you get paid, in something other than money, for your service?"
+        },
+        {
+          "id": "t8-q2",
+          "text": "What do you want back from the people you sponsor?"
+        },
+        {
+          "id": "t8-q3",
+          "text": "When has standing in this fellowship mattered to you?"
+        },
+        {
+          "id": "t8-q4",
+          "text": "Would you still do it if nobody knew you did?"
+        },
+        {
+          "id": "t8-q5",
+          "text": "Where does your recovery double as your reputation?"
+        },
+        {
+          "id": "t8-q6",
+          "text": "What is the difference between a sponsor and a counsellor, in how you actually behave?"
+        }
+      ]
+    },
+    {
+      "id": "trad09",
+      "number": 9,
+      "topic": "Never organised",
+      "explanation": [
+        "It ought never be organised as such, though it may create service boards or committees answerable to the people they serve. This is the one that sounds like a contradiction and is not: there is no government, and the jobs still get done.",
+        "The 1939 Foreword opens with the words the Tradition later formalised — we are not an organization in the conventional sense of the word — written when there were about a hundred of them and nothing much to organise.",
+        "The practical test is whether anybody in it can be told what to do and made to do it. If they can, something has quietly become an organisation while everyone was looking the other way."
+      ],
+      "references": [
+        {
+          "sectionId": "foreword",
+          "anchor": "We are not an organization in the conventional sense of the word",
+          "label": "“Not an organization in the conventional sense”",
+          "why": "The Tradition's own words, in the Foreword, eleven years early.",
+          "paraIndex": 4
+        },
+        {
+          "sectionId": "ch11",
+          "anchor": "But life among Alcoholics Anonymous is more than attending gatherings",
+          "label": "The work with nobody organising it",
+          "why": "Things getting done without a structure to do them.",
+          "paraIndex": 43
+        }
+      ],
+      "questions": [
+        {
+          "id": "t9-q1",
+          "text": "What at your meeting runs on a rota, and what runs on one person?"
+        },
+        {
+          "id": "t9-q2",
+          "text": "Who could not be replaced? Why not?"
+        },
+        {
+          "id": "t9-q3",
+          "text": "Where have you confused a job with a position?"
+        },
+        {
+          "id": "t9-q4",
+          "text": "What happens at your meeting if nobody does the job this week?"
+        },
+        {
+          "id": "t9-q5",
+          "text": "When did you last hand something over — properly, without hovering?"
+        },
+        {
+          "id": "t9-q6",
+          "text": "Who serves you every week without your noticing?"
+        }
+      ]
+    },
+    {
+      "id": "trad10",
+      "number": 10,
+      "topic": "Outside issues",
+      "explanation": [
+        "No opinion on outside issues, so the name is never drawn into public controversy. The narrow reading is politics and religion. The wide one is anything at all that is not the single purpose.",
+        "1939 says it twice. About the book's own contents: these matters are, from their very nature, controversial — and it goes ahead anyway, carefully, having said so. And in Working With Others, about drink itself: we are careful never to show intolerance or hatred of drinking as an institution. Not even that. Not even the thing that nearly killed all of them.",
+        "The same chapter gives the reason in five words: we have no monopoly on God. An opinion held collectively is a wall, and a wall keeps somebody out who might otherwise have come in."
+      ],
+      "references": [
+        {
+          "sectionId": "ch07",
+          "anchor": "We are careful never to show intolerance or hatred of drinking",
+          "label": "Not even about drink",
+          "why": "The furthest possible test of the principle, and the book passes it.",
+          "paraIndex": 45
+        },
+        {
+          "sectionId": "ch02",
+          "anchor": "Of necessity there will have to be discussion of matters medical",
+          "label": "Knowing it is controversial",
+          "why": "Naming the danger before walking into it, rather than pretending there is none.",
+          "paraIndex": 11
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "If he thinks he can do the job in some other way",
+          "label": "“We have no monopoly on God”",
+          "why": "Five words that decide most arguments about this one.",
+          "paraIndex": 20
+        },
+        {
+          "sectionId": "foreword",
+          "anchor": "We are not an organization in the conventional sense of the word",
+          "label": "“Nor do we oppose anyone”",
+          "why": "The other half of not being allied: not being against anything either.",
+          "paraIndex": 4
+        }
+      ],
+      "questions": [
+        {
+          "id": "t10-q1",
+          "text": "What opinion do you hold that would keep a newcomer quiet in a meeting?"
+        },
+        {
+          "id": "t10-q2",
+          "text": "Where have you argued as though the fellowship agreed with you?"
+        },
+        {
+          "id": "t10-q3",
+          "text": "What comes up at your meeting that is not the one purpose?"
+        },
+        {
+          "id": "t10-q4",
+          "text": "When did you last say something that cost somebody their welcome?"
+        },
+        {
+          "id": "t10-q5",
+          "text": "“Not even intolerance of drinking.” What do you make of that?"
+        },
+        {
+          "id": "t10-q6",
+          "text": "Where do you want the fellowship to take a side? Why is that dangerous?"
+        }
+      ]
+    },
+    {
+      "id": "trad11",
+      "number": 11,
+      "topic": "Attraction, not promotion",
+      "explanation": [
+        "Public relations by attraction rather than promotion, and personal anonymity kept at the level of press, radio and film. The first half is about how the thing grows; the second is about who takes the credit for it growing.",
+        "The 1939 Foreword contains the instruction almost as it is still practised: when writing or speaking publicly about alcoholism, omit your personal name and describe yourself as a member. What it gives is a practical reason rather than a spiritual one — there were too few of them to answer the post.",
+        "Attraction rather than promotion is the harder half and gets the less attention. It means the argument for all of this is somebody's life, visibly different, and nothing else. There is no campaign to run and nothing to sell."
+      ],
+      "references": [
+        {
+          "sectionId": "foreword",
+          "anchor": "When writing or speaking publicly about alcoholism",
+          "label": "“A Member of Alcoholics Anonymous”",
+          "why": "The press-level anonymity instruction, in the 1939 Foreword, in one sentence.",
+          "paraIndex": 2
+        },
+        {
+          "sectionId": "foreword",
+          "anchor": "It is important that we remain anonymous because we are too few",
+          "label": "Why they stayed anonymous",
+          "why": "The reason given at the time is practical, not spiritual. Worth knowing.",
+          "paraIndex": 1
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "Practical experience shows that nothing will so much insure immunity",
+          "label": "The only advertisement there is",
+          "why": "One recovered alcoholic in front of another. That is the whole method.",
+          "paraIndex": 0
+        }
+      ],
+      "questions": [
+        {
+          "id": "t11-q1",
+          "text": "What in your life is the argument for this without you saying a word?"
+        },
+        {
+          "id": "t11-q2",
+          "text": "Where have you promoted rather than attracted?"
+        },
+        {
+          "id": "t11-q3",
+          "text": "Who noticed something different in you before you told them anything?"
+        },
+        {
+          "id": "t11-q4",
+          "text": "What would you want your name on, if you were allowed to have it?"
+        },
+        {
+          "id": "t11-q5",
+          "text": "Where do you talk about the fellowship for your own benefit rather than anyone's?"
+        },
+        {
+          "id": "t11-q6",
+          "text": "Is there anybody you have driven off by trying too hard?"
+        }
+      ]
+    },
+    {
+      "id": "trad12",
+      "number": 12,
+      "topic": "Anonymity",
+      "explanation": [
+        "Anonymity as the spiritual foundation of all of them, ever reminding us to place principles before personalities. The last one, and the one the other eleven are said to rest on.",
+        "1939 gives only the practical version — it is important that we remain anonymous, because there were too few of them to handle the letters. The spiritual reading came later, and it is worth knowing that the principle began as an administrative problem and grew into the ground everything else stands on.",
+        "Principles before personalities is the half that costs. It means the thing is true whoever happens to be saying it, and that it stays true when the person who said it best goes back out."
+      ],
+      "references": [
+        {
+          "sectionId": "foreword",
+          "anchor": "It is important that we remain anonymous because we are too few",
+          "label": "Where it started, and why",
+          "why": "Anonymity as a practical measure in 1939, before it was a spiritual principle.",
+          "paraIndex": 1
+        },
+        {
+          "sectionId": "foreword",
+          "anchor": "When writing or speaking publicly about alcoholism",
+          "label": "Anonymity in practice",
+          "why": "What it actually asked of a member, then and now.",
+          "paraIndex": 2
+        },
+        {
+          "sectionId": "ch07",
+          "anchor": "Burn the idea into the consciousness of every man",
+          "label": "“Regardless of anyone”",
+          "why": "Nobody's recovery is meant to depend on a particular person — including yours.",
+          "paraIndex": 29
+        }
+      ],
+      "questions": [
+        {
+          "id": "t12-q1",
+          "text": "Whose sobriety have you been leaning on instead of your own?"
+        },
+        {
+          "id": "t12-q2",
+          "text": "What happened the last time somebody you looked up to went back out?"
+        },
+        {
+          "id": "t12-q3",
+          "text": "Where do you want to be known for this?"
+        },
+        {
+          "id": "t12-q4",
+          "text": "What do you say about people in the fellowship, outside it?"
+        },
+        {
+          "id": "t12-q5",
+          "text": "Which principle do you find hardest to separate from the person who taught it to you?"
+        },
+        {
+          "id": "t12-q6",
+          "text": "What would be lost if your name were attached to all of it?"
+        }
+      ]
+    }
+  ]
+}

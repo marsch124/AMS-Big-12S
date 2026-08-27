@@ -55,6 +55,9 @@
             // app. The unsent draft is deliberately not here: a record moves to
             // a new phone, a half-finished sentence does not need to.
             messages: state.messages,
+            // Where a Tradition was seen holding or not holding. Years of
+            // service experience can sit in here, so it travels like the rest.
+            tradlog: state.tradlog,
             // The days the app has been opened. A run of them is worth nothing
             // if it starts again on a new phone.
             visits: state.visits || []
@@ -170,7 +173,8 @@
     function restoreBackup(payload, mode) {
         mode = mode || 'merge';
         var summary = { notes: 0, bookmarks: 0, inventory: 0, cravings: 0, meetings: 0,
-                        checkins: 0, breaks: 0, messages: 0, bookText: false, mode: mode };
+                        checkins: 0, breaks: 0, messages: 0, tradlog: 0,
+                        bookText: false, mode: mode };
 
         var prepare = mode === 'replace'
             ? Promise.all([
@@ -181,7 +185,8 @@
                 DB.clear(DB.STORE_MEETINGS),
                 DB.clear(DB.STORE_CHECKINS),
                 DB.clear(DB.STORE_BREAKS),
-                DB.clear(DB.STORE_MESSAGES)
+                DB.clear(DB.STORE_MESSAGES),
+                DB.clear(DB.STORE_TRADLOG)
             ])
             : Promise.resolve();
 
@@ -266,6 +271,16 @@
             });
             summary.messages = messages.length;
 
+            // Absent from anything written before 2.21, same rule as the rest.
+            var existingTradlog = {};
+            if (mode === 'merge') {
+                Store.state.tradlog.forEach(function (row) { existingTradlog[row.id] = row; });
+            }
+            var tradlog = (payload.tradlog || []).map(function (row) {
+                return newerOf(row, existingTradlog[row.id]);
+            });
+            summary.tradlog = tradlog.length;
+
             return Promise.all([
                 DB.putMany(DB.STORE_NOTES, notes),
                 DB.putMany(DB.STORE_BOOKMARKS, bookmarks),
@@ -274,7 +289,8 @@
                 DB.putMany(DB.STORE_MEETINGS, meetings),
                 DB.putMany(DB.STORE_CHECKINS, checkins),
                 DB.putMany(DB.STORE_BREAKS, breaks),
-                DB.putMany(DB.STORE_MESSAGES, messages)
+                DB.putMany(DB.STORE_MESSAGES, messages),
+                DB.putMany(DB.STORE_TRADLOG, tradlog)
             ]);
         }).then(function () {
             if (payload.book && payload.book.sections && payload.book.sections.length) {

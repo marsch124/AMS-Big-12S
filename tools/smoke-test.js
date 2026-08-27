@@ -1032,6 +1032,194 @@ async function openContents(page) {
         'offer shown: ' + (await page.isVisible('#craving-offer')));
     await page.click('.tab[data-screen="home"]');
 
+    // ── the disclaimer ────────────────────────────────────────────────────
+    // Somebody looking for who is answerable for this app should find the
+    // answer in the app, not only in a README they will never open.
+    await page.click('.tab[data-screen="settings"]');
+    await page.waitForSelector('#screen-settings.is-active');
+    const disclaimer = await page.evaluate(() => {
+        const h = document.getElementById('settings-disclaimer');
+        return h ? h.nextElementSibling.textContent.replace(/\s+/g, ' ') : '';
+    });
+    check('Settings carries a disclaimer of its own', disclaimer.length > 200);
+    check('it says the responsibility taken is none',
+        /no responsibility is taken/i.test(disclaimer));
+    check('it says what is his and what is the book\u2019s',
+        /public domain/i.test(disclaimer) && /own experience/i.test(disclaimer) &&
+        /not official a\.a\. material/i.test(disclaimer));
+    check('it says copyrighted material is left out rather than reproduced',
+        /left out rather than reproduced/i.test(disclaimer));
+    check('and it keeps the one line that is a fact rather than advice',
+        /ring a doctor first/i.test(disclaimer));
+    check('the affiliation is stated once, not twice',
+        (await page.evaluate(() => (document.getElementById('screen-settings').textContent
+            .match(/Not affiliated with/g) || []).length)) === 1);
+
+    // ── the Twelve Traditions ─────────────────────────────────────────────
+    await page.click('.tab[data-screen="steps"]');
+    await page.waitForSelector('#screen-steps.is-active');
+    check('the Steps tab carries both twelves rather than a seventh tab appearing',
+        (await page.isVisible('#twelves-switch')) &&
+        (await page.$$eval('.tabbar .tab', (e) => e.length)) === 6,
+        (await page.$$eval('.tabbar .tab', (e) => e.length)) + ' tabs');
+    check('and opens on the steps', (await page.textContent('#twelves-title')) === 'The Twelve Steps');
+
+    await page.click('#twelves-switch .switch-opt[data-twelve="traditions"]');
+    await page.waitForTimeout(150);
+    check('the switch shows the other twelve',
+        (await page.textContent('#twelves-title')) === 'The Twelve Traditions' &&
+        (await page.isVisible('#tradlist')) && !(await page.isVisible('#steplist')));
+
+    const topics = await page.$$eval('#tradlist .step-name', (e) => e.map((x) => x.textContent));
+    check('all twelve are there, named by topic', topics.length === 12 &&
+        topics[2] === 'Membership' && topics[11] === 'Anonymity', topics.join(', '));
+
+    /*
+     * The bar this whole section is built around. The Traditions were written in
+     * 1946 and first printed in the book at the second edition, which is under
+     * copyright; the 1939 text this app carries does not contain them. Nothing
+     * shipped may carry their wording, and this is the check that says so.
+     */
+    check('no Tradition carries the wording — that is the point, not an omission',
+        await page.evaluate(() => Store.allTraditions().every((t) => !t.text && !!t.topic)));
+    check('and the 1939 text does not contain them either',
+        await page.evaluate(() => {
+            const words = ['singleness of purpose', 'group conscience', 'common welfare',
+                'self-supporting', 'outside issues'];
+            return Store.state.book.sections.every((s) => s.paragraphs.every((p) =>
+                words.every((w) => p.toLowerCase().indexOf(w) === -1)));
+        }));
+
+    // Every reference is resolved again at runtime, trusting the anchor over the
+    // stored index, so an imported copy of the text keeps the links.
+    const ground = await page.evaluate(() => Store.allTraditions().map((t) => ({
+        n: t.number,
+        live: t.references.filter((r) => Store.resolveStepRef(r) !== null).length,
+        refs: t.references.length
+    })));
+    check('every reference resolves against the bundled text',
+        ground.every((g) => g.live === g.refs) && ground.reduce((n, g) => n + g.refs, 0) === 33,
+        ground.reduce((n, g) => n + g.live, 0) + ' of ' + ground.reduce((n, g) => n + g.refs, 0));
+    check('and every one of the twelve has some 1939 ground to stand on',
+        ground.every((g) => g.live > 0),
+        ground.map((g) => g.n + ':' + g.live).join(' '));
+
+    await page.click('#tradlist .step-item >> nth=2');
+    await page.waitForSelector('#screen-tradition.is-active');
+    check('a Tradition page opens with the topic, not a quotation',
+        (await page.textContent('#tradition-title')) === 'Tradition 3' &&
+        (await page.textContent('#tradition-sub')) === 'Membership');
+    check('and says on the page why the wording is not there',
+        (await page.textContent('#tradition-wording')).includes('1946'),
+        await page.textContent('#tradition-wording'));
+    check('the Steps tab stays lit while you are inside one',
+        await page.evaluate(() => document.querySelector('.tab[data-screen="steps"]')
+            .classList.contains('is-active')));
+    check('it carries the 1939 ground, and says how much of it there is',
+        (await page.$$eval('#tradition-references .ref-item', (e) => e.length)) === 3 &&
+        (await page.$$eval('#tradition-references .is-missing', (e) => e.length)) === 0 &&
+        (await page.textContent('#tradition-ground')).includes('3 passages'),
+        await page.textContent('#tradition-ground'));
+    check('and six questions of our own', (await page.$$eval('#tradition-questions .question',
+        (e) => e.length)) === 6);
+
+    // The questions are the same machinery as a step's, not a second copy.
+    await page.click('#tradition-questions .question >> nth=0 >> .chip >> nth=0');
+    await page.waitForSelector('#note-sheet:not([hidden])');
+    check('answering one names the Tradition rather than a step',
+        (await page.textContent('#note-sheet-title')) === 'Tradition 3 — answering',
+        await page.textContent('#note-sheet-title'));
+    await page.fill('#note-sheet-body', 'The man who comes back drunk. I had written him off.');
+    await page.click('#note-save');
+    await page.waitForTimeout(400);
+    check('and the answer is filed against the Tradition, not against a step',
+        await page.evaluate(() => {
+            const a = Store.state.notes.filter((n) => n.traditionId === 'trad03' && n.questionId);
+            return a.length === 1 && !a[0].stepId;
+        }));
+    check('answering again keeps the first answer rather than replacing it',
+        await page.evaluate(async () => {
+            await Store.saveNote({ traditionId: 'trad03', questionId: 't3-q1', body: 'Again, later.' });
+            return Store.tradAnswersFor('trad03', 't3-q1').length === 2;
+        }));
+
+    // A note with no page and no step used to fall straight into Reflections.
+    await page.evaluate(() => Store.saveNote({ traditionId: 'trad03', body: 'A note on this one.' }));
+    check('a Tradition note is not swept into Reflections',
+        await page.evaluate(() => {
+            const note = Store.state.notes.filter((n) =>
+                n.traditionId === 'trad03' && !n.questionId)[0];
+            return !Store.isLooseNote(note) && Store.isTraditionNote(note);
+        }));
+    await page.click('.tab[data-screen="notes"]');
+    await page.click('#notes-filters .chip[data-filter="own"]');
+    await page.waitForTimeout(150);
+    check('and the Reflections count matches the list it is over',
+        (await page.$$eval('#notes-list .card', (e) => e.length)) ===
+        (await page.evaluate(() => Store.state.notes.filter(Store.isLooseNote).length)),
+        (await page.$$eval('#notes-list .card', (e) => e.length)) + ' shown');
+    await page.click('#notes-filters .chip[data-filter="all"]');
+
+    // The log, which is the third thing that counts as having worked one.
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('#tradlist .step-item >> nth=2');
+    await page.waitForSelector('#screen-tradition.is-active');
+    await page.click('#tradition-log-add');
+    await page.waitForSelector('#tradlog-sheet:not([hidden])');
+    check('the log arrives already set to the Tradition you were reading',
+        (await page.inputValue('#tradlog-sheet-which')) === 'trad03');
+    await page.click('#tradlog-held .chip[data-held="no"]');
+    await page.fill('#tradlog-sheet-what', 'The business meeting voted a difficult man out. Nobody said the only requirement out loud.');
+    await page.fill('#tradlog-sheet-learned', 'Say it next time, even badly.');
+    await page.click('#tradlog-sheet-save');
+    await page.waitForSelector('#tradlog-sheet', { state: 'hidden' });
+    check('an entry is kept, and one that did not hold is kept as that',
+        await page.evaluate(() => Store.state.tradlog.length === 1 &&
+            Store.state.tradlog[0].held === false));
+    check('and it shows on the Tradition it belongs to',
+        (await page.$$eval('#tradition-log .tradlog-card', (e) => e.length)) === 1 &&
+        (await page.$$eval('#tradition-log .is-missed', (e) => e.length)) === 1);
+
+    await page.click('#tradition-back');
+    await page.waitForSelector('#screen-steps.is-active');
+    check('coming back lands on the Traditions rather than the Steps',
+        (await page.textContent('#twelves-title')) === 'The Twelve Traditions');
+    check('the shared log shows it too, naming which one it was',
+        (await page.textContent('#tradlog-list .tradlog-which')).includes('Membership'),
+        await page.textContent('#tradlog-list .tradlog-which'));
+    check('and the summary says how it stands without scoring it',
+        (await page.textContent('#tradlog-summary')).includes('One entry') &&
+        (await page.textContent('#tradlog-summary')).includes('the other way'),
+        await page.textContent('#tradlog-summary'));
+    check('the list row counts all three things, not one of them',
+        (await page.textContent('#tradlist .step-item >> nth=2')).includes('1 of 6 answered') &&
+        (await page.textContent('#tradlist .step-item >> nth=2')).includes('1 note') &&
+        (await page.textContent('#tradlist .step-item >> nth=2')).includes('1 seen'),
+        await page.textContent('#tradlist .step-item >> nth=2'));
+
+    // Which twelve you were last on is remembered: somebody working the
+    // Traditions this month should not have to switch every time.
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('#screen-home.is-active');
+    await page.click('.tab[data-screen="steps"]');
+    await page.waitForTimeout(150);
+    check('the tab remembers which twelve you were working',
+        (await page.textContent('#twelves-title')) === 'The Twelve Traditions');
+    await page.click('#twelves-switch .switch-opt[data-twelve="steps"]');
+    await page.waitForTimeout(150);
+    check('and the steps still work exactly as they did',
+        (await page.$$eval('#steplist .step-item', (e) => e.length)) === 12);
+
+    // The three notes above were written to prove the plumbing; the note store
+    // is shared, and what is left in it is counted by the rest of the suite.
+    // The log entry stays — the backup round trip asserts it.
+    await page.evaluate(async () => {
+        const mine = Store.state.notes.filter((n) => n.traditionId);
+        for (const note of mine) await Store.deleteNote(note.id);
+    });
+    check('and the Traditions tests leave the note store as they found it',
+        (await page.evaluate(() => Store.state.notes.filter((n) => n.traditionId).length)) === 0);
+
     // ── the emergency page ────────────────────────────────────────────────
     await page.click('.tab[data-screen="home"]');
     await page.click('#home-craving');
@@ -1106,6 +1294,22 @@ async function openContents(page) {
     check('breathing opens its own sheet, ready rather than already running',
         (await page.textContent('#breathe-phase')) === 'Ready' &&
         (await page.textContent('#breathe-start')) === 'Start');
+    // The tones are generated rather than bundled, so there is nothing to ship
+    // and nothing to fetch. Count the oscillators actually started.
+    await page.evaluate(() => {
+        window.__tones = [];
+        const C = window.AudioContext || window.webkitAudioContext;
+        const real = C.prototype.createOscillator;
+        C.prototype.createOscillator = function () {
+            const osc = real.call(this);
+            const start = osc.start.bind(osc);
+            osc.start = function (t) { window.__tones.push(osc.frequency.value); return start(t); };
+            return osc;
+        };
+    });
+    check('the sound is on to begin with, and says so',
+        (await page.textContent('#breathe-sound')) === 'Sound on');
+
     await page.click('#breathe-start');
     await page.waitForTimeout(1100);
     check('it counts down the phase it is in',
@@ -1114,6 +1318,28 @@ async function openContents(page) {
         (await page.textContent('#breathe-phase')) + ' ' + (await page.textContent('#breathe-count')));
     check('and the ring is told which phase it is showing',
         (await page.getAttribute('#breathe-ring', 'class')).indexOf('is-in') !== -1);
+
+    // A headless browser may keep the context suspended, in which case there is
+    // nothing to hear. The count still has to be at most one: a tone sounds on
+    // the turn of the breath, never once a second.
+    const heard = await page.evaluate(() => window.__tones.slice());
+    check('a tone sounds on the turn of the breath, not every second',
+        heard.length <= 1, heard.join(', ') || 'context suspended, nothing sounded');
+
+    // Silence is the check that holds whatever the browser does about autoplay:
+    // with the sound off, nothing may be started at all.
+    await page.click('#breathe-sound');
+    await page.waitForTimeout(150);
+    check('turning it off says so, and is remembered in settings',
+        (await page.textContent('#breathe-sound')) === 'Sound off' &&
+        (await page.evaluate(() => Store.state.settings.breathSound)) === false);
+    const quietFrom = await page.evaluate(() => window.__tones.length);
+    await page.waitForTimeout(4300);
+    check('and nothing sounds while it is off, whatever the ring is doing',
+        (await page.evaluate(() => window.__tones.length)) === quietFrom);
+    await page.click('#breathe-sound');
+    check('turning it back on is remembered too',
+        (await page.evaluate(() => Store.state.settings.breathSound)) === true);
     await page.click('#breathe-start');
     check('stopping stops it', (await page.textContent('#breathe-phase')) === 'Stopped');
 
@@ -1302,6 +1528,9 @@ async function openContents(page) {
         slim.checkins.length === 2, (slim.checkins || []).length + ' check-ins');
     check('and the times abstinence broke', slim.breaks.length === 2,
         (slim.breaks || []).length + ' breaks');
+    check('and where the Traditions were seen holding or not',
+        slim.tradlog.length === 1 && slim.tradlog[0].traditionId === 'trad03',
+        (slim.tradlog || []).length + ' log entries');
     check('and what has been said to a sponsor, a sponsee or a spouse',
         slim.messages.length === 1 && slim.messages[0].who === 'sponsor',
         (slim.messages || []).length + ' messages');
@@ -1319,16 +1548,18 @@ async function openContents(page) {
     delete older.checkins;
     delete older.breaks;
     delete older.messages;
+    delete older.tradlog;
     const keptThrough = await page.evaluate(async (json) => {
         await Backup.restoreBackup(Backup.parseBackup(json), 'merge');
         return { cravings: Store.state.cravings.length, meetings: Store.state.meetings.length,
                  checkins: Store.state.checkins.length, breaks: Store.state.breaks.length,
-                 messages: Store.state.messages.length };
+                 messages: Store.state.messages.length,
+                 tradlog: Store.state.tradlog.length };
     }, JSON.stringify(older));
     check('an older backup restores without wiping any of them',
         keptThrough.cravings === 2 && keptThrough.meetings === 1 &&
         keptThrough.checkins === 2 && keptThrough.breaks === 2 &&
-        keptThrough.messages === 1,
+        keptThrough.messages === 1 && keptThrough.tradlog === 1,
         JSON.stringify(keptThrough));
     check('backup stays small when the text is not included',
         !slim.includesBookText && JSON.stringify(slim).length < 4000,

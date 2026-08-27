@@ -8,7 +8,7 @@
     'use strict';
 
     var DB_NAME = 'ams-big-12s';
-    var DB_VERSION = 7;
+    var DB_VERSION = 8;
 
     var STORE_META = 'meta';
     var STORE_BOOK = 'book';
@@ -32,6 +32,10 @@
     // out of the note store: a note is something still waiting to be said, and
     // one of these has been said already.
     var STORE_MESSAGES = 'messages';
+    // Where a Tradition was seen working, or not working. Dated observations
+    // against one of the twelve — structured records, so they follow cravings
+    // and meetings rather than being bent into the note store.
+    var STORE_TRADLOG = 'tradlog';
 
     var dbPromise = null;
 
@@ -88,6 +92,11 @@
                 if (!db.objectStoreNames.contains(STORE_MESSAGES)) {
                     var messages = db.createObjectStore(STORE_MESSAGES, { keyPath: 'id' });
                     messages.createIndex('sentAt', 'sentAt', { unique: false });
+                }
+                // Added in DB_VERSION 8, guarded like every one before it.
+                if (!db.objectStoreNames.contains(STORE_TRADLOG)) {
+                    var tradlog = db.createObjectStore(STORE_TRADLOG, { keyPath: 'id' });
+                    tradlog.createIndex('on', 'on', { unique: false });
                 }
             };
 
@@ -183,6 +192,7 @@
         STORE_CHECKINS: STORE_CHECKINS,
         STORE_BREAKS: STORE_BREAKS,
         STORE_MESSAGES: STORE_MESSAGES,
+        STORE_TRADLOG: STORE_TRADLOG,
         open: open,
         get: get,
         getAll: getAll,
