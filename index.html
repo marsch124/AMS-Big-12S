@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=30">
+<link rel="stylesheet" href="css/style.css?v=31">
 </head>
 <body>
 
@@ -357,6 +357,19 @@
         Writing it down starts a clock, and gives you one more of these to look back on.
       </p>
 
+      <!-- Only here when one of these ended in a drink in the last three days
+           and nothing was started for it. It says nothing about the entry. -->
+      <button class="do-row do-row-alone" id="craving-offer" hidden>
+        <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M13.4 3.6 7.9 12.4h4.9L10.6 20.4 17 11.2h-4.9z"/>
+        </svg></span>
+        <span class="do-text">
+          <span class="do-label">The three days</span>
+          <span class="do-note" id="craving-offer-note"></span>
+        </span>
+        <span class="do-go">›</span>
+      </button>
+
       <button class="passage-card" id="craving-passage">
         <span class="passage-label">From the book</span>
         <span class="passage-text" id="craving-passage-text"></span>
@@ -425,6 +438,21 @@
       </div>
 
       <div id="bounce-open" hidden>
+        <!-- Where this came from, when it came from the craving log. It goes
+             at the top because it is the only thing on this page that was
+             written before the event rather than after it. -->
+        <button class="do-row do-row-alone" id="bounce-from" hidden>
+          <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.4"/>
+            <path d="M12 7.2V12l3.1 1.8"/>
+          </svg></span>
+          <span class="do-text">
+            <span class="do-label">From the craving you wrote down</span>
+            <span class="do-note" id="bounce-from-note"></span>
+          </span>
+          <span class="do-go">›</span>
+        </button>
+
         <label class="checkin-field">
           <span class="checkin-label">What happened?</span>
           <textarea id="bounce-what" class="note-input" rows="3"
@@ -872,6 +900,31 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>The craving log and the three days</span><span class="ver-tag">2.18</span></summary>
+          <div class="disclosure-body">
+            <p>The two screens are joined up. An entry that ends in a drink is exactly the
+               moment nobody wants to go hunting through an app, so the page for the days
+               after is offered there and then.</p>
+            <ul>
+              <li><strong>Offered once, and it takes a no.</strong> Save a craving as having
+                  ended in a drink and the three days are offered. Say not now and nothing
+                  more is said about it.</li>
+              <li><strong>A quiet row on the craving screen</strong> for three days afterwards,
+                  so a no is not a door closing. After that it goes on its own rather than
+                  sitting there as a reproach.</li>
+              <li><strong>The date is carried over</strong> rather than asked for twice — and
+                  is still yours to change, along with whether to count your days again.</li>
+              <li><strong>It remembers where it came from.</strong> The three days link back to
+                  the entry, and what you wrote at the time can go into the copy for your
+                  sponsor under "What led to it" — the only part of that text written before
+                  the event rather than after it.</li>
+            </ul>
+            <p>Nothing about this appears on the front page. The app noticing is one thing;
+               the app bringing it up every morning is another.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Starting again</span><span class="ver-tag">2.17</span></summary>
@@ -1796,6 +1849,22 @@
   </div>
 </div>
 
+<!-- Shown once, when a craving is saved as having ended in a drink. It is an
+     offer and not a verdict: it says what the page is, and it takes a no. -->
+<div class="sheet" id="drank-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title">The three days</h2>
+  <p class="sheet-quote" id="drank-sheet-when"></p>
+  <p class="hint">
+    There is a page for the days after this one — three days of small things to do, the
+    book on the same screen, and somewhere to write. It keeps, if now is not the time.
+  </p>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="drank-sheet-open">Open it</button>
+    <button class="btn btn-quiet" id="drank-sheet-later">Not now</button>
+  </div>
+</div>
+
 <div class="sheet" id="para-sheet" hidden>
   <div class="sheet-handle"></div>
   <p class="sheet-quote" id="para-sheet-quote"></p>
@@ -1879,6 +1948,7 @@
   <h2 class="sheet-title">It happened</h2>
   <p class="sheet-quote">Nothing here is announced or sent. It is written down so that the next
      three days have a shape.</p>
+  <p class="hint" id="bounce-sheet-from" hidden></p>
   <label class="inv-input">
     <span class="sheet-label">When</span>
     <input type="date" id="bounce-sheet-on" class="field">
@@ -1943,9 +2013,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=6"></script>
-<script src="js/store.js?v=20"></script>
+<script src="js/store.js?v=21"></script>
 <script src="js/backup.js?v=8"></script>
-<script src="js/ui.js?v=34"></script>
+<script src="js/ui.js?v=35"></script>
 <script src="js/app.js?v=22"></script>
 </body>
 </html>

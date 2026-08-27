@@ -1338,6 +1338,10 @@
             id: row.id || uid('brk'),
             on: row.on || todayISO(),
             what: String(row.what || '').trim(),
+            // The craving entry this was started from, when it was started
+            // from one at all. Null is the ordinary case: most of these are
+            // opened by hand, from the front page.
+            cravingId: row.cravingId || null,
             // { '1': { note: '', done: { taskId: true } }, ... }
             days: Object.assign({}, row.days),
             closedAt: row.closedAt || null,
@@ -1349,10 +1353,10 @@
         });
     }
 
-    function startBreak(on) {
+    function startBreak(on, cravingId) {
         var already = openBreak();
         if (already) return Promise.resolve(already);
-        return saveBreak({ on: on || todayISO() });
+        return saveBreak({ on: on || todayISO(), cravingId: cravingId || null });
     }
 
     function closeBreak(id) {
@@ -1377,6 +1381,48 @@
     function bounceReading() { return BOUNCE_READING; }
 
     /*
+     * The craving log and the three days, joined up.
+     *
+     * An entry that ended in a drink is the exact moment this plan is for, and
+     * hunting through an app for it afterwards is the last thing anybody needs
+     * then. So the entry offers the page. The break remembers which entry it
+     * came from, and that memory is also how the offer knows to stop: once a
+     * plan exists for an entry, it is never offered for that entry again.
+     */
+    function breakForCraving(cravingId) {
+        if (!cravingId) return null;
+        return state.breaks.filter(function (row) {
+            return row.cravingId === cravingId;
+        })[0] || null;
+    }
+
+    function cravingForBreak(row) {
+        if (!row || !row.cravingId) return null;
+        return state.cravings.filter(function (crav) {
+            return crav.id === row.cravingId;
+        })[0] || null;
+    }
+
+    /*
+     * The entry the plan should be offered for, if there is one.
+     *
+     * Three days, because three days is the length of the thing being offered.
+     * After that the offer fades of its own accord rather than sitting on the
+     * screen as a reproach — and a no is a no: declining leaves nothing behind
+     * but this quiet row, which goes on its own in the end.
+     */
+    function cravingNeedingPlan(date) {
+        if (openBreak()) return null;
+        var drank = state.cravings.filter(function (row) {
+            return row.endedAt && row.outcome === 'drank';
+        })[0];
+        if (!drank) return null;
+        if (breakForCraving(drank.id)) return null;
+        if (dayNumber(date) - dayNumber(new Date(drank.endedAt)) > 2) return null;
+        return drank;
+    }
+
+    /*
      * The three days as plain text, for a sponsor. Composed here like every
      * other copy, and it says what is not done as well as what is — the point
      * of showing somebody this is that they can see the gaps.
@@ -1389,6 +1435,16 @@
         if (row.what && options.what !== false) {
             lines.push('What happened');
             lines.push(row.what);
+            lines.push('');
+        }
+
+        // What was written in the craving log at the time, if this came from
+        // one. It is the only part of this text written before the event
+        // rather than after it, so it goes in under its own heading.
+        var from = cravingForBreak(row);
+        if (from && from.what && options.craving !== false) {
+            lines.push('What led to it');
+            lines.push(from.what);
             lines.push('');
         }
 
@@ -2059,6 +2115,9 @@
 
         loadBreaks: loadBreaks,
         openBreak: openBreak,
+        breakForCraving: breakForCraving,
+        cravingForBreak: cravingForBreak,
+        cravingNeedingPlan: cravingNeedingPlan,
         saveBreak: saveBreak,
         startBreak: startBreak,
         closeBreak: closeBreak,

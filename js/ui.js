@@ -402,6 +402,8 @@
     /* ------------------------------------------------------------ craving */
 
     var cravingEditing = null;   // the record the sheet is open on
+    var drankOffer = null;       // the entry the three days are being offered for
+    var bounceFrom = null;       // the entry a new three days is being carried over from
 
     function timeOfDay(iso) {
         return clockTime(iso);
@@ -480,8 +482,21 @@
         }
 
         renderCravingPassage();
+        renderCravingOffer();
         renderCravingActions();
         renderCravingList();
+    }
+
+    /*
+     * The one place the two logs meet on screen. It sits under the start
+     * button rather than at the top: somebody in the middle of a craving does
+     * not need to be shown the page for after one.
+     */
+    function renderCravingOffer() {
+        var wanted = Store.cravingNeedingPlan();
+        $('craving-offer').hidden = !wanted;
+        if (!wanted) return;
+        $('craving-offer-note').textContent = 'For the one on ' + shortDate(wanted.startedAt);
     }
 
     function renderCravingPassage() {
@@ -620,11 +635,32 @@
         Store.endCraving(cravingEditing.id, {
             outcome: lit ? lit.dataset.outcome : 'passed',
             what: $('craving-sheet-what').value
-        }).then(function () {
+        }).then(function (saved) {
             cravingEditing = null;
             closeSheets();
             renderCraving();
+            offerThreeDays(saved);
         });
+    }
+
+    /*
+     * An entry that ends in a drink is exactly when nobody wants to go looking
+     * for anything, so the page is put in front of him — once, and only for
+     * the entry that has just been written, so that editing an old one months
+     * later does not reopen it.
+     */
+    function offerThreeDays(craving) {
+        if (!craving || craving.outcome !== 'drank') return;
+        var wanted = Store.cravingNeedingPlan();
+        if (!wanted || wanted.id !== craving.id) return;
+        drankOffer = craving;
+        $('drank-sheet-when').textContent = 'Written down at ' + timeOfDay(craving.endedAt) + '.';
+        openSheet('drank-sheet');
+    }
+
+    function startThreeDays(craving) {
+        showScreen('bounce');
+        openBounceSheet(craving);
     }
 
     /* ------------------------------------------------------- starting again */
@@ -644,6 +680,7 @@
                 Store.saveBreak(Object.assign({}, Store.openBreak(),
                     { what: $('bounce-what').value }));
             };
+            renderBounceFrom(row);
             renderBounceDays(row, day);
             renderBounceReading();
         } else {
@@ -651,6 +688,14 @@
         }
 
         renderBounceHistory();
+    }
+
+    function renderBounceFrom(row) {
+        var from = Store.cravingForBreak(row);
+        $('bounce-from').hidden = !from;
+        if (!from) return;
+        $('bounce-from-note').textContent = shortDate(from.startedAt) + ', ' +
+            timeOfDay(from.startedAt) + (from.what ? ' \u00b7 ' + from.what : '');
     }
 
     function renderBounceDays(row, currentDay) {
@@ -761,12 +806,14 @@
     }
 
     function openBounceCopy(row) {
+        var options = [{ key: 'what', label: 'What happened', on: true }];
+        var from = Store.cravingForBreak(row);
+        if (from && from.what) options.push({ key: 'craving', label: 'What led to it', on: true });
+        options.push({ key: 'notes', label: 'What you wrote on each day', on: true });
+
         openCopySheet({
             title: 'Starting again \u00b7 ' + formatDay(row.on),
-            options: [
-                { key: 'what', label: 'What happened', on: true },
-                { key: 'notes', label: 'What you wrote on each day', on: true }
-            ],
+            options: options,
             compose: function (opts) { return Store.breakAsText(row, opts); }
         });
     }
@@ -776,9 +823,19 @@
      * yesterday by the time anybody opens this — and so is whether to count the
      * days again, because it is his count and not the app's.
      */
-    function openBounceSheet() {
-        $('bounce-sheet-on').value = Store.todayISO();
+    function openBounceSheet(craving) {
+        bounceFrom = craving || null;
+        // Carried over from the entry rather than asked for again — he has
+        // already said when it was, once, and the date is still his to change.
+        $('bounce-sheet-on').value = craving
+            ? Store.dayISO(new Date(craving.startedAt))
+            : Store.todayISO();
         $('bounce-sheet-on').max = Store.todayISO();
+        $('bounce-sheet-from').hidden = !craving;
+        if (craving) {
+            $('bounce-sheet-from').textContent = 'Taken from the craving you wrote down at ' +
+                timeOfDay(craving.startedAt) + '. Change it if that is not the day.';
+        }
         var reset = $('bounce-sheet-reset');
         reset.dataset.reset = 'yes';
         reset.classList.add('is-active');
@@ -788,8 +845,10 @@
     function saveBounceSheet() {
         var on = $('bounce-sheet-on').value || Store.todayISO();
         var reset = $('bounce-sheet-reset').dataset.reset === 'yes';
+        var from = bounceFrom;
+        bounceFrom = null;
 
-        Store.startBreak(on).then(function () {
+        Store.startBreak(on, from ? from.id : null).then(function () {
             if (!reset) return null;
             return Store.saveSettings({ soberSince: on });
         }).then(function () {
@@ -4020,7 +4079,8 @@
         // ── starting again ─────────────────────────────────────────────────
         $('broken').addEventListener('click', function () { showScreen('bounce'); });
         $('bounce-back').addEventListener('click', function () { showScreen('home'); });
-        $('bounce-start').addEventListener('click', openBounceSheet);
+        $('bounce-start').addEventListener('click', function () { openBounceSheet(); });
+        $('bounce-from').addEventListener('click', function () { showScreen('craving'); });
         $('bounce-sheet-cancel').addEventListener('click', closeSheets);
         $('bounce-sheet-save').addEventListener('click', saveBounceSheet);
         $('bounce-sheet-reset').addEventListener('click', function () {
@@ -4113,6 +4173,20 @@
             chip.addEventListener('click', function () { setCravingOutcome(chip.dataset.outcome); });
         });
         $('craving-sheet-save').addEventListener('click', saveCravingSheet);
+        $('craving-offer').addEventListener('click', function () {
+            var wanted = Store.cravingNeedingPlan();
+            if (wanted) startThreeDays(wanted);
+        });
+        $('drank-sheet-open').addEventListener('click', function () {
+            var craving = drankOffer;
+            drankOffer = null;
+            closeSheets();
+            if (craving) startThreeDays(craving);
+        });
+        $('drank-sheet-later').addEventListener('click', function () {
+            drankOffer = null;
+            closeSheets();
+        });
         $('craving-sheet-cancel').addEventListener('click', function () {
             cravingEditing = null;
             closeSheets();

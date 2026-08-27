@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.17 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.18 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -331,6 +331,44 @@ HTML, which is why it is shaped this way — do not collapse it back.
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
 
+## The craving log and the three days (2.18)
+
+**The offer is made once, and it takes a no.** Saving a craving as having ended
+in a drink opens `#drank-sheet`. "Not now" closes it and nothing more is said.
+What stays is `#craving-offer`, a quiet row on the craving screen, and only for
+three days — the length of the thing being offered. After that it goes on its
+own rather than sitting there as a reproach.
+
+**Nothing about it reaches the home screen.** The app noticing is one thing; the
+app bringing it up every morning is another. `broken-note` keeps its two states
+(open, or resting) and knows nothing about the craving log. If that ever changes,
+change it deliberately.
+
+**A break remembers its entry, and that memory is the off switch.**
+`breaks.cravingId` is the link. `Store.cravingNeedingPlan()` returns the most
+recent drank entry only when no break is open, none is linked to it, and it is
+within three days — so `breakForCraving()` is what stops the offer coming back,
+not a dismissed flag. Declining leaves no record at all, which is the point.
+
+**`offerThreeDays(saved)` checks the entry is the one just written**
+(`wanted.id !== craving.id` bails). Editing a drank entry from months ago must
+not reopen the offer.
+
+**The date is carried over, not asked twice** — `openBounceSheet(craving)`
+prefills from the entry's day and says where it came from. It is still an input
+he can change, and the `soberSince` question is untouched: see below.
+
+**`cravingId` rides the backup like any other field**, and `breakAsText` can put
+what was written at the time under "What led to it" — the only part of that text
+written before the event rather than after it. It is an option, off-able, like
+everything else in a copy sheet.
+
+**`.do-row` sets `display: flex`, which beats the browser's own `[hidden]`.**
+Any row that is hidden some of the time needs an explicit `[hidden]` rule; the
+file already does this for `.passage-card`, `.continue-card`, `.tabbar` and the
+rest. `.do-row[hidden]` was added in 2.18 after a smoke check found the offer row
+permanently on screen.
+
 ## Starting again (2.17)
 
 **Nothing on that page scolds.** Somebody opening it has already had the worst
@@ -559,7 +597,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    346 end-to-end browser checks
+tools/smoke-test.js    356 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -571,7 +609,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 346 checks, expect 346/346
+node tools/smoke-test.js                  # 356 checks, expect 356/356
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

@@ -413,6 +413,12 @@ button { cursor: pointer; }
   text-decoration: none;
 }
 .do-row:last-child { border-bottom: 0; }
+/* `display: flex` above beats the browser's own [hidden] rule, so every row
+   that is hidden some of the time needs this said out loud. */
+.do-row[hidden] { display: none; }
+/* On its own between a button and a card, this one needs room underneath as
+   well as above; the home row is followed by a heading that brings its own. */
+#craving-offer { margin-bottom: 14px; }
 .do-row:active { background: var(--bg-sunken); }
 .do-icon { flex: none; display: inline-flex; line-height: 1; color: var(--accent); }
 .do-icon svg {

@@ -629,6 +629,21 @@ async function openContents(page) {
     check('what was going on is kept with it',
         (await page.textContent('.craving-card')).includes('Went to the shop.'));
 
+    // The one place the two logs meet. Nobody wants to go hunting for the page
+    // at that moment, so it is put in front of him — once, and it takes a no.
+    await page.waitForSelector('#drank-sheet:not([hidden])');
+    await shot(page, 'shot-drank-offer.png');
+    check('an entry that ends in a drink offers the three days there and then',
+        (await page.textContent('#drank-sheet .sheet-title')) === 'The three days');
+    await page.click('#drank-sheet-later');
+    await page.waitForSelector('#drank-sheet', { state: 'hidden' });
+    check('not now is taken for an answer, and starts nothing',
+        !(await page.evaluate(() => Store.openBreak())));
+    check('but the offer stays on the screen rather than the door closing',
+        await page.isVisible('#craving-offer') &&
+        (await page.textContent('#craving-offer .do-label')) === 'The three days');
+    await shot(page, 'shot-craving-offer.png');
+
     // ── before we talk ────────────────────────────────────────────────────
     await page.click('.tab[data-screen="home"]');
     await page.click('.shortcut[data-shortcut="sponsor"]');
@@ -959,6 +974,59 @@ async function openContents(page) {
     check('and the home row goes back to how it was',
         (await page.textContent('#broken-note')) === 'Three days, and what to do with them');
 
+    // ── the craving log and the three days ────────────────────────────────
+    await page.click('.shortcut[data-shortcut="craving"]');
+    await page.waitForSelector('#screen-craving.is-active');
+    check('the offer is still there days later, and says which entry it is for',
+        await page.isVisible('#craving-offer') &&
+        (await page.textContent('#craving-offer-note')).indexOf('For the one on ') === 0,
+        await page.textContent('#craving-offer-note'));
+
+    const drank = await page.evaluate(() => {
+        const row = Store.cravingNeedingPlan();
+        return { id: row.id, day: Store.dayISO(new Date(row.startedAt)) };
+    });
+    await page.click('#craving-offer');
+    await page.waitForSelector('#bounce-sheet:not([hidden])');
+    await shot(page, 'shot-bounce-carried.png');
+    check('taking it up carries the date over rather than asking twice',
+        (await page.inputValue('#bounce-sheet-on')) === drank.day &&
+        await page.isVisible('#bounce-sheet-from'),
+        (await page.inputValue('#bounce-sheet-on')) + ' vs ' + drank.day);
+
+    await page.click('#bounce-sheet-reset');   // his count, not the app's
+    await page.click('#bounce-sheet-save');
+    await page.waitForTimeout(400);
+    check('and the three days remember which entry they came from',
+        (await page.evaluate(() => Store.openBreak().cravingId)) === drank.id,
+        await page.evaluate(() => String(Store.openBreak().cravingId)));
+    await shot(page, 'shot-bounce-linked.png');
+    check('the page links back to it, with what was written at the time',
+        await page.isVisible('#bounce-from') &&
+        (await page.textContent('#bounce-from-note')).includes('Went to the shop.'),
+        await page.textContent('#bounce-from-note'));
+
+    await page.click('#bounce-copy');
+    await page.waitForSelector('#copy-sheet:not([hidden])');
+    const linkedOut = await page.inputValue('#copy-preview');
+    check('and what led to it can go to the sponsor with the rest',
+        linkedOut.includes('What led to it') && linkedOut.includes('Went to the shop.'),
+        (linkedOut.match(/What led to it[^]{0,30}/) || [''])[0]);
+    await page.click('#copy-cancel');
+    await page.waitForSelector('#copy-sheet', { state: 'hidden' });
+
+    page.once('dialog', (d) => d.accept());
+    await page.click('#bounce-close');
+    await page.waitForTimeout(400);
+    await page.click('.tab[data-screen="home"]');
+    await page.click('.shortcut[data-shortcut="craving"]');
+    await page.waitForSelector('#screen-craving.is-active');
+    check('once an entry has its three days it is never offered them again',
+        !(await page.isVisible('#craving-offer')) &&
+        !(await page.evaluate(() => Store.cravingNeedingPlan())),
+        'offer shown: ' + (await page.isVisible('#craving-offer')));
+    await page.click('.tab[data-screen="home"]');
+
     // ── backup round trip ─────────────────────────────────────────────────
     const slim = JSON.parse(await page.evaluate(() => Backup.serialize({ includeBookText: false })));
     check('backup carries notes, bookmarks, position, settings',
@@ -971,8 +1039,10 @@ async function openContents(page) {
         (slim.meetings || []).length + ' meetings');
     check('and what was worked out before a conversation',
         slim.checkins.length === 2, (slim.checkins || []).length + ' check-ins');
-    check('and the times abstinence broke', slim.breaks.length === 1,
+    check('and the times abstinence broke', slim.breaks.length === 2,
         (slim.breaks || []).length + ' breaks');
+    check('including which craving entry one of them came from',
+        slim.breaks.filter((row) => row.cravingId === drank.id).length === 1);
 
     // A backup written before the craving screen existed has no such key, and
     // must restore without emptying a list that is only worth anything whole.
@@ -988,7 +1058,7 @@ async function openContents(page) {
     }, JSON.stringify(older));
     check('an older backup restores without wiping any of them',
         keptThrough.cravings === 2 && keptThrough.meetings === 1 &&
-        keptThrough.checkins === 2 && keptThrough.breaks === 1,
+        keptThrough.checkins === 2 && keptThrough.breaks === 2,
         JSON.stringify(keptThrough));
     check('backup stays small when the text is not included',
         !slim.includesBookText && JSON.stringify(slim).length < 4000,
