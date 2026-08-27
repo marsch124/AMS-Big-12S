@@ -51,6 +51,7 @@
   --tile-write:   #f7d117;  --tile-write-on:   #7d690a;
   --who-sponsor:  var(--tile-sponsor);
   --who-sponsee:  var(--tile-sponsee);
+  --who-spouse:   #e11d48;
 
   /* The craving screen. Five rows that look identical are five things to read
      at the worst possible moment; a colour each is a thing to reach for, and
@@ -108,6 +109,7 @@
   --tile-write:   #8c6d46;  --tile-write-on:   #fbf6ea;
   --who-sponsor:  #8c6d46;
   --who-sponsee:  #8c6d46;
+  --who-spouse:   #8c6d46;
 
   --move-breathe: #8c6d46;  --move-breathe-on: #fbf6ea;
   --move-headon:  #8c6d46;  --move-headon-on:  #fbf6ea;
@@ -172,6 +174,7 @@
   --tile-sponsee: #22bb66;  --tile-sponsee-on: #00351a;
   --tile-message: #f0559b;  --tile-message-on: #4d0025;
   --tile-write:   #f7d117;  --tile-write-on:   #4f4300;
+  --who-spouse:   #f4708d;
 
   --move-breathe: #0eb5c9;  --move-breathe-on: #04343b;
   --move-headon:  #8b5cf6;  --move-headon-on:  #1c0050;
@@ -198,6 +201,14 @@
 #screen-checkin[data-who="sponsor"] { --accent: var(--who-sponsor); --accent-on: #ffffff; }
 #screen-checkin[data-who="sponsee"] { --accent: var(--who-sponsee); --accent-on: #ffffff; }
 #screen-checkin[data-who] .topbar { border-bottom: 3px solid var(--accent); }
+
+/* The same again for saying something to somebody. This screen is entirely
+   about who it is going to, so it wears them: the chosen chip, the send rows
+   and the band under the title all take that person's colour. */
+#screen-message[data-who="sponsor"] { --accent: var(--who-sponsor); --accent-on: #ffffff; }
+#screen-message[data-who="sponsee"] { --accent: var(--who-sponsee); --accent-on: #ffffff; }
+#screen-message[data-who="spouse"]  { --accent: var(--who-spouse);  --accent-on: #ffffff; }
+#screen-message[data-who] .topbar { border-bottom: 3px solid var(--accent); }
 
 [data-typeface="sans"] {
   --reader-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -938,7 +949,13 @@ button { cursor: pointer; }
    under it as well as over it. */
 #message-nobody { margin-bottom: 14px; }
 
-.message-card { border-left: 3px solid var(--accent); }
+/* .card.message-card, not .message-card: the fourth rule in this file to have
+   asked for a left edge and been overruled by .card's shorthand further down.
+   A message in the list is edged in the colour of whoever it went to. */
+.card.message-card { border-left: 3px solid var(--accent); }
+.card.message-card[data-who="sponsor"] { border-left-color: var(--who-sponsor); }
+.card.message-card[data-who="sponsee"] { border-left-color: var(--who-sponsee); }
+.card.message-card[data-who="spouse"]  { border-left-color: var(--who-spouse); }
 .message-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .message-who { font-size: 15px; font-weight: 600; }
 .message-when { font-size: 14px; color: var(--text-dim); }
@@ -1067,6 +1084,16 @@ button { cursor: pointer; }
    hidden: what you did not do on day one is worth seeing on day two. */
 .bounce-day.is-now { border-color: var(--accent); }
 .bounce-day.is-past { opacity: 0.72; }
+/* A day whose list is finished. Stated, not celebrated: getting through one of
+   these days is not an achievement to be congratulated, it is a thing that
+   happened, and the screen says so in the same voice as everything else. */
+.bounce-day.is-complete .bounce-day-when::after {
+  /* Two spaces: the first ends the hex escape and is eaten, the second is the
+     one that actually shows. One space rendered as "\u00b7all done". */
+  content: ' \00b7  all done';
+  color: var(--accent);
+  font-weight: 600;
+}
 .bounce-day-title {
   display: flex;
   align-items: baseline;

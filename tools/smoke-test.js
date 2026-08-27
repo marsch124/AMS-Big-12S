@@ -1150,6 +1150,23 @@ async function openContents(page) {
     await page.waitForTimeout(250);
     check('a task ticks off and stays ticked',
         await page.evaluate(() => !!Store.openBreak().days['1'].done.tell));
+
+    // Every task on a day, ticked. Marked, and marked quietly: getting through
+    // one of these days is a thing that happened, not an achievement.
+    check('a day with one thing left is not marked finished',
+        (await page.$$eval('.bounce-day.is-complete', (e) => e.length)) === 0);
+    const dayOneTasks = await page.$$eval('.bounce-day >> nth=0 >> .bounce-task',
+        (e) => e.length);
+    for (let i = 0; i < dayOneTasks; i += 1) {
+        const left = await page.$$('.bounce-day >> nth=0 >> .bounce-task:not(.is-done)');
+        if (!left.length) break;
+        await left[0].click();
+        await page.waitForTimeout(160);
+    }
+    check('and one with everything ticked says so',
+        (await page.$$eval('.bounce-day.is-complete', (e) => e.length)) === 1 &&
+        (await page.$eval('.bounce-day.is-complete .bounce-day-when',
+            (n) => getComputedStyle(n, '::after').content)).indexOf('all done') > -1);
     await page.fill('#bounce-what', 'Wine at a work dinner.');
     await page.dispatchEvent('#bounce-what', 'change');
     await page.waitForTimeout(250);
@@ -1602,6 +1619,34 @@ async function openContents(page) {
         writeTo.length === 3 && writeTo[0] === 'Karl' && writeTo[1] === 'Tobias' &&
         writeTo[2] === 'Anna', writeTo.join(', '));
 
+    // The screen belongs to whoever it is going to, like the check-in. Reading
+    // the colour off the screen and switching person has to actually move it.
+    const whoColour = (role) => page.evaluate((r) => {
+        const probe = document.createElement('span');
+        document.body.appendChild(probe);
+        probe.style.color = 'var(--who-' + r + ')';
+        const c = getComputedStyle(probe).color;
+        probe.remove();
+        return c;
+    }, role);
+    const bandFor = () => page.$eval('#screen-message', (n) => ({
+        who: n.dataset.who,
+        band: getComputedStyle(n.querySelector('.topbar')).borderBottomColor,
+    }));
+    const asSponsor = await bandFor();
+    check('the message screen wears your sponsor to start with',
+        asSponsor.who === 'sponsor' && asSponsor.band === (await whoColour('sponsor')),
+        asSponsor.who + ' ' + asSponsor.band);
+    await page.click('#message-who .chip[data-who="spouse"]');
+    await page.waitForTimeout(200);
+    const asSpouse = await bandFor();
+    check('and changes colour when you change who it is for',
+        asSpouse.who === 'spouse' && asSpouse.band === (await whoColour('spouse')) &&
+        asSpouse.band !== asSponsor.band,
+        asSponsor.band + ' -> ' + asSpouse.band);
+    await page.click('#message-who .chip[data-who="sponsor"]');
+    await page.waitForTimeout(200);
+
     check('nothing is recorded before anything has been sent',
         (await page.textContent('#message-summary')).includes('Nothing sent'),
         await page.textContent('#message-summary'));
@@ -1673,6 +1718,19 @@ async function openContents(page) {
     check('the record says how it left rather than that it arrived',
         (await page.textContent('.message-card .message-how')) === 'Copied',
         await page.textContent('.message-card .message-how'));
+
+    // .message-card was the fourth rule in the stylesheet to ask for a left
+    // edge and be overruled by .card's shorthand. It is edged in whoever the
+    // message went to now, and this check is what keeps it that way.
+    const sentEdge = await page.$eval('.message-card', (n) => ({
+        who: n.dataset.who,
+        width: getComputedStyle(n).borderLeftWidth,
+        colour: getComputedStyle(n).borderLeftColor,
+    }));
+    check('a sent message is edged in the colour of who it went to',
+        sentEdge.who === 'sponsor' && sentEdge.width === '3px' &&
+        sentEdge.colour === (await whoColour('sponsor')),
+        sentEdge.who + ' ' + sentEdge.width + ' ' + sentEdge.colour);
     check('and the summary counts it',
         (await page.textContent('#message-summary')).includes('One sent from here'),
         await page.textContent('#message-summary'));

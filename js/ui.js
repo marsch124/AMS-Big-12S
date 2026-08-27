@@ -1021,10 +1021,17 @@
             var kept = (row.days && row.days[plan.day]) || {};
             var done = kept.done || {};
 
+            // Every task on that day ticked. Worth saying, and worth saying
+            // quietly — see the note on .bounce-day.is-complete.
+            var allDone = plan.tasks.length > 0 && plan.tasks.every(function (task) {
+                return !!done[task.id];
+            });
+
             var panel = document.createElement('div');
             panel.className = 'bounce-day' +
                 (plan.day === currentDay ? ' is-now' : '') +
-                (plan.day < currentDay ? ' is-past' : '');
+                (plan.day < currentDay ? ' is-past' : '') +
+                (allDone ? ' is-complete' : '');
 
             var head = document.createElement('h2');
             head.className = 'bounce-day-title';
@@ -1663,6 +1670,9 @@
     }
 
     function renderMessageWho(people) {
+        // The screen takes the colour of whoever it is going to, the same way
+        // the check-in takes the colour of whoever you are talking to.
+        $('screen-message').dataset.who = messageWho;
         var box = $('message-who');
         box.innerHTML = '';
         people.forEach(function (person) {
@@ -1837,6 +1847,7 @@
         Store.state.messages.slice(0, 10).forEach(function (row) {
             var card = document.createElement('button');
             card.className = 'card message-card';
+            card.dataset.who = row.who;
             card.innerHTML =
                 '<span class="message-head">' +
                     '<span class="message-who">' +

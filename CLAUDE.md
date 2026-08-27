@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.27 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.28 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,43 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## The message and bounce screens (2.28) — the last two
+
+**`#screen-message[data-who]` works exactly like the check-in's**, set in
+`renderMessageWho()`. Three people now: `--who-sponsor`, `--who-sponsee` and
+`--who-spouse` (`#e11d48`, ΔE 101 from the sponsor violet). Sent messages carry
+`data-who` and are edged in it, so the list reads as people rather than texts.
+
+**`.card.message-card` was the fourth `border-left` in this file to lose to
+`.card`'s shorthand.** All four are fixed and all four have tests. If you add a
+component that carries `.card` and wants an edge, write both classes.
+
+**`.bounce-day.is-complete` states it and does not celebrate it.** Getting
+through one of those three days is a thing that happened, not an achievement —
+same rule as the day count and the meeting list. No badge, no colour change to
+the panel, just the words *all done* after the day's name.
+
+**A CSS hex escape eats the space that ends it.** `content: ' \00b7 all done'`
+renders as `·all done`; it needs two spaces, the first to terminate the escape
+and the second to show. Caught by rendering it, not by reading it.
+
+### The colour pass is finished
+
+Every screen has been through it: home, the steps and Traditions, the craving
+page, notes, Settings, the reader and its contents, search, meetings, both
+check-ins, saying something, and starting again. The system is:
+
+- **`--hue-*` per tab**, set on `<html>` as `[data-hue]` by `showScreen()`.
+- **`--tile-*` / `--move-*`** for bright fills that are chosen between.
+- **`--who-*` per person**, aliased to the home tiles, used anywhere a thing
+  belongs to somebody — notes, note edges in the reader, rule lists, check-ins,
+  messages.
+- **A screen that belongs to a person overrides `--accent` on itself**, beating
+  `[data-hue]` without changing which tab is lit.
+- **Filled means you have been here**: a worked step, the chapter you left off
+  in, a meeting you spoke at, a finished bounce day.
+- **The book text and the craving page take none of it.**
 
 ## The meeting and check-in screens (2.27)
 
@@ -1042,7 +1079,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    480 end-to-end browser checks
+tools/smoke-test.js    485 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -1054,7 +1091,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 480 checks, expect 480/480
+node tools/smoke-test.js                  # 485 checks, expect 485/485
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.
