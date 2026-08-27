@@ -16,12 +16,12 @@
   --bg-sunken: #f1ede4;
   --paper:     #faf5e9;
   --text:      #2b2925;
-  --text-dim:  #77716a;
+  --text-dim:  #6d6761;
   --rule:      #ebe6db;
-  --accent:    #0072c5;
+  --accent:    #006bb8;
   --accent-on: #ffffff;
   --mark:      #ffe08a;
-  --danger:    #c4452f;
+  --danger:    #b7412c;
 
   /* Cards sit on the page rather than being drawn onto it. */
   --shadow:      0 1px 2px rgba(52, 46, 36, 0.04), 0 5px 14px rgba(52, 46, 36, 0.055);
@@ -31,42 +31,52 @@
 
   /* One colour per place. Each clears 4.5:1 on both grounds — --accent is
      small bold type in a dozen places, not only icons. */
-  --hue-home:     #bf4d00;
-  --hue-library:  #0072c5;
+  --hue-home:     #b24800;
+  --hue-library:  #006bb8;
   --hue-steps:    #6d28d9;
-  --hue-notes:    #00822b;
-  --hue-search:   #007d7d;
+  --hue-notes:    #007a28;
+  --hue-search:   #007575;
   --wash: #fff4d9;
+
+  /* Every screen stands on a soft wash of its own colour. The cards stay white
+     on top of it, so nothing that has to be read is on a tint — the colour is
+     the room, and the card is the paper you read off in it. */
+  --tint-home:     #fbf1ea;
+  --tint-library:  #eaf3fb;
+  --tint-steps:    #f0eafb;
+  --tint-notes:    #eafbf1;
+  --tint-search:   #eafbfb;
+  --tint-settings: #fbeaf4;
 
   /* The home tiles. A tile is coloured by where it takes you, not by where it
      sits, so Read is the Read tab's blue. The chip is a solid bright fill and
      the icon is a deep tone of the same hue — the colour has to carry at a
      glance, and a 14% tint of it did not. Every --on clears 3.6:1 on its own
      fill: an icon is a graphic, so 3:1 is the bar it has to meet, not 4.5. */
-  --tile-read:    #2e9bf0;  --tile-read-on:    #00406e;
-  --tile-meeting: #f26419;  --tile-meeting-on: #662502;
-  --tile-sponsor: #8b5cf6;  --tile-sponsor-on: #2c0275;
-  --tile-sponsee: #22bb66;  --tile-sponsee-on: #0a542f;
-  --tile-message: #f0559b;  --tile-message-on: #730039;
-  --tile-write:   #f7d117;  --tile-write-on:   #7d690a;
+  --tile-read:    #1e9bff;  --tile-read-on:    #004073;
+  --tile-meeting: #ff6a1f;  --tile-meeting-on: #732802;
+  --tile-sponsor: #9061ff;  --tile-sponsor-on: #2a008c;
+  --tile-sponsee: #12c96f;  --tile-sponsee-on: #0b5e36;
+  --tile-message: #ff4fa3;  --tile-message-on: #7a023c;
+  --tile-write:   #ffd60a;  --tile-write-on:   #826c00;
   /* A person's colour, for TYPE — pills, headings, the flag under a paragraph,
      the edge on their cards. These were aliases of --tile-* until 2.29, and a
      tile is a bright fill chosen against white: as small bold text the sponsee
      green measured 2.41:1. Same hue as the tile, made fit for reading. */
-  --who-sponsor:  #7f54e2;
-  --who-sponsee:  #178046;
-  --who-spouse:   #d91c46;
+  --who-sponsor:  #764ed3;
+  --who-sponsee:  #167842;
+  --who-spouse:   #cc1a42;
 
   /* The craving screen. Five rows that look identical are five things to read
      at the worst possible moment; a colour each is a thing to reach for, and
      one you can learn. This is legibility under stress, not decoration — the
      page's tone is untouched, and nothing on it is cheerful. */
-  --move-breathe: #0eb5c9;  --move-breathe-on: #105159;
-  --move-headon:  #8b5cf6;  --move-headon-on:  #27027a;
-  --move-whatif:  #f7d117;  --move-whatif-on:  #7d690a;
-  --move-shower:  #2e9bf0;  --move-shower-on:  #003f70;
-  --move-own:     #22bb66;  --move-own-on:     #0d542d;
-  --move-reach:   #f0559b;  --move-reach-on:   #730235;
+  --move-breathe: #00c8de;  --move-breathe-on: #0d5f69;
+  --move-headon:  #9061ff;  --move-headon-on:  #2a008c;
+  --move-whatif:  #ffd60a;  --move-whatif-on:  #826c00;
+  --move-shower:  #1e9bff;  --move-shower-on:  #004073;
+  --move-own:     #12c96f;  --move-own-on:     #0b5e36;
+  --move-reach:   #ff4fa3;  --move-reach-on:   #7a023c;
   --move-prayer:  #94a3b8;  --move-prayer-on:  #263141;
 
   --hue-settings: #b03a7a;
@@ -80,57 +90,6 @@
   --tabbar-h: 56px;
 }
 
-/* The old default, kept whole and kept monochrome. It is the reading theme,
-   and the one way back to an app that feels entirely like a book. */
-[data-theme="sepia"] {
-  --bg:        #f4ecd8;
-  --bg-raised: #fbf6ea;
-  --bg-sunken: #ebe0c8;
-  --paper:     #f4ecd8;
-  --text:      #3a3226;
-  --text-dim:  #756751;
-  --rule:      #ddceb0;
-  --accent:    #7f6340;
-  --accent-on: #ffffff;
-  --mark:      #e8c98a;
-  --danger:    #a4402f;
-  --shadow:      0 1px 2px rgba(58, 50, 38, 0.05), 0 4px 12px rgba(58, 50, 38, 0.05);
-  --shadow-lift: 0 2px 5px rgba(58, 50, 38, 0.08), 0 10px 24px rgba(58, 50, 38, 0.09);
-
-  --hue-home:     #7f6340;
-  --hue-library:  #7f6340;
-  --hue-steps:    #7f6340;
-  --hue-notes:    #7f6340;
-  --hue-search:   #7f6340;
-  --hue-settings: #7f6340;
-  --wash: #f4ecd8;
-
-  --tile-read:    #8c6d46;  --tile-read-on:    #fbf6ea;
-  --tile-meeting: #8c6d46;  --tile-meeting-on: #fbf6ea;
-  --tile-sponsor: #8c6d46;  --tile-sponsor-on: #fbf6ea;
-  --tile-sponsee: #8c6d46;  --tile-sponsee-on: #fbf6ea;
-  --tile-message: #8c6d46;  --tile-message-on: #fbf6ea;
-  --tile-write:   #8c6d46;  --tile-write-on:   #fbf6ea;
-  --who-sponsor:  #7f6340;
-  --who-sponsee:  #7f6340;
-  --who-spouse:   #7f6340;
-
-  /* The one exception to sepia being a single colour, and it is deliberate.
-     The five ways out of a craving are coloured everywhere, including here,
-     because that colour is legibility and not decoration: nobody chooses a
-     reading theme in March meaning to make the worst ten minutes of July
-     harder to read. Reaching somebody and the two prayers stay brown — those
-     are named by a person or a title, and they are not what you are picking
-     between in a hurry. */
-  --move-breathe: #0eb5c9;  --move-breathe-on: #105159;
-  --move-headon:  #8b5cf6;  --move-headon-on:  #27027a;
-  --move-whatif:  #f7d117;  --move-whatif-on:  #7d690a;
-  --move-shower:  #2e9bf0;  --move-shower-on:  #003f70;
-  --move-own:     #22bb66;  --move-own-on:     #0d542d;
-  --move-reach:   #8c6d46;  --move-reach-on:   #fbf6ea;
-  --move-prayer:  #8c6d46;  --move-prayer-on:  #fbf6ea;
-}
-
 [data-theme="light"] {
   --bg:        #f7f8fa;
   --bg-raised: #ffffff;
@@ -139,18 +98,25 @@
   --text:      #1c1a17;
   --text-dim:  #6b6862;
   --rule:      #e4e7ec;
-  --accent:    #0072c5;
+  --accent:    #006bb8;
   --mark:      #ffe08a;
   --shadow:      0 1px 2px rgba(20, 24, 32, 0.05), 0 5px 14px rgba(20, 24, 32, 0.06);
   --shadow-lift: 0 2px 5px rgba(20, 24, 32, 0.08), 0 12px 28px rgba(20, 24, 32, 0.10);
 
-  --hue-home:     #bf4d00;
-  --hue-library:  #0072c5;
+  --hue-home:     #b24800;
+  --hue-library:  #006bb8;
   --hue-steps:    #6d28d9;
-  --hue-notes:    #00822b;
-  --hue-search:   #007d7d;
+  --hue-notes:    #007a28;
+  --hue-search:   #007575;
   --hue-settings: #b03a7a;
   --wash: #fdf1e3;
+
+  --tint-home:     #fdf3ed;
+  --tint-library:  #eef5fc;
+  --tint-steps:    #f3edfc;
+  --tint-notes:    #edfcf3;
+  --tint-search:   #edfcfc;
+  --tint-settings: #fcedf6;
 }
 
 /* Night, not a switched-off day. The hues lift and desaturate so they read at
@@ -179,6 +145,13 @@
   --hue-settings: #e885bd;
   --wash: #24282f;
 
+  --tint-home:     #1d1917;
+  --tint-library:  #171a1d;
+  --tint-steps:    #19171d;
+  --tint-notes:    #171d1a;
+  --tint-search:   #171d1d;
+  --tint-settings: #1d171b;
+
   --tile-read:    #2e9bf0;  --tile-read-on:    #00294a;
   --tile-meeting: #f26419;  --tile-meeting-on: #431800;
   --tile-sponsor: #8b5cf6;  --tile-sponsor-on: #1c0050;
@@ -204,12 +177,12 @@
 
 /* The lit tab colours the screen it opened. Set on <html> by showScreen, so a
    sheet or a sub-screen keeps the colour of the tab it belongs to. */
-[data-hue="home"]     { --accent: var(--hue-home); }
-[data-hue="library"]  { --accent: var(--hue-library); }
-[data-hue="steps"]    { --accent: var(--hue-steps); }
-[data-hue="notes"]    { --accent: var(--hue-notes); }
-[data-hue="search"]   { --accent: var(--hue-search); }
-[data-hue="settings"] { --accent: var(--hue-settings); }
+[data-hue="home"]     { --accent: var(--hue-home);     --bg: var(--tint-home); }
+[data-hue="library"]  { --accent: var(--hue-library);  --bg: var(--tint-library); }
+[data-hue="steps"]    { --accent: var(--hue-steps);    --bg: var(--tint-steps); }
+[data-hue="notes"]    { --accent: var(--hue-notes);    --bg: var(--tint-notes); }
+[data-hue="search"]   { --accent: var(--hue-search);   --bg: var(--tint-search); }
+[data-hue="settings"] { --accent: var(--hue-settings); --bg: var(--tint-settings); }
 
 /* Two screens belong to a person rather than to a tab, and take that person's
    colour over the tab's: talking to your sponsor is violet all the way down,
@@ -292,7 +265,9 @@ button { cursor: pointer; }
   align-items: center;
   gap: 8px;
   padding: calc(var(--safe-top) + 12px) 14px 12px;
-  background: var(--bg-raised);
+  /* --bg, not --bg-raised: --bg carries the screen's own tint, and a white bar
+     over a coloured ground was a seam across the top of every screen. */
+  background: var(--bg);
   border-bottom: 1px solid var(--rule);
 }
 .topbar-titles { flex: 1; min-width: 0; }
@@ -2306,7 +2281,6 @@ button:focus-visible,
 }
 .swatch.is-active { border-color: var(--accent); }
 .swatch-morning { background: #fcfaf6; color: #1f7fa8; }
-.swatch-sepia { background: #f4ecd8; color: #3a3226; }
 .swatch-light { background: #ffffff; color: #1c1a17; }
 .swatch-dark  { background: #12100e; color: #ddd6cc; }
 

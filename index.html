@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="sepia">
+<html lang="en" data-theme="morning">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=42">
+<link rel="stylesheet" href="css/style.css?v=43">
 </head>
 <body>
 
@@ -743,7 +743,6 @@
           <span>Theme</span>
           <select id="set-theme">
             <option value="morning">Morning</option>
-            <option value="sepia">Sepia</option>
             <option value="light">Light</option>
             <option value="dark">Dark</option>
             <option value="auto">Match device</option>
@@ -1219,6 +1218,29 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Rooms, not pages</span><span class="ver-tag">2.31</span></summary>
+          <div class="disclosure-body">
+            <p><strong>Every screen now stands on a wash of its own colour.</strong> The
+               Steps are a violet room, your notes a green one, Search teal, Settings rose,
+               and Home the warm one it always was. The cards stay white on top, so nothing
+               you actually have to read sits on a tint — <em>the colour is the room, and
+               the card is the paper you read off in it.</em> The bar at the top joins in
+               rather than sitting across it in white.</p>
+            <p><strong>The colours themselves are brighter.</strong> Every fill went up:
+               the blue, the orange, the violet, the green, the pink, the yellow and the
+               cyan on the breathing row.</p>
+            <p><strong>Sepia is gone.</strong> Morning, Light and Dark are what is left, and
+               anybody still on Sepia comes out on Morning. It was the way back to an app
+               that looked like a book, and that is no longer what this app is trying to
+               be.</p>
+            <p>Adding the tints knocked ten colours below the readable line at once, because
+               a tinted ground is slightly darker than a white one. The palette test walks
+               <strong>every screen of every theme</strong> now — three themes by six rooms
+               — rather than one ground each.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>The one exception in Sepia</span><span class="ver-tag">2.30</span></summary>
@@ -2611,7 +2633,6 @@
   <label class="row"><span>Spacing</span><input type="range" id="type-lineheight" min="130" max="220" step="5"></label>
   <div class="theme-swatches">
     <button class="swatch swatch-morning" data-theme-pick="morning" aria-label="Morning">Aa</button>
-    <button class="swatch swatch-sepia" data-theme-pick="sepia" aria-label="Sepia">Aa</button>
     <button class="swatch swatch-light" data-theme-pick="light" aria-label="Light">Aa</button>
     <button class="swatch swatch-dark" data-theme-pick="dark" aria-label="Dark">Aa</button>
   </div>
@@ -2753,7 +2774,7 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=8"></script>
-<script src="js/store.js?v=25"></script>
+<script src="js/store.js?v=26"></script>
 <script src="js/backup.js?v=10"></script>
 <script src="js/ui.js?v=44"></script>
 <script src="js/app.js?v=26"></script>

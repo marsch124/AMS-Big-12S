@@ -254,25 +254,34 @@ async function openContents(page) {
             const [hi, lo] = lum(a) > lum(b) ? [lum(a), lum(b)] : [lum(b), lum(a)];
             return (hi + 0.05) / (lo + 0.05);
         };
+        // Every theme crossed with every screen's own ground. --bg is set per
+        // hue now, so checking one hue would leave five untested — and the
+        // tints differ enough in lightness to matter: adding them dropped ten
+        // colours below the bar at once.
         const was = document.documentElement.getAttribute('data-theme');
+        const wasHue = document.documentElement.getAttribute('data-hue');
         const bad = [];
-        ['morning', 'sepia', 'light', 'dark'].forEach((theme) => {
+        ['morning', 'light', 'dark'].forEach((theme) => {
             document.documentElement.setAttribute('data-theme', theme);
-            const bg = read('--bg');
-            const raised = read('--bg-raised');
-            asText.forEach((token) => {
-                const c = read(token);
-                const worst = Math.min(ratio(c, bg), ratio(c, raised));
-                if (worst < 4.5) {
-                    bad.push(theme + ' ' + token + ' ' + worst.toFixed(2));
-                }
+            ['home', 'library', 'steps', 'notes', 'search', 'settings'].forEach((hue) => {
+                document.documentElement.setAttribute('data-hue', hue);
+                const bg = read('--bg');
+                const raised = read('--bg-raised');
+                asText.forEach((token) => {
+                    const c = read(token);
+                    const worst = Math.min(ratio(c, bg), ratio(c, raised));
+                    if (worst < 4.5) {
+                        bad.push(theme + '/' + hue + ' ' + token + ' ' + worst.toFixed(2));
+                    }
+                });
             });
         });
         document.documentElement.setAttribute('data-theme', was);
+        if (wasHue) document.documentElement.setAttribute('data-hue', wasHue);
         probe.remove();
         return bad;
     });
-    check('every colour used as type clears 4.5:1 in all four themes',
+    check('every type colour clears 4.5:1 on every screen of every theme',
         paletteTrouble.length === 0, paletteTrouble.join(' | ') || 'all clear');
 
     // Headings are ink, not the accent. They were the accent colour for one
@@ -303,28 +312,6 @@ async function openContents(page) {
         new Set(moveChips.map((m) => m.chip)).size === 5,
         moveChips.map((m) => m.chip).join(' '));
 
-    // Sepia is one colour everywhere except here. That is deliberate: the
-    // colour on these five rows is legibility, not decoration, and nobody
-    // picks a reading theme meaning to make the worst ten minutes harder to
-    // read. Reaching somebody and the prayers do stay brown — they are named
-    // by a person or a title and are not what you pick between in a hurry.
-    const inSepia = await page.evaluate(() => {
-        const was = document.documentElement.getAttribute('data-theme');
-        document.documentElement.setAttribute('data-theme', 'sepia');
-        const chip = (sel) => {
-            const n = document.querySelector(sel);
-            return n ? getComputedStyle(n.querySelector('.do-icon')).backgroundColor : '';
-        };
-        const moves = [...document.querySelectorAll('#craving-moves .do-row')]
-            .map((n) => getComputedStyle(n.querySelector('.do-icon')).backgroundColor);
-        const reach = chip('#craving-message');
-        document.documentElement.setAttribute('data-theme', was);
-        return { moves, reach };
-    });
-    check('the five ways out keep their colours even in sepia',
-        new Set(inSepia.moves).size === 5, inSepia.moves.join(' '));
-    check('and everything else on that screen stays sepia\'s one colour',
-        inSepia.moves.indexOf(inSepia.reach) === -1, 'reach ' + inSepia.reach);
     check('the ways to reach somebody are one colour, being one kind of thing',
         (await page.$$eval('#craving-rings .do-row, #craving-message, #craving-write',
             (nodes) => nodes.length > 0 &&
@@ -3113,7 +3100,7 @@ async function openContents(page) {
     await page.selectOption('#set-theme', 'dark');
     await page.waitForTimeout(150);
     check('theme switches', (await page.getAttribute('html', 'data-theme')) === 'dark');
-    await page.selectOption('#set-theme', 'sepia');
+    await page.selectOption('#set-theme', 'morning');
     check('settings shows what text is loaded',
         (await page.textContent('#book-status')).includes('First Edition (1939)'));
 

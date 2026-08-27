@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.30 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.31 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,33 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## Rooms, and the end of Sepia (2.31)
+
+**Martin's brief, restated when he thought it was drifting:** "I want the happy,
+fresh, whimsical colors." He asked for all three of: more colour on the
+surfaces, brighter hues, and Sepia dropped.
+
+**`[data-hue]` sets `--bg` as well as `--accent`**, from `--tint-*`. Each screen
+stands on a soft wash of its own colour and the cards stay `--bg-raised` white
+on top of it, so no text that matters sits on a tint. `.topbar` uses `--bg` for
+the same reason — as `--bg-raised` it was a white seam across the top of every
+coloured screen. `--paper` still overrides it in the reader.
+
+**Adding the tints put ten type colours below 4.5:1 in one move**, because a
+tinted ground is darker than white. Every type colour is now solved against the
+*darkest* tint in play (`--tint-steps`), so one set works in every room, and the
+audit walks **theme × hue** — three by six — rather than one ground per theme.
+Adding a tint without re-running it is how this breaks.
+
+**Sepia is deleted, not hidden.** `loadSettings()` maps a stored `sepia` to
+`morning` unconditionally. The old `themeMoved` marker is gone and may linger
+harmlessly in existing settings records. `--paper` in Morning keeps the reader
+feeling like paper, which was the half of Sepia worth keeping.
+
+**Do not reintroduce a monochrome theme** without asking: dropping Sepia was an
+explicit instruction, and the craving-screen exception that existed only to
+survive it went with it.
 
 ## Sepia's one exception (2.30)
 
@@ -1127,7 +1154,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    488 end-to-end browser checks
+tools/smoke-test.js    486 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -1139,7 +1166,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 488 checks, expect 488/488
+node tools/smoke-test.js                  # 486 checks, expect 486/486
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.
