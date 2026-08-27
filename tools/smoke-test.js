@@ -52,6 +52,18 @@ function sameHue(a, b, within = 15) {
     return Math.min(gap, 360 - gap) < within;
 }
 
+/* Settings is an index of folded sections. A test that wants to touch
+ * something inside one has to open it, exactly as a reader would — except the
+ * version history, which has its own check that it starts shut. */
+async function openSettings(page) {
+    await page.click('.tab[data-screen="settings"]');
+    await page.waitForSelector('#screen-settings.is-active');
+    await page.$$eval('#screen-settings .disclosure-section', (nodes) => {
+        nodes.forEach((n) => { if (n.id !== 'version-history') n.open = true; });
+    });
+    await page.waitForTimeout(120);
+}
+
 async function shot(page, name) {
     if (!SHOT_DIR) return;
     fs.mkdirSync(SHOT_DIR, { recursive: true });
@@ -452,8 +464,7 @@ async function openContents(page) {
         (await page.textContent('#stats .stat:last-child')).includes('opened the app'));
 
     // ── the rules ─────────────────────────────────────────────────────────
-    await page.click('.tab[data-screen="settings"]');
-    await page.waitForSelector('#screen-settings.is-active');
+    await openSettings(page);
 
     const sponsorRules = await page.$$eval('#rules-sponsor-list li', (e) => e.map((x) => x.textContent));
     check('the sponsor rules are there from the first run', sponsorRules.length === 4 &&
@@ -1331,14 +1342,55 @@ async function openContents(page) {
         'offer shown: ' + (await page.isVisible('#craving-offer')));
     await page.click('.tab[data-screen="home"]');
 
+    // ── settings as an index ──────────────────────────────────────────────
+    // Every section folds now, so the screen opens as a list you can read in
+    // one go rather than a scroll you have to travel.
+    await page.click('.tab[data-screen="settings"]');
+    await page.waitForSelector('#screen-settings.is-active');
+    const index = await page.$$eval(
+        '#screen-settings > .screen-body > .disclosure-section',
+        (nodes) => nodes.map((n) => ({
+            title: n.querySelector('summary').textContent.replace(/\s+/g, ' ').trim(),
+            open: n.hasAttribute('open'),
+        })));
+    check('Settings opens as an index of folded sections',
+        index.length >= 10 && index.every((r) => !r.open),
+        index.length + ' rows: ' + index.map((r) => r.title).join(' / '));
+    check('and it starts with what you change and ends with what you read once',
+        index[0].title === 'Reading' && index[index.length - 1].title === 'About',
+        index[0].title + ' \u2026 ' + index[index.length - 1].title);
+    // Near enough one screen: the whole index is in view or one nudge away,
+    // rather than the several screens of travel it used to be. Deliberately
+    // not "fits exactly" — the rows could be squeezed to win that, and they
+    // would drop under the 44px a thumb needs, which is the property worth
+    // more of the two.
+    const indexFit = await page.$eval('#screen-settings .screen-body',
+        (n) => ({ content: n.scrollHeight, screen: n.clientHeight }));
+    check('the whole index is about one screen, not a journey',
+        indexFit.content < indexFit.screen * 1.2,
+        indexFit.content + 'px of ' + indexFit.screen + 'px');
+    const rowHeights = await page.$$eval(
+        '#screen-settings > .screen-body > .disclosure-section > summary',
+        (nodes) => nodes.map((n) => Math.round(n.getBoundingClientRect().height)));
+    check('and every row is still big enough to hit with a thumb',
+        Math.min(...rowHeights) >= 44, 'smallest ' + Math.min(...rowHeights) + 'px');
+
+    // A deep link has to open the door it points at, not scroll to a shut one.
+    await page.click('.tab[data-screen="home"]');
+    await page.waitForSelector('#screen-home.is-active');
+    await page.click('#daycount');
+    await page.waitForSelector('#screen-settings.is-active');
+    await page.waitForTimeout(200);
+    check('a link into Settings opens the section it points at',
+        await page.$eval('#settings-abstinence', (n) => n.hasAttribute('open')));
+
     // ── the disclaimer ────────────────────────────────────────────────────
     // Somebody looking for who is answerable for this app should find the
     // answer in the app, not only in a README they will never open.
-    await page.click('.tab[data-screen="settings"]');
-    await page.waitForSelector('#screen-settings.is-active');
+    await openSettings(page);
     const disclaimer = await page.evaluate(() => {
         const h = document.getElementById('settings-disclaimer');
-        return h ? h.nextElementSibling.textContent.replace(/\s+/g, ' ') : '';
+        return h ? h.textContent.replace(/\s+/g, ' ') : '';
     });
     check('Settings carries a disclaimer of its own', disclaimer.length > 200);
     check('it says the responsibility taken is none',
@@ -2420,8 +2472,7 @@ async function openContents(page) {
         forSponsee.edge + ' vs tile ' + tileColours.sponsee);
 
     // Settings tells the two conversations apart the same way.
-    await page.click('.tab[data-screen="settings"]');
-    await page.waitForSelector('#screen-settings.is-active');
+    await openSettings(page);
     const ruleTitles = await page.$$eval('.ruleset[data-who]', (sets) =>
         sets.map((n) => ({
             who: n.dataset.who,
@@ -3096,7 +3147,7 @@ async function openContents(page) {
     await page.waitForSelector('#share-sheet', { state: 'hidden' });
 
     // ── appearance ────────────────────────────────────────────────────────
-    await page.click('.tab[data-screen="settings"]');
+    await openSettings(page);
     await page.selectOption('#set-theme', 'dark');
     await page.waitForTimeout(150);
     check('theme switches', (await page.getAttribute('html', 'data-theme')) === 'dark');
@@ -3186,7 +3237,7 @@ async function openContents(page) {
 
     await page.click('#reader-back');
     await page.evaluate(() => Store.savePosition({ sectionId: 'ch05', paraIndex: 12, ratio: 0.2 }));
-    await page.click('.tab[data-screen="settings"]');
+    await openSettings(page);
 
     // ── a passing look does not move where you are up to ──────────────────
     await page.click('.tab[data-screen="library"]');
@@ -3240,7 +3291,7 @@ async function openContents(page) {
         (await page.evaluate(() => Store.state.position.sectionId)) === 'ch02');
     await page.click('#reader-back');
     await page.evaluate(() => Store.savePosition({ sectionId: 'ch05', paraIndex: 12, ratio: 0.2 }));
-    await page.click('.tab[data-screen="settings"]');
+    await openSettings(page);
 
     // A morning time reads the same either way, so prove it on an evening one.
     const evening = await page.evaluate(async () => {
@@ -3261,7 +3312,7 @@ async function openContents(page) {
     // next, and the housekeeping last. Order is asserted, not left to whoever
     // appends the next panel to the bottom.
     const howPanels = await page.$$eval(
-        '#screen-settings .panel-flush > .disclosure > summary',
+        '#settings-how .section-body > .disclosure > summary',
         (nodes) => nodes.map((n) => n.textContent.trim()));
     check('How this works opens with the way in', howPanels[0] === 'Start here',
         howPanels[0]);
@@ -3271,15 +3322,15 @@ async function openContents(page) {
         howPanels[howPanels.length - 1] === 'Nothing leaves this phone',
         howPanels[howPanels.length - 1]);
     check('every panel folds away shut', !(await page.$$eval(
-        '#screen-settings .panel-flush > .disclosure',
+        '#settings-how .section-body > .disclosure',
         (nodes) => nodes.some((n) => n.hasAttribute('open')))));
 
     // Start here has to answer three questions to be worth its place: why the
     // app exists, what happens to what you write, and what a normal week is.
-    await page.click('#screen-settings .panel-flush > .disclosure:first-child > summary');
+    await page.click('#settings-how .section-body > .disclosure:first-child > summary');
     await page.waitForTimeout(150);
     const startHere = await page.$eval(
-        '#screen-settings .panel-flush > .disclosure:first-child .disclosure-body',
+        '#settings-how .section-body > .disclosure:first-child .disclosure-body',
         (e) => e.innerText);
     check('it points at the craving page before anything else',
         startHere.indexOf('I have a craving') > -1 &&
@@ -3292,9 +3343,9 @@ async function openContents(page) {
     check('and walks through an ordinary week',
         /An ordinary week/.test(startHere) &&
         (await page.$$eval(
-            '#screen-settings .panel-flush > .disclosure:first-child li',
+            '#settings-how .section-body > .disclosure:first-child li',
             (e) => e.length)) === 6);
-    await page.click('#screen-settings .panel-flush > .disclosure:first-child > summary');
+    await page.click('#settings-how .section-body > .disclosure:first-child > summary');
 
     // No sentence in the section may run past 40 words. The long ones were
     // the actual fault here: fifty-two words of subordinate clauses is not
@@ -3302,7 +3353,7 @@ async function openContents(page) {
     // textContent, not innerText: these panels are shut, and innerText reads
     // as empty on anything hidden — which would pass this check by measuring
     // nothing at all.
-    const longest = await page.$$eval('#screen-settings .panel-flush .disclosure-body',
+    const longest = await page.$$eval('#settings-how .section-body .disclosure-body',
         (bodies) => {
             let worst = 0;
             let text = '';

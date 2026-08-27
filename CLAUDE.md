@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.31 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.32 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,33 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## Settings as an index (2.32)
+
+**Every section of Settings is a `.disclosure-section`**, folded, in the order
+you would reach for them: Reading, Counting the days, People you can ring,
+Rules, What else helps, Backup and restore, Book text, How this works, Version
+history, Disclaimer, About. Eleven rows, about one screen. Backup and Restore
+were merged — they were always one job.
+
+**`showSettingsAt()` opens the target and every `<details>` above it.** Six
+callers deep-link into Settings; before this they would have scrolled to a shut
+door. There is a check that clicks the day count and asserts
+`#settings-abstinence` ends up open.
+
+**A section's anchor id is now on the `<details>`, not on an `<h2>`.** Anything
+reading `nextElementSibling` off one of those anchors is reading the *next
+section* — that is what broke the disclaimer checks.
+
+**Rows are 13px of padding on a 19px line = 44px exactly**, and they are not
+tightened further. The index misses fitting one screen by about one row, and
+squeezing to win that would put the rows under the 44px a thumb needs. The
+check asserts *both* — under 1.2 screens, and no row below 44px — rather than
+the tidier number.
+
+**Test helper: `openSettings(page)`** clicks the tab and opens every section
+except `#version-history` (which has its own check that it starts shut). Any new
+test touching Settings content needs it.
 
 ## Rooms, and the end of Sepia (2.31)
 
@@ -1154,7 +1181,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    486 end-to-end browser checks
+tools/smoke-test.js    491 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -1166,7 +1193,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 486 checks, expect 486/486
+node tools/smoke-test.js                  # 491 checks, expect 491/491
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

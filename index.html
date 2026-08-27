@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=43">
+<link rel="stylesheet" href="css/style.css?v=44">
 </head>
 <body>
 
@@ -737,8 +737,9 @@
     </header>
     <div class="screen-body">
 
-      <h2 class="section-heading">Reading</h2>
-      <div class="panel">
+      <details class="disclosure disclosure-section">
+        <summary><span>Reading</span></summary>
+        <div class="section-body">
         <label class="row">
           <span>Theme</span>
           <select id="set-theme">
@@ -767,10 +768,12 @@
           <span>Keep screen awake while reading</span>
           <input type="checkbox" id="set-keepawake">
         </label>
-      </div>
-
-      <h2 class="section-heading" id="settings-abstinence">Counting the days</h2>
-      <div class="panel">
+      
+        </div>
+      </details>
+      <details class="disclosure disclosure-section" id="settings-abstinence">
+        <summary><span>Counting the days</span></summary>
+        <div class="section-body">
         <p class="panel-note">
           The first day, counted inclusively — set it to today and the home screen reads
           <strong>1 day</strong>. Leave it empty and the counter stays off the home screen
@@ -780,46 +783,12 @@
           <span>First day</span>
           <input type="date" id="set-sober-since" class="row-input">
         </label>
-      </div>
-
-      <h2 class="section-heading" id="settings-rules">Rules</h2>
-      <div class="panel">
-        <p class="panel-note">
-          What you have agreed. Two lists, because they are two different conversations —
-          what you keep, and what you have asked of someone else. One rule to a line, with
-          <strong>**bold**</strong> and <em>*italics*</em> if a word needs the weight.
-        </p>
-        <div class="ruleset" data-who="sponsor">
-          <h3 class="ruleset-title">With my sponsor</h3>
-          <ul class="rules-list" id="rules-sponsor-list"></ul>
-          <p class="ruleset-empty" id="rules-sponsor-empty" hidden>Nothing written down yet.</p>
-          <button class="btn btn-quiet btn-small" data-rules="sponsor">Change these</button>
+      
         </div>
-        <div class="ruleset" data-who="sponsee">
-          <h3 class="ruleset-title">With my sponsee</h3>
-          <ul class="rules-list" id="rules-sponsee-list"></ul>
-          <p class="ruleset-empty" id="rules-sponsee-empty" hidden>Nothing written down yet.</p>
-          <button class="btn btn-quiet btn-small" data-rules="sponsee">Change these</button>
-        </div>
-      </div>
-
-      <h2 class="section-heading" id="settings-helps">What else helps</h2>
-      <div class="panel">
-        <p class="panel-note">
-          Yours, on the craving screen under <strong>Something else that works</strong>. The
-          app writes down breathing, meeting it head on, thinking it through and the shower;
-          this is the rest of what works for you. One to a line, and
-          <strong>**bold**</strong> and <em>*italics*</em> work here too.
-        </p>
-        <div class="ruleset">
-          <ul class="rules-list" id="rules-helps-list"></ul>
-          <p class="ruleset-empty" id="rules-helps-empty" hidden>Nothing written down yet.</p>
-          <button class="btn btn-quiet btn-small" data-rules="helps">Change these</button>
-        </div>
-      </div>
-
-      <h2 class="section-heading" id="settings-people">People you can ring</h2>
-      <div class="panel">
+      </details>
+      <details class="disclosure disclosure-section" id="settings-people">
+        <summary><span>People you can ring</span></summary>
+        <div class="section-body">
         <p class="panel-note">
           Kept on this device like everything else, and used for one thing: the buttons at the
           top of the craving screen. Whoever has a number here is one tap away when it is bad.
@@ -855,10 +824,54 @@
           <input type="tel" id="set-spouse-phone" class="row-input" autocomplete="off"
                  placeholder="+43 …">
         </label>
-      </div>
-
-      <h2 class="section-heading">Backup</h2>
-      <div class="panel">
+      
+        </div>
+      </details>
+      <details class="disclosure disclosure-section" id="settings-rules">
+        <summary><span>Rules</span></summary>
+        <div class="section-body">
+        <p class="panel-note">
+          What you have agreed. Two lists, because they are two different conversations —
+          what you keep, and what you have asked of someone else. One rule to a line, with
+          <strong>**bold**</strong> and <em>*italics*</em> if a word needs the weight.
+        </p>
+        <div class="ruleset" data-who="sponsor">
+          <h3 class="ruleset-title">With my sponsor</h3>
+          <ul class="rules-list" id="rules-sponsor-list"></ul>
+          <p class="ruleset-empty" id="rules-sponsor-empty" hidden>Nothing written down yet.</p>
+          <button class="btn btn-quiet btn-small" data-rules="sponsor">Change these</button>
+        </div>
+        <div class="ruleset" data-who="sponsee">
+          <h3 class="ruleset-title">With my sponsee</h3>
+          <ul class="rules-list" id="rules-sponsee-list"></ul>
+          <p class="ruleset-empty" id="rules-sponsee-empty" hidden>Nothing written down yet.</p>
+          <button class="btn btn-quiet btn-small" data-rules="sponsee">Change these</button>
+        </div>
+      
+        </div>
+      </details>
+      <details class="disclosure disclosure-section" id="settings-helps">
+        <summary><span>What else helps</span></summary>
+        <div class="section-body">
+        <p class="panel-note">
+          Yours, on the craving screen under <strong>Something else that works</strong>. The
+          app writes down breathing, meeting it head on, thinking it through and the shower;
+          this is the rest of what works for you. One to a line, and
+          <strong>**bold**</strong> and <em>*italics*</em> work here too.
+        </p>
+        <div class="ruleset">
+          <ul class="rules-list" id="rules-helps-list"></ul>
+          <p class="ruleset-empty" id="rules-helps-empty" hidden>Nothing written down yet.</p>
+          <button class="btn btn-quiet btn-small" data-rules="helps">Change these</button>
+        </div>
+      
+        </div>
+      </details>
+      <details class="disclosure disclosure-section" id="settings-backup">
+        <summary><span>Backup and restore</span></summary>
+        <div class="section-body">
+        <p class="panel-note">One JSON file with your notes, your bookmarks, where you
+           are and your settings. Nothing leaves this device until you send it.</p>
         <p class="panel-note">
           A backup is a single JSON file holding your notes, bookmarks, reading position
           and settings. Save it somewhere you control — Files, iCloud Drive, email —
@@ -873,10 +886,7 @@
           <button class="btn" id="btn-copy-backup">Copy as text</button>
         </div>
         <p class="hint" id="backup-status"></p>
-      </div>
-
-      <h2 class="section-heading">Restore</h2>
-      <div class="panel">
+      
         <label class="row">
           <span>If a note exists in both places</span>
           <select id="restore-mode">
@@ -890,10 +900,12 @@
         </div>
         <input type="file" id="import-file" accept="application/json,.json" hidden>
         <p class="hint" id="restore-status"></p>
-      </div>
-
-      <h2 class="section-heading" id="settings-import">Book text</h2>
-      <div class="panel">
+      
+        </div>
+      </details>
+      <details class="disclosure disclosure-section" id="settings-import">
+        <summary><span>Book text</span></summary>
+        <div class="section-body">
         <p class="panel-note" id="book-status"></p>
         <div class="btn-row">
           <button class="btn btn-primary" id="btn-text-file">Choose text file</button>
@@ -912,11 +924,12 @@
              Services, so please do not import those unless you have permission.</p>
         </details>
         <button class="btn btn-danger btn-block" id="btn-clear-text" hidden>Go back to the bundled copy</button>
-      </div>
-
-      <h2 class="section-heading">How this works</h2>
-      <div class="panel panel-flush">
-
+      
+        </div>
+      </details>
+      <details class="disclosure disclosure-section" id="settings-how">
+        <summary><span>How this works</span></summary>
+        <div class="section-body is-flush">
         <details class="disclosure">
           <summary>Start here</summary>
           <div class="disclosure-body">
@@ -1208,7 +1221,9 @@
           </div>
         </details>
 
-      </div>
+      
+        </div>
+      </details>
 
       <!-- The whole stack folds. Twenty-odd releases is a lot of screen to scroll
            past on the way to About, and most days you do not want any of it. -->
@@ -1218,6 +1233,28 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Settings, in one screen</span><span class="ver-tag">2.32</span></summary>
+          <div class="disclosure-body">
+            <p><strong>Settings was twelve sections, all open, all the time.</strong> You
+               scrolled past the theme, the day count, the rules, the numbers, backup,
+               restore and the book text on the way to anything at all.</p>
+            <p><strong>It is an index now.</strong> Eleven rows, near enough one screen, and
+               you open the one you want. In the order you would actually reach for them:
+               reading and the day count at the top, the people you ring next, and the
+               things you set once or read once — the book text, the disclaimer, the about
+               — at the bottom.</p>
+            <p><strong>Backup and Restore are one section</strong>, because they were always
+               two halves of one job.</p>
+            <p>Every link that jumps into Settings — from the day count, from the craving
+               screen, from a step — <strong>opens the section it points at</strong>. A link
+               that scrolled you neatly to a shut door would be worse than no link.</p>
+            <p>The rows could have been squeezed a little tighter to fit exactly, and they
+               are not: <strong>44 pixels is what a thumb needs</strong>, and that is worth
+               more than winning the last few pixels.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Rooms, not pages</span><span class="ver-tag">2.31</span></summary>
@@ -2350,8 +2387,9 @@
       <!-- Above About rather than buried under it. Somebody looking for who is
            answerable for this app should find the answer before they find the
            typesetting notes. -->
-      <h2 class="section-heading" id="settings-disclaimer">Disclaimer</h2>
-      <div class="panel">
+      <details class="disclosure disclosure-section" id="settings-disclaimer">
+        <summary><span>Disclaimer</span></summary>
+        <div class="section-body">
         <p class="panel-note">
           This app was built by one person for their own use, and it is offered exactly as
           it is. <strong>No responsibility is taken for anything that follows from using
@@ -2383,10 +2421,12 @@
           Not affiliated with, endorsed by or connected to Alcoholics Anonymous World
           Services, Inc.
         </p>
-      </div>
-
-      <h2 class="section-heading">About</h2>
-      <div class="panel">
+      
+        </div>
+      </details>
+      <details class="disclosure disclosure-section">
+        <summary><span>About</span></summary>
+        <div class="section-body">
         <p class="panel-note">
           <strong>AMS Big 12S</strong> <span id="about-version"></span><br>
           Everything you write stays on this device. Nothing is uploaded, and there is no
@@ -2403,7 +2443,10 @@
           Dover&rsquo;s 2011 introduction and biographical notes remain under copyright and
           are deliberately <strong>not</strong> included here. Only the 1939 text is.
         </p>
-      </div>
+      
+        </div>
+      </details>
+
 
     </div>
   </section>
@@ -2776,7 +2819,7 @@
 <script src="js/db.js?v=8"></script>
 <script src="js/store.js?v=26"></script>
 <script src="js/backup.js?v=10"></script>
-<script src="js/ui.js?v=44"></script>
+<script src="js/ui.js?v=45"></script>
 <script src="js/app.js?v=26"></script>
 </body>
 </html>

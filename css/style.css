@@ -2144,17 +2144,31 @@ button:focus-visible,
 }
 .disclosure[open] summary::after { transform: translateY(2px) rotate(225deg); }
 
-/* A whole section that folds into one row — the version history, which is
-   otherwise a long stack to scroll past on the way to anything below it. It
-   carries its own panel, since there is no heading above it any more. */
+/* A whole section of Settings, folded into one row. Every section is one of
+   these now, so the screen opens as an index you can read in one go instead of
+   a scroll you have to travel. The gap between them is a list gap, not the
+   "everything else is above me" gap it was when only the version history
+   used one. */
 .disclosure-section {
   border: 1px solid var(--rule);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   background: var(--bg-raised);
+  box-shadow: var(--shadow);
   padding: 0 14px;
-  margin-top: 26px;
+  margin-top: 7px;
 }
-.disclosure-section > summary { font-weight: 600; }
+.screen-body > .disclosure-section:first-of-type { margin-top: 2px; }
+/* These rows are the whole navigation of the screen, so they carry a little
+   more weight than a disclosure buried inside one — and they are tight enough
+   that all eleven fit on one screen, which is the point of folding them at
+   all. 13px either side of a 19px line clears the 44px a thumb needs. */
+.disclosure-section > summary { font-size: 15.5px; font-weight: 600; padding: 13px 26px 13px 0; }
+
+.section-body { padding: 0 0 14px; }
+/* A section whose contents are themselves rows wants them edge to edge, so it
+   gives back the padding the section put on. */
+.section-body.is-flush { padding: 0 0 2px; margin: 0 -14px; }
+.section-body.is-flush > .disclosure { padding: 0 14px; }
 .disclosure-list { border-top: 1px solid var(--rule); }
 
 .ver-tag {

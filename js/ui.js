@@ -162,8 +162,15 @@
 
     function showSettingsAt(anchorId) {
         showScreen('settings');
+        var target = $(anchorId);
+        // Settings is an index of folded rows, so a deep link has to open the
+        // one it points at — and anything it is nested inside — or it scrolls
+        // you neatly to a shut door.
+        for (var node = target; node; node = node.parentElement) {
+            if (node.tagName === 'DETAILS') node.open = true;
+        }
         setTimeout(function () {
-            $(anchorId).scrollIntoView({ behavior: 'smooth', block: 'start' });
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 80);
     }
 
