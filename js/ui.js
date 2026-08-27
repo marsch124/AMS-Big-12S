@@ -139,7 +139,7 @@
         // screen has to keep time, and a timer running behind the reader is a
         // wake-up a minute for a screen nobody is looking at.
         if (name === 'home') renderHome();
-        else if (name === 'craving') renderCraving();
+        else if (name === 'craving') { movesOpen = {}; prayersOpen = {}; renderCraving(); }
         else {
             stopClock();
             if (name === 'meeting') renderMeeting();
@@ -289,10 +289,12 @@
     }
 
     /*
-     * Seven ways in, written in the first person, because that is how the
-     * reason arrives: not "notes" but "I want to write something down". A tile
-     * whose name runShortcut() does not know says so when tapped — a place held
-     * open is more honest than a button that quietly does nothing.
+     * Six ways in, written in the first person, because that is how the reason
+     * arrives: not "notes" but "I want to write something down". The craving
+     * row is not among them: it sits above the grid, because it is the one
+     * nobody should have to read a list to find. A tile whose name
+     * runShortcut() does not know says so when tapped — a place held open is
+     * more honest than a button that quietly does nothing.
      */
     function renderShortcuts() {
         var position = Store.state.position;
@@ -333,7 +335,6 @@
             }
             return;
         }
-        if (name === 'craving') { showScreen('craving'); return; }
         if (name === 'meeting') { showScreen('meeting'); return; }
         if (name === 'message') { openMessage(); return; }
         if (name === 'sponsor') { openCheckin('sponsor'); return; }
@@ -487,6 +488,8 @@
 
         renderCravingPassage();
         renderCravingOffer();
+        renderCravingMoves();
+        renderCravingPrayers();
         renderCravingActions();
         renderCravingList();
     }
@@ -580,6 +583,227 @@
         // The chapter is only offered if this copy of the text has it.
         var chapter = Store.getSection('ch03');
         $('craving-chapter').hidden = !chapter || !chapter.paragraphs.length;
+    }
+
+    /*
+     * The emergency list (2.20). Everything here opens where it stands: a
+     * craving is not the moment to be moved between screens, and a row that
+     * navigated away would take the rest of the list with it.
+     */
+
+    var BREATH_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="3.4"/></svg>';
+
+    var EYE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M2.6 12c2.4-3.6 5.5-5.4 9.4-5.4s7 1.8 9.4 5.4c-2.4 3.6-5.5 5.4-9.4 5.4s-7-1.8-9.4-5.4z"/>' +
+        '<circle cx="12" cy="12" r="2.4"/></svg>';
+
+    var FORK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M12 20.4v-6.2"/><path d="M12 14.2 5.4 7.6V3.6"/>' +
+        '<path d="M12 14.2 18.6 7.6V3.6"/></svg>';
+
+    var DROP_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M12 3.6c3.4 4 5.1 7 5.1 9.1a5.1 5.1 0 0 1-10.2 0c0-2.1 1.7-5.1 5.1-9.1z"/></svg>';
+
+    var STAR_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M12 3.6 14.3 9l5.8.5-4.4 3.8 1.3 5.7L12 15.9l-5 3.1 1.3-5.7L3.9 9.5 9.7 9z"/></svg>';
+
+    var SPOKEN_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M10.2 6.4C6.9 7.3 5.2 9.6 5.2 13.2v4.4h5.8v-5.8H7.9c0-1.9 1-3.2 2.9-3.9z"/>' +
+        '<path d="M19.6 6.4c-3.3.9-5 3.2-5 6.8v4.4h5.8v-5.8h-3.1c0-1.9 1-3.2 2.9-3.9z"/></svg>';
+
+    var MOVE_ICONS = {
+        breathe: BREATH_ICON, headon: EYE_ICON, whatif: FORK_ICON,
+        shower: DROP_ICON, own: STAR_ICON
+    };
+
+    // Which rows are open. Reset on every arrival at the screen: what you
+    // wanted open last Tuesday is not what you want open now.
+    var movesOpen = {};
+
+    function renderCravingMoves() {
+        var box = $('craving-moves');
+        box.innerHTML = '';
+
+        Store.cravingMoves().forEach(function (move) {
+            var own = move.kind === 'own';
+            var items = own ? Store.helpsList() : [];
+
+            // His own list, empty, would be a row that opens onto nothing. It
+            // says so and offers Settings instead.
+            var note = own && !items.length
+                ? 'Nothing written down yet — add yours in Settings'
+                : move.note;
+
+            var row = document.createElement('button');
+            row.className = 'do-row move-row' + (movesOpen[move.id] ? ' is-open' : '');
+            row.innerHTML = doRowHtml(MOVE_ICONS[move.id] || STAR_ICON, move.label, note);
+            if (move.kind !== 'breathe') {
+                row.querySelector('.do-go').textContent = movesOpen[move.id] ? '–' : '+';
+            }
+            box.appendChild(row);
+
+            if (move.kind === 'breathe') {
+                row.addEventListener('click', openBreathe);
+                return;
+            }
+
+            var body = document.createElement('div');
+            body.className = 'move-body';
+            body.hidden = !movesOpen[move.id];
+            if (own) {
+                if (items.length) {
+                    var list = document.createElement('ul');
+                    list.className = 'rules-list';
+                    items.forEach(function (item) {
+                        var li = document.createElement('li');
+                        li.innerHTML = richText(item);
+                        list.appendChild(li);
+                    });
+                    body.appendChild(list);
+                } else {
+                    var go = document.createElement('button');
+                    go.className = 'btn btn-quiet btn-small';
+                    go.textContent = 'Add them in Settings';
+                    go.addEventListener('click', function (event) {
+                        event.stopPropagation();
+                        showSettingsAt('settings-helps');
+                    });
+                    body.appendChild(go);
+                }
+            } else {
+                var para = document.createElement('p');
+                para.className = 'move-text';
+                para.textContent = move.body;
+                body.appendChild(para);
+            }
+            box.appendChild(body);
+
+            row.addEventListener('click', function () {
+                movesOpen[move.id] = !movesOpen[move.id];
+                renderCravingMoves();
+            });
+        });
+    }
+
+    /*
+     * The two prayers the book prints, resolved at runtime through the steps
+     * that carry them, and shown here rather than opened in the reader — the
+     * point is to say the words, not to go and find them. A prayer whose
+     * paragraph is not in this copy of the text says so.
+     */
+    var prayersOpen = {};
+
+    function renderCravingPrayers() {
+        var box = $('craving-prayers');
+        box.innerHTML = '';
+
+        var prayers = Store.cravingPrayers();
+        var any = prayers.some(function (prayer) { return !!prayer.text; });
+        $('craving-prayers').hidden = !any;
+        $('craving-prayers').previousElementSibling.hidden = !any;
+        if (!any) return;
+
+        prayers.forEach(function (prayer) {
+            if (!prayer.text) return;
+
+            var row = document.createElement('button');
+            row.className = 'do-row move-row' + (prayersOpen[prayer.id] ? ' is-open' : '');
+            row.innerHTML = doRowHtml(SPOKEN_ICON, prayer.label, prayer.sectionTitle);
+            row.querySelector('.do-go').textContent = prayersOpen[prayer.id] ? '–' : '+';
+            box.appendChild(row);
+
+            var body = document.createElement('div');
+            body.className = 'move-body';
+            body.hidden = !prayersOpen[prayer.id];
+            var quote = document.createElement('p');
+            quote.className = 'move-text move-prayer';
+            quote.textContent = prayer.text;
+            body.appendChild(quote);
+
+            // The way through to the page it lives on, for afterwards. It is a
+            // look, not reading, so it must not drag the reading position onto it.
+            var open = document.createElement('button');
+            open.className = 'btn btn-quiet btn-small';
+            open.textContent = 'Read it in place';
+            open.addEventListener('click', function (event) {
+                event.stopPropagation();
+                openReader(prayer.sectionId,
+                    { paraIndex: prayer.paraIndex, highlight: true, justLooking: true });
+            });
+            body.appendChild(open);
+            box.appendChild(body);
+
+            row.addEventListener('click', function () {
+                prayersOpen[prayer.id] = !prayersOpen[prayer.id];
+                renderCravingPrayers();
+            });
+        });
+    }
+
+    /*
+     * The breathing timer. In for four, hold for four, out for six — the long
+     * end is the out breath, because that is the half that settles a body down.
+     *
+     * It runs on one timeout at a time rather than an interval, so a phone that
+     * throttles a backgrounded tab cannot leave a stack of them behind, and
+     * `closeSheets()` is not enough to stop it: the sheet closing has to stop
+     * the clock as well or it goes on counting into an empty room.
+     */
+    var breathTimer = null;
+    var breathPhase = 0;
+    var breathLeft = 0;
+    var breathCycles = 0;
+
+    function openBreathe() {
+        stopBreathing();
+        breathCycles = 0;
+        $('breathe-phase').textContent = 'Ready';
+        $('breathe-count').textContent = '';
+        $('breathe-note').textContent =
+            'In for four, hold for four, out for six. Follow the ring.';
+        $('breathe-start').textContent = 'Start';
+        $('breathe-ring').className = 'breathe-ring';
+        openSheet('breathe-sheet');
+    }
+
+    function stopBreathing() {
+        if (breathTimer) { clearTimeout(breathTimer); breathTimer = null; }
+    }
+
+    function startBreathing() {
+        stopBreathing();
+        breathPhase = 0;
+        breathLeft = Store.breathCycle()[0].seconds;
+        $('breathe-start').textContent = 'Stop';
+        paintBreath();
+        breathTimer = setTimeout(tickBreath, 1000);
+    }
+
+    function paintBreath() {
+        var cycle = Store.breathCycle();
+        var phase = cycle[breathPhase];
+        $('breathe-phase').textContent = phase.label;
+        $('breathe-count').textContent = String(breathLeft);
+        $('breathe-ring').className = 'breathe-ring is-' + phase.id;
+        // The ring's own duration follows the phase, so the growing and the
+        // counting cannot drift apart.
+        $('breathe-ring').style.transitionDuration = phase.seconds + 's';
+        $('breathe-note').textContent = breathCycles
+            ? breathCycles + (breathCycles === 1 ? ' breath' : ' breaths') + ' so far'
+            : 'Follow the ring. Stop whenever you like.';
+    }
+
+    function tickBreath() {
+        var cycle = Store.breathCycle();
+        breathLeft--;
+        if (breathLeft <= 0) {
+            breathPhase++;
+            if (breathPhase >= cycle.length) { breathPhase = 0; breathCycles++; }
+            breathLeft = cycle[breathPhase].seconds;
+        }
+        paintBreath();
+        breathTimer = setTimeout(tickBreath, 1000);
     }
 
     function renderCravingList() {
@@ -4154,7 +4378,12 @@
         sponsor: { key: 'sponsorRules', title: 'Rules with my sponsor',
                    note: 'What you have agreed to keep.' },
         sponsee: { key: 'sponseeRules', title: 'Rules with my sponsee',
-                   note: 'What you have asked of them.' }
+                   note: 'What you have asked of them.' },
+        // Not a rule, and it lives under its own heading in Settings — but it
+        // is the same shape and the same editor, so it goes through this map
+        // rather than growing a second one.
+        helps: { key: 'helpsList', title: 'What else helps',
+                 note: 'What works for you when a craving comes.' }
     };
 
     var rulesEditing = 'sponsor';
@@ -4265,6 +4494,9 @@
             sheet.hidden = true;
         });
         $('sheet-backdrop').hidden = true;
+        // The breathing sheet keeps a clock, and a clock behind a closed sheet
+        // goes on counting into an empty room.
+        stopBreathing();
     }
 
     function openPaste(config) {
@@ -4514,7 +4746,26 @@
         });
 
         // ── a craving ──────────────────────────────────────────────────────
+        // Its own row at the top of the home screen rather than a tile in the
+        // grid, so it is reachable without reading anything first.
+        $('home-craving').addEventListener('click', function () { showScreen('craving'); });
         $('craving-back').addEventListener('click', function () { showScreen('home'); });
+
+        $('breathe-start').addEventListener('click', function () {
+            if (breathTimer) {
+                stopBreathing();
+                $('breathe-start').textContent = 'Start';
+                $('breathe-phase').textContent = 'Stopped';
+                $('breathe-count').textContent = '';
+                $('breathe-ring').className = 'breathe-ring';
+                $('breathe-note').textContent = breathCycles
+                    ? breathCycles + (breathCycles === 1 ? ' breath' : ' breaths') + '. Start again whenever.'
+                    : 'Start again whenever you like.';
+                return;
+            }
+            startBreathing();
+        });
+        $('breathe-close').addEventListener('click', closeSheets);
         $('craving-message').addEventListener('click', function () { openMessage(); });
 
         $('craving-start').addEventListener('click', function () {
@@ -4815,6 +5066,7 @@
                 });
             } else {
                 stopClock();
+                stopBreathing();
                 flushPosition();
                 flushMessageDraft();
             }

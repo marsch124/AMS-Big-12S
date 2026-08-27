@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=32">
+<link rel="stylesheet" href="css/style.css?v=33">
 </head>
 <body>
 
@@ -33,6 +33,22 @@
     </header>
 
     <div class="screen-body">
+      <!-- High and prominent, at Martin's ask (2.20). The opposite of #broken
+           below, which is quiet on purpose: this is for the minute it is
+           happening, that is for the morning after. -->
+      <button class="do-row do-row-alone do-row-urgent" id="home-craving">
+        <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M2.6 8.4c1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0 1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0"/>
+          <path d="M2.6 13.2c1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0 1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0"/>
+          <path d="M2.6 18c1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0 1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0"/>
+        </svg></span>
+        <span class="do-text">
+          <span class="do-label">I have a craving</span>
+          <span class="do-note" id="shortcut-craving-note"></span>
+        </span>
+        <span class="do-go">›</span>
+      </button>
+
       <!-- Small, and first. It is the number he opens the app already knowing;
            the app's job is to have counted it right, not to make a fuss of it. -->
       <button class="daycount" id="daycount">
@@ -66,9 +82,9 @@
 
       <h2 class="section-heading">What brings you here</h2>
       <!-- Written in the first person, because that is how the reason arrives:
-           not "notes" but "I want to write something down". Seven of them now.
-           The ones with nothing behind them yet say so when tapped rather than
-           pretending. -->
+           not "notes" but "I want to write something down". Six of them: the
+           craving one sits above, in a row of its own, because it is the one
+           nobody should have to look for. -->
       <div class="shortcuts" id="shortcuts">
         <button class="shortcut" data-shortcut="read">
           <span class="shortcut-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
@@ -77,16 +93,6 @@
           </svg></span>
           <span class="shortcut-label">I want to read</span>
           <span class="shortcut-note" id="shortcut-read-note"></span>
-        </button>
-
-        <button class="shortcut" data-shortcut="craving">
-          <span class="shortcut-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M2.6 8.4c1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0 1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0"/>
-            <path d="M2.6 13.2c1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0 1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0"/>
-            <path d="M2.6 18c1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0 1.6-1.7 3.2-1.7 4.7 0 1.6 1.7 3.2 1.7 4.7 0"/>
-          </svg></span>
-          <span class="shortcut-label">I have cravings</span>
-          <span class="shortcut-note" id="shortcut-craving-note"></span>
         </button>
 
         <button class="shortcut" data-shortcut="meeting">
@@ -382,13 +388,14 @@
         <span class="do-go">›</span>
       </button>
 
-      <button class="passage-card" id="craving-passage">
-        <span class="passage-label">From the book</span>
-        <span class="passage-text" id="craving-passage-text"></span>
-        <span class="passage-where" id="craving-passage-where"></span>
-      </button>
+      <!-- The things to do, in the order they are worth doing: the body first,
+           because it answers quickest, then the two turns of thought. Each one
+           opens where it stands rather than moving you to another screen —
+           navigation is the last thing anybody wants in the middle of one. -->
+      <h2 class="section-heading">Do this now</h2>
+      <div class="panel panel-flush" id="craving-moves"></div>
 
-      <h2 class="section-heading">What helps</h2>
+      <h2 class="section-heading">Or reach somebody</h2>
       <div class="panel panel-flush">
         <div id="craving-rings"></div>
         <button class="do-row" id="craving-message">
@@ -416,6 +423,22 @@
           </span>
           <span class="do-go">›</span>
         </button>
+      </div>
+
+      <h2 class="section-heading">Or say it out loud</h2>
+      <div class="panel panel-flush" id="craving-prayers"></div>
+
+      <!-- The book last of the three, not first. It is the best thing on this
+           screen and it is still reading, and reading is not what the first
+           minute of one of these is for. -->
+      <h2 class="section-heading">Or read a little</h2>
+      <button class="passage-card" id="craving-passage">
+        <span class="passage-label">From the book</span>
+        <span class="passage-text" id="craving-passage-text"></span>
+        <span class="passage-where" id="craving-passage-where"></span>
+      </button>
+
+      <div class="panel panel-flush">
         <button class="do-row" id="craving-chapter">
           <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M2.9 5.6c3.1-.5 6.1 0 9.1 1.9 3-1.9 6-2.4 9.1-1.9v11.9c-3.1-.5-6.1 0-9.1 1.9-3-1.9-6-2.4-9.1-1.9z"/>
@@ -706,6 +729,21 @@
         </div>
       </div>
 
+      <h2 class="section-heading" id="settings-helps">What else helps</h2>
+      <div class="panel">
+        <p class="panel-note">
+          Yours, on the craving screen under <strong>Something else that works</strong>. The
+          app writes down breathing, meeting it head on, thinking it through and the shower;
+          this is the rest of what works for you. One to a line, and
+          <strong>**bold**</strong> and <em>*italics*</em> work here too.
+        </p>
+        <div class="ruleset">
+          <ul class="rules-list" id="rules-helps-list"></ul>
+          <p class="ruleset-empty" id="rules-helps-empty" hidden>Nothing written down yet.</p>
+          <button class="btn btn-quiet btn-small" data-rules="helps">Change these</button>
+        </div>
+      </div>
+
       <h2 class="section-heading" id="settings-people">People you can ring</h2>
       <div class="panel">
         <p class="panel-note">
@@ -858,6 +896,35 @@
         </details>
 
         <details class="disclosure">
+          <summary>When a craving comes</summary>
+          <div class="disclosure-body">
+            <p><strong>I have a craving</strong> sits at the top of the home screen, above
+               everything else, and opens the page for exactly this. It leads with what to
+               do; the book is further down, because reading is not what the first minute is
+               for.</p>
+            <p><strong>Do this now</strong> is five things, the body first because it answers
+               quickest. <strong>Breathe</strong> opens a ring to follow — four in, hold four,
+               six out — and you can stop it whenever. <strong>Meet it head on</strong> and
+               <strong>think it through</strong> open a few lines each where they stand.
+               <strong>Get in the shower</strong> is what it says. <strong>Something else that
+               works</strong> is your own list, kept in Settings under
+               <em>What else helps</em>.</p>
+            <p><strong>Or reach somebody</strong> has whoever you have put a number against,
+               sponsor first, plus saying something to them and writing down what is going
+               on.</p>
+            <p><strong>Or say it out loud</strong> holds the two prayers the book prints — at
+               step three and at step seven. They open here rather than sending you into a
+               chapter to find them, and there is a way through to the page for afterwards.</p>
+            <p>Nothing on this page moves you to another screen. And nothing on it
+               congratulates you or tells you a craving is nothing.</p>
+            <p><strong>I am having one now</strong> starts a clock, and the list underneath is
+               the reason the screen exists: in the middle of one it is not obvious that it
+               will end, and the only convincing argument that it will is the run of ones
+               that did.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
           <summary>Saying something to them</summary>
           <div class="disclosure-body">
             <p>Some things will not keep until the next conversation, and some evenings
@@ -1003,6 +1070,34 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>When it is bad</span><span class="ver-tag">2.20</span></summary>
+          <div class="disclosure-body">
+            <p><strong>I have a craving</strong> is now a row of its own at the top of the
+               home screen rather than one tile among several. It is the one thing on that
+               page you should never have to look for.</p>
+            <p>The screen it opens leads with what to do, and the book has moved down under
+               it. The book is the best thing on that page and it is still reading, and
+               reading is not what the first minute of one of these is for.</p>
+            <ul>
+              <li><strong>Breathe</strong> — four in, hold four, six out, with a ring to
+                  follow. The long end is the out breath, because that is the half that
+                  settles a body down.</li>
+              <li><strong>Meet it head on</strong> and <strong>think it through — what
+                  happens if</strong>, each opening where it stands with a few lines rather
+                  than only naming itself.</li>
+              <li><strong>Get in the shower.</strong> Cold if you can stand it.</li>
+              <li><strong>Something else that works</strong> — yours, kept in Settings under
+                  <em>What else helps</em>, seeded with tapping, a workout and meditation.</li>
+              <li><strong>The two prayers</strong> the book prints, at step three and step
+                  seven, said where you are standing instead of found in a chapter.</li>
+            </ul>
+            <p>Nothing here moves you to another screen. Navigation is the last thing anybody
+               wants in the middle of one, and a row that took you somewhere else would take
+               the rest of the list with it.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Saying something to them</span><span class="ver-tag">2.19</span></summary>
@@ -2099,6 +2194,24 @@
   </div>
 </div>
 
+<!-- Deliberately bare. A ring, a word and a number, and one way out of it.
+     Anything else on this sheet is something to read while trying not to. -->
+<div class="sheet sheet-breathe" id="breathe-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title">Breathe</h2>
+  <div class="breathe-stage">
+    <div class="breathe-ring" id="breathe-ring">
+      <span class="breathe-phase" id="breathe-phase">Ready</span>
+      <span class="breathe-count" id="breathe-count"></span>
+    </div>
+  </div>
+  <p class="hint" id="breathe-note">In for four, hold for four, out for six. Follow the ring.</p>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="breathe-start">Start</button>
+    <button class="btn btn-quiet" id="breathe-close">Close</button>
+  </div>
+</div>
+
 <div class="sheet" id="message-past-sheet" hidden>
   <div class="sheet-handle"></div>
   <h2 class="sheet-title" id="message-past-title">What you sent</h2>
@@ -2158,9 +2271,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=7"></script>
-<script src="js/store.js?v=22"></script>
+<script src="js/store.js?v=23"></script>
 <script src="js/backup.js?v=9"></script>
-<script src="js/ui.js?v=36"></script>
-<script src="js/app.js?v=23"></script>
+<script src="js/ui.js?v=37"></script>
+<script src="js/app.js?v=24"></script>
 </body>
 </html>

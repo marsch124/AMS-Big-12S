@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.19 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.20 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -200,9 +200,10 @@ store.** The home screen and the step page were both counting days; two
 implementations of "what day is it" would eventually disagree. `ui.js` keeps thin
 wrappers that call through.
 
-**No shortcut tile is a placeholder any more.** All of them — *I have cravings*
-(2.2), *I'm going to a meeting* (2.3) and *I want to say something to someone*
-(2.19) — were built. Seven tiles now. The machinery is still there:
+**No shortcut tile is a placeholder any more.** All of them — *I'm going to a
+meeting* (2.3) and *I want to say something to someone* (2.19) — were built. Six
+tiles, since the craving one left the grid for a row of its own above them in
+2.20. The machinery is still there:
 a tile whose name `runShortcut()` does not know falls through to "Not built yet
 — this one is a place held open", and `is-soon` dashes its border. Use that for
 the next tile added ahead of what it does, and never wire a new tile to
@@ -332,6 +333,64 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## When it is bad (2.20)
+
+**The craving row is out of the tile grid and above everything, at Martin's ask.**
+Six tiles now, not seven, and `#home-craving` is a full-width row at the top of
+the home screen. It is the deliberate opposite of `#broken`, which stays quiet
+and full-width *below* the tiles: this one is for the minute it is happening,
+that one is for the morning after. `runShortcut('craving')` was removed rather
+than left unreachable.
+
+**The doing comes before the book on that screen, and that is a reversal.** The
+passage card and the chapter row moved *below* the moves, the people and the
+prayers. The book is the best thing on the page and it is still reading, and
+reading is not what the first minute is for. Do not put the passage back at the
+top.
+
+**Nothing on the page navigates.** Every move and every prayer opens in place,
+because a row that took you to another screen would take the rest of the list
+with it at the moment the list is the point. The `+`/`–` in the chevron slot is
+what tells an opening row from a going-somewhere row *before* it is tapped.
+`movesOpen` and `prayersOpen` are cleared on every arrival in `showScreen` — what
+was left open last Tuesday is not what is wanted now.
+
+**`CRAVING_MOVES` is Martin's to rewrite**, exactly like `BOUNCE_PLAN`: his
+register, explicitly not A.A. material, and the book's own contribution to the
+screen is the passage, the chapter and the two prayers, all quoted rather than
+paraphrased.
+
+**The prayers are read from the steps that carry them, never written out again.**
+`cravingPrayers()` goes through `getStep('step03'/'step07').work.prayerRef` and
+`resolveStepRef()`, so `build-steps.js` validation covers them and there is one
+place the wording comes from — the book. A prayer whose paragraph is not in this
+copy of the text is dropped, and the whole section hides when neither resolves.
+"Read it in place" passes `justLooking: true`, like every other jump to a
+passage.
+
+**Breathing is one timeout, never an interval.** In four, hold four, out six —
+the long end is the out breath because that is the half that settles a body down,
+and whole seconds because counting halves is beyond anybody in the middle of
+this. `paintBreath()` sets the ring's `transition-duration` from the phase, so
+the ring and the count cannot drift apart. The clock is stopped by
+`closeSheets()` and by `visibilitychange`, not just by the Stop button: a clock
+behind a closed sheet goes on counting into an empty room, and a throttled
+background tab would come back with the ring and the number disagreeing. A smoke
+check holds the close case. The ring is flattened under
+`prefers-reduced-motion`; the words and the count still carry the whole exercise.
+
+**`helpsList` is a third `RULE_LISTS` entry, under its own Settings heading.**
+Same store shape, same editor sheet, same rich text — but it is not a rule, so
+the markup sits under *What else helps* rather than under *Rules*. Extend the map
+for a fourth list; do not branch. Seeded with tapping, a workout and meditation,
+and an empty list is a choice that is kept, exactly as with the rules — the row
+then says so and offers Settings rather than opening onto nothing.
+
+**Do not add a breathing app.** The timer here is four lines of state and exists
+because Martin asked for it on this page. AMS-Breathing is the separate thing; if
+this ever wants patterns, sound or history, that is a conversation, not a
+widening.
 
 ## Saying something to them (2.19)
 
@@ -659,7 +718,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    382 end-to-end browser checks
+tools/smoke-test.js    402 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -671,7 +730,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 382 checks, expect 382/382
+node tools/smoke-test.js                  # 402 checks, expect 402/402
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

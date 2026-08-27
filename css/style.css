@@ -488,6 +488,111 @@ button { cursor: pointer; }
 #meeting-raise .card-list { margin-top: 0; }
 #meeting-raise:empty { display: none; }
 
+/* ═══════════════════════════════════════════════════ when it is bad (2.20) ══ */
+
+/* High and prominent, at Martin's ask. The accent border and the weight are
+   the whole difference from #broken below it, which is deliberately quiet:
+   this row is for the minute it is happening. */
+.do-row-urgent {
+  margin: 0 0 16px;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: var(--bg-raised);
+}
+.do-row-urgent .do-label { font-weight: 650; }
+
+/* Each move opens where it stands. The + / – sits where the chevron does on
+   a row that goes somewhere, so the two kinds of row are told apart before
+   they are tapped rather than after. */
+.move-row.is-open { border-bottom-color: transparent; }
+.move-row .do-go {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+  width: 1ch;
+  text-align: center;
+}
+
+.move-body {
+  padding: 0 14px 14px 50px;
+  border-bottom: 1px solid var(--rule);
+}
+.move-body[hidden] { display: none; }
+.move-body:last-child { border-bottom: 0; }
+.move-body .rules-list { margin: 0; }
+.move-body .btn { margin-top: 10px; }
+
+.move-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+/* The prayers are the book's words, so they are set like the book's words
+   and not like the app's. */
+.move-prayer {
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* ── the breathing sheet ── */
+
+/* Deliberately bare: a ring, a word, a number. Anything else here is
+   something to read while trying not to. */
+.sheet-breathe { text-align: center; }
+.sheet-breathe .sheet-title { text-align: center; }
+.sheet-breathe .hint { text-align: center; }
+
+.breathe-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 220px;
+  margin: 8px 0 4px;
+}
+
+.breathe-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 120px;
+  height: 120px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--bg-raised);
+  transform: scale(1);
+  transition-property: transform;
+  transition-timing-function: ease-in-out;
+  transition-duration: 4s;
+}
+/* Grow on the way in, hold where it got to, settle on the way out. The
+   duration is set per phase in paintBreath(), so the ring and the count
+   cannot drift apart. */
+.breathe-ring.is-in { transform: scale(1.55); }
+.breathe-ring.is-hold { transform: scale(1.55); }
+.breathe-ring.is-out { transform: scale(1); }
+
+.breathe-phase {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.breathe-count { font-size: 26px; font-weight: 300; color: var(--text); }
+
+/* Somebody who has asked for less movement should not be handed a pulsing
+   circle; the words and the count still carry the whole exercise. */
+@media (prefers-reduced-motion: reduce) {
+  .breathe-ring { transition: none; transform: none; }
+  .breathe-ring.is-in,
+  .breathe-ring.is-hold,
+  .breathe-ring.is-out { transform: none; }
+}
+
 /* ═════════════════════════════════════════════════════════ saying something ══ */
 
 /* One box, and it wants to look like somewhere to talk rather than a form

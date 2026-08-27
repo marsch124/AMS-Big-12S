@@ -101,8 +101,13 @@ async function openContents(page) {
     });
     check('a different day brings a different passage', movesOn);
 
-    check('seven shortcuts, in the first person',
-        (await page.$$eval('#shortcuts .shortcut', (e) => e.length)) === 7);
+    check('six shortcuts, in the first person',
+        (await page.$$eval('#shortcuts .shortcut', (e) => e.length)) === 6);
+    // A craving is not one reason among six. It is its own row, above
+    // everything the app might otherwise rather show him.
+    check('and the craving row is above them, not one of them',
+        (await page.$$eval('#shortcuts .shortcut[data-shortcut="craving"]', (e) => e.length)) === 0 &&
+        (await page.isVisible('#home-craving')));
     check('every shortcut now goes somewhere',
         (await page.$$eval('#shortcuts .shortcut.is-soon', (e) => e.length)) === 0);
     check('four counts', (await page.$$eval('#stats .stat', (e) => e.length)) === 4);
@@ -518,7 +523,7 @@ async function openContents(page) {
 
     // ── a craving ─────────────────────────────────────────────────────────
     await page.click('.tab[data-screen="home"]');
-    await page.click('.shortcut[data-shortcut="craving"]');
+    await page.click('#home-craving');
     await page.waitForSelector('#screen-craving.is-active');
     check('the craving shortcut opens a screen of its own', true);
     check('the Home tab stays lit inside it',
@@ -548,7 +553,7 @@ async function openContents(page) {
     await page.waitForTimeout(120);
 
     await page.click('.tab[data-screen="home"]');
-    await page.click('.shortcut[data-shortcut="craving"]');
+    await page.click('#home-craving');
     await page.waitForSelector('#screen-craving.is-active');
     check('with a number saved it offers to ring them by name',
         (await page.textContent('#craving-rings .do-row .do-label')) === 'Ring Karl');
@@ -606,7 +611,7 @@ async function openContents(page) {
     check('the home tile carries how the cravings stand',
         (await page.textContent('#shortcut-craving-note')).length > 0,
         await page.textContent('#shortcut-craving-note'));
-    await page.click('.shortcut[data-shortcut="craving"]');
+    await page.click('#home-craving');
     await page.waitForSelector('#screen-craving.is-active');
     check('the record survives a reload',
         (await page.$$eval('.craving-card', (e) => e.length)) === 1);
@@ -975,7 +980,7 @@ async function openContents(page) {
         (await page.textContent('#broken-note')) === 'Three days, and what to do with them');
 
     // ── the craving log and the three days ────────────────────────────────
-    await page.click('.shortcut[data-shortcut="craving"]');
+    await page.click('#home-craving');
     await page.waitForSelector('#screen-craving.is-active');
     check('the offer is still there days later, and says which entry it is for',
         await page.isVisible('#craving-offer') &&
@@ -1019,13 +1024,127 @@ async function openContents(page) {
     await page.click('#bounce-close');
     await page.waitForTimeout(400);
     await page.click('.tab[data-screen="home"]');
-    await page.click('.shortcut[data-shortcut="craving"]');
+    await page.click('#home-craving');
     await page.waitForSelector('#screen-craving.is-active');
     check('once an entry has its three days it is never offered them again',
         !(await page.isVisible('#craving-offer')) &&
         !(await page.evaluate(() => Store.cravingNeedingPlan())),
         'offer shown: ' + (await page.isVisible('#craving-offer')));
     await page.click('.tab[data-screen="home"]');
+
+    // ── the emergency page ────────────────────────────────────────────────
+    await page.click('.tab[data-screen="home"]');
+    await page.click('#home-craving');
+    await page.waitForSelector('#screen-craving.is-active');
+
+    const moves = await page.$$eval('#craving-moves .move-row .do-label', (e) => e.map((x) => x.textContent));
+    check('five things to do, the body first because it answers quickest',
+        moves.length === 5 && moves[0] === 'Breathe' && moves[1] === 'Meet it head on' &&
+        moves[4] === 'Something else that works', moves.join(' / '));
+
+    // Navigation is the last thing anybody wants in the middle of one, so
+    // every row on this page opens where it stands.
+    check('nothing on the page is open when you arrive',
+        (await page.$$eval('#craving-moves .move-body:not([hidden])', (e) => e.length)) === 0);
+    await page.click('#craving-moves .move-row >> nth=1');
+    check('a move opens where it stands rather than moving you elsewhere',
+        (await page.evaluate(() => document.querySelector('#screen-craving').classList.contains('is-active'))) &&
+        (await page.$$eval('#craving-moves .move-body:not([hidden])', (e) => e.length)) === 1);
+    check('and says what it means rather than only naming itself',
+        (await page.textContent('#craving-moves .move-body:not([hidden]) .move-text')).length > 120);
+    await page.click('#craving-moves .move-row >> nth=1');
+    check('and closes again', (await page.$$eval('#craving-moves .move-body:not([hidden])', (e) => e.length)) === 0);
+
+    // His own list, which is the whole reason it is editable rather than fixed.
+    await page.click('#craving-moves .move-row >> nth=4');
+    check('his own things are on the list, from Settings',
+        (await page.$$eval('#craving-moves .move-body:not([hidden]) li', (e) => e.map((x) => x.textContent)))
+            .join(', ') === 'Tapping, A workout, Meditation',
+        await page.$$eval('#craving-moves .move-body:not([hidden]) li', (e) => e.map((x) => x.textContent).join(', ')));
+
+    await page.evaluate(() => Store.saveSettings({ helpsList: ['Walk the dog', '**Ring anyone**'] }));
+    await page.evaluate(() => UI.showScreen('home'));
+    await page.click('#home-craving');
+    await page.click('#craving-moves .move-row >> nth=4');
+    check('changing them in Settings changes what this page offers',
+        (await page.$$eval('#craving-moves .move-body:not([hidden]) li', (e) => e.map((x) => x.textContent)))
+            .join(', ') === 'Walk the dog, Ring anyone');
+    check('and the same bold works here as in the rules',
+        (await page.$$eval('#craving-moves .move-body:not([hidden]) li strong', (e) => e.length)) === 1);
+
+    // An empty list would be a row that opens onto nothing.
+    await page.evaluate(() => Store.saveSettings({ helpsList: [] }));
+    await page.evaluate(() => UI.showScreen('home'));
+    await page.click('#home-craving');
+    check('with none written down the row says so rather than opening onto nothing',
+        (await page.textContent('#craving-moves .move-row >> nth=4')).includes('Nothing written down yet'),
+        await page.textContent('#craving-moves .move-row >> nth=4'));
+    await page.evaluate(() => Store.saveSettings({ helpsList: ['Tapping', 'A workout', 'Meditation'] }));
+
+    // The prayers are the book's, resolved at runtime through the steps that
+    // carry them — never written out a second time in this app.
+    await page.evaluate(() => UI.showScreen('home'));
+    await page.click('#home-craving');
+    const prayers = await page.$$eval('#craving-prayers .move-row .do-label', (e) => e.map((x) => x.textContent));
+    check('both prayers the book prints are offered', prayers.length === 2 &&
+        prayers[0] === 'The third-step prayer' && prayers[1] === 'The seventh-step prayer',
+        prayers.join(' / '));
+    await page.click('#craving-prayers .move-row >> nth=0');
+    const said = await page.textContent('#craving-prayers .move-body:not([hidden]) .move-prayer');
+    check('and it is the book’s own words, not a version of them',
+        said.includes('God, I offer myself to Thee'), JSON.stringify(said.slice(0, 60)));
+    check('taken from the paragraph the step points at, resolved at runtime',
+        await page.evaluate((text) => {
+            const ref = Store.getStep('step03').work.prayerRef;
+            const i = Store.resolveStepRef(ref);
+            return Store.getSection(ref.sectionId).paragraphs[i] === text;
+        }, said));
+
+    // The breathing timer: one clock, and it must not outlive its sheet.
+    await page.click('#craving-moves .move-row >> nth=0');
+    await page.waitForSelector('#breathe-sheet:not([hidden])');
+    check('breathing opens its own sheet, ready rather than already running',
+        (await page.textContent('#breathe-phase')) === 'Ready' &&
+        (await page.textContent('#breathe-start')) === 'Start');
+    await page.click('#breathe-start');
+    await page.waitForTimeout(1100);
+    check('it counts down the phase it is in',
+        (await page.textContent('#breathe-phase')) === 'In' &&
+        Number(await page.textContent('#breathe-count')) < 4,
+        (await page.textContent('#breathe-phase')) + ' ' + (await page.textContent('#breathe-count')));
+    check('and the ring is told which phase it is showing',
+        (await page.getAttribute('#breathe-ring', 'class')).indexOf('is-in') !== -1);
+    await page.click('#breathe-start');
+    check('stopping stops it', (await page.textContent('#breathe-phase')) === 'Stopped');
+
+    // A clock behind a closed sheet goes on counting into an empty room.
+    await page.click('#breathe-start');
+    await page.waitForTimeout(300);
+    await page.click('#breathe-close');
+    await page.waitForSelector('#breathe-sheet', { state: 'hidden' });
+    const frozenAt = await page.textContent('#breathe-count');
+    await page.waitForTimeout(1600);
+    check('and closing the sheet stops it too, rather than leaving it running',
+        (await page.textContent('#breathe-count')) === frozenAt,
+        'was ' + frozenAt + ', now ' + (await page.textContent('#breathe-count')));
+
+    // Coming back is a fresh arrival: what you left open last time is not
+    // what you want open in the middle of the next one.
+    await page.click('#craving-moves .move-row >> nth=1');
+    await page.evaluate(() => UI.showScreen('home'));
+    await page.click('#home-craving');
+    check('coming back to it finds everything closed again',
+        (await page.$$eval('#craving-moves .move-body:not([hidden])', (e) => e.length)) === 0 &&
+        (await page.$$eval('#craving-prayers .move-body:not([hidden])', (e) => e.length)) === 0);
+
+    // The book is still on the page, just no longer ahead of the doing.
+    check('the passage and the chapter are below the things to do',
+        await page.evaluate(() => {
+            const body = document.querySelector('#screen-craving .screen-body');
+            const kids = Array.prototype.slice.call(body.children);
+            return kids.indexOf(document.getElementById('craving-passage')) >
+                   kids.indexOf(document.getElementById('craving-moves'));
+        }));
 
     // ── saying something to them ──────────────────────────────────────────
     await page.click('.tab[data-screen="home"]');
@@ -1140,7 +1259,7 @@ async function openContents(page) {
 
     // Ringing is not always in you; the row sits beside the numbers for exactly
     // the evening when it is not.
-    await page.click('.shortcut[data-shortcut="craving"]');
+    await page.click('#home-craving');
     await page.waitForSelector('#screen-craving.is-active');
     await page.click('#craving-message');
     await page.waitForSelector('#screen-message.is-active');

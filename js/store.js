@@ -35,7 +35,15 @@
             'No white sugar',
             'No substances that trigger'
         ],
-        sponseeRules: []
+        sponseeRules: [],
+        // What works for him when a craving comes, beyond the four moves the
+        // craving screen writes down itself. Seeded with his three; an empty
+        // list is a choice and is kept, the same as the rules.
+        helpsList: [
+            'Tapping',
+            'A workout',
+            'Meditation'
+        ]
     };
 
     var POSITION_MIRROR_KEY = 'ams-big-12s:position';
@@ -2199,6 +2207,117 @@
         return line;
     }
 
+    /* ------------------------------------------------------- when it is bad */
+
+    /*
+     * The things to do when a craving arrives, in the order they are worth
+     * doing: the body first, because it is the part that answers quickest, then
+     * the two turns of thought, then whatever else works for him.
+     *
+     * Written in Martin's register, like BOUNCE_PLAN, and his to rewrite. It is
+     * not A.A. material and does not pretend to be — the book's own contribution
+     * to this screen is the passage and the chapter, both quoted rather than
+     * paraphrased.
+     *
+     * Nothing here congratulates and nothing here scolds. Somebody reading it
+     * is in the middle of one.
+     */
+    var CRAVING_MOVES = [
+        {
+            id: 'breathe',
+            kind: 'breathe',
+            label: 'Breathe',
+            note: 'Four in, hold four, six out'
+        },
+        {
+            id: 'headon',
+            label: 'Meet it head on',
+            note: 'Do not argue with it — look straight at it',
+            body: 'Do not argue with it, and do not try to think about something ' +
+                'else. That is a fight on its ground, and it wins there. Name it ' +
+                'instead. This is a craving. It started, so it will stop. Every one ' +
+                'before it did, and the list at the bottom of this screen is the ' +
+                'proof of that rather than a promise about it.'
+        },
+        {
+            id: 'whatif',
+            label: 'Think it through \u2014 what happens if',
+            note: 'Past the first one, to the morning after',
+            body: 'Play the whole thing forward. Not the first one \u2014 the second, ' +
+                'the fourth, the morning, the call you would have to make, the count ' +
+                'back to day one. A craving only ever shows you the first one. Make ' +
+                'yourself watch the rest of it.'
+        },
+        {
+            id: 'shower',
+            label: 'Get in the shower',
+            note: 'Cold if you can stand it',
+            body: 'Cold if you can stand it, warm if you cannot. It is not a trick. ' +
+                'A body doing something else is a body that has stopped rehearsing, ' +
+                'and ten minutes is usually enough for the worst of it to move.'
+        },
+        {
+            id: 'own',
+            kind: 'own',
+            label: 'Something else that works',
+            note: 'Yours, and changed in Settings'
+        }
+    ];
+
+    /*
+     * In for four, hold for four, out for six. The long end is the out breath
+     * because that is the half that settles a body down, and the counts are
+     * whole seconds because counting halves is beyond anybody in the middle of
+     * this. One cycle is fourteen seconds.
+     */
+    var BREATH_CYCLE = [
+        { id: 'in', label: 'In', seconds: 4 },
+        { id: 'hold', label: 'Hold', seconds: 4 },
+        { id: 'out', label: 'Out', seconds: 6 }
+    ];
+
+    function breathCycle() { return BREATH_CYCLE; }
+
+    function cravingMoves() { return CRAVING_MOVES; }
+
+    // His own list, blank lines dropped, exactly as the rules are read.
+    function helpsList() {
+        return (state.settings.helpsList || []).filter(function (item) {
+            return String(item).trim().length > 0;
+        });
+    }
+
+    /*
+     * The two prayers, taken from the steps that carry them rather than written
+     * out again here. `build-steps.js` already resolves and validates
+     * `work.prayerRef` at build time, so pointing at it means there is one place
+     * a bad anchor can be caught and one place the wording comes from — the
+     * book. A prayer whose paragraph cannot be found is reported missing, never
+     * shown at a guessed one.
+     */
+    var CRAVING_PRAYERS = [
+        { id: 'step03', stepId: 'step03', label: 'The third-step prayer' },
+        { id: 'step07', stepId: 'step07', label: 'The seventh-step prayer' }
+    ];
+
+    function cravingPrayers() {
+        return CRAVING_PRAYERS.map(function (prayer) {
+            var step = getStep(prayer.stepId);
+            var ref = step && step.work && step.work.prayerRef;
+            var index = ref ? resolveStepRef(ref) : null;
+            var section = ref ? getSection(ref.sectionId) : null;
+            return {
+                id: prayer.id,
+                stepId: prayer.stepId,
+                label: prayer.label,
+                sectionId: ref ? ref.sectionId : '',
+                sectionTitle: section ? section.title : '',
+                paraIndex: index,
+                text: (index === null || !section) ? '' : section.paragraphs[index]
+            };
+        });
+    }
+
     /* --------------------------------------------------------------- boot */
 
     function init() {
@@ -2354,6 +2473,11 @@
         meetingSummaryLine: meetingSummaryLine,
         meetingDayText: meetingDayText,
         meetingsAsText: meetingsAsText,
+
+        cravingMoves: cravingMoves,
+        cravingPrayers: cravingPrayers,
+        breathCycle: breathCycle,
+        helpsList: helpsList,
 
         MESSAGE_OPENERS: MESSAGE_OPENERS,
         loadMessages: loadMessages,

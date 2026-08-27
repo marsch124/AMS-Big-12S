@@ -15,8 +15,11 @@ without a signal.
   what you have done
 - 🧭 **Starting again** — if abstinence breaks, the three days after it: what to do, somewhere
   to write, and the book to hand
-- 🌊 **A craving screen** — start a clock on one, close it when it goes, and keep the list of
-  the ones that passed; your sponsor a tap away
+- 🌊 **When a craving comes** — its own row at the top of the home screen, opening a page
+  that leads with what to do: a breathing ring to follow, meeting it head on, thinking it
+  through, the shower, your own list, the numbers to ring and the two prayers the book
+  prints. Start a clock on one, close it when it goes, and keep the list of the ones that
+  passed
 - 👥 **Meetings** — what you meant to bring up, and the record of the ones you got to
 - 📖 **Distraction-free reader** — serif or sans, four themes, adjustable size and spacing
 - 🔖 **Remembers where you stopped** — down to the paragraph, restored on every launch, and
@@ -97,31 +100,42 @@ morning with nothing written says so.
 
 ## When you have a craving
 
-*I have cravings* opens a screen with three things on it, in the order they tend
-to be wanted.
+**I have a craving** is a row of its own at the top of the home screen, above
+everything else on it. That position is deliberate: it is the one thing on that
+page nobody should have to look for.
 
-**Something to do this minute.** Ring somebody — sponsor, sponsee or spouse.
-Put their numbers in **Settings → People you can ring** and whoever has one is a
-tap away; leave them all empty and the screen offers to take you there instead.
-The sponsee is on that list on purpose: the book's own answer to a shaky evening
-is to work with another alcoholic. The numbers are kept on the device like
-everything else and are used for nothing but those buttons. Or write down what is
-going on, which puts a note on the list for your sponsor. Or open *More About
-Alcoholism*, which is the chapter on exactly this.
+The screen it opens leads with **what to do**, and the book sits below that. The
+book is the best thing on the page and it is still reading, and reading is not
+what the first minute of one of these is for.
 
-**Something from the book**, drawn from eleven passages chosen for this moment
-and weighted towards what to do rather than what is wrong with you. Verified
-word for word, the same as the daily passage.
+**Do this now** — five things, the body first because it answers quickest:
 
-**A record of this one.** One tap starts a clock, one tap closes it. That is the
-part worth having: in the middle of a craving it is not obvious that it will
-end, and the only convincing argument that it will is the list of the ones that
-did — so the screen leads with how many there have been and how long the longest
-ran.
+| | |
+|---|---|
+| **Breathe** | A ring to follow: four in, hold four, six out. The long end is the out breath, because that is the half that settles a body down. Stop it whenever. |
+| **Meet it head on** | Do not argue with it. A few lines, opening where they stand. |
+| **Think it through — what happens if** | Past the first one, to the morning after. |
+| **Get in the shower** | Cold if you can stand it. |
+| **Something else that works** | Your own list, kept in Settings under *What else helps* — seeded with tapping, a workout and meditation, and yours to change. |
 
-The record can also say that you drank. A list that only holds victories is not
-a record, and the count stops claiming every one passed the moment one did not.
-Cravings ride the normal backup, like everything else.
+**Or reach somebody** — whoever has a number against them in Settings, sponsor
+first, plus saying something to them and writing down what is going on.
+
+**Or say it out loud** — the two prayers the book prints, at step three and at
+step seven. They open on this page rather than sending you into a chapter to
+find them, and there is a way through to the page itself for afterwards. The
+words are resolved at runtime from the steps that carry them, so they are the
+book's and never a version of them.
+
+Nothing on this page moves you to another screen. Navigation is the last thing
+anybody wants in the middle of one, and a row that took you elsewhere would take
+the rest of the list with it.
+
+**I am having one now** starts a clock, and the list underneath is the reason the
+screen exists at all: in the middle of a craving it is not obvious that it will
+end, and the only convincing argument that it will is the run of ones that did.
+Entries that ended in a drink are kept too — a list that can only record
+victories is not a record.
 
 ## Reading somewhere without it counting
 
