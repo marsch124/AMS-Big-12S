@@ -547,11 +547,11 @@
         var holder = $('step-work');
         var body = $('step-work-body');
 
-        // Kinds still declared in the data with no renderer show no work section
-        // rather than an empty one. Remaining: people-worked-with.
+        // Every declared kind now has a renderer. The fallback stays: a kind this
+        // build does not know hides its section rather than showing an empty one.
         var kinds = ['inventory-tables', 'amends-list', 'amends-progress',
             'daily-entries', 'daily-practice', 'prayer', 'two-lists', 'sittings',
-            'carried-defects'];
+            'carried-defects', 'people-worked-with'];
         if (!work || kinds.indexOf(work.kind) === -1) {
             holder.hidden = true;
             body.innerHTML = '';
@@ -578,9 +578,112 @@
             body.appendChild(renderSittings(step, work));
         } else if (work.kind === 'carried-defects') {
             body.appendChild(renderCarriedDefects(step, work));
+        } else if (work.kind === 'people-worked-with') {
+            body.appendChild(renderPeopleWorkedWith(step, work));
         } else {
             body.appendChild(renderDaily(step, work));
         }
+    }
+
+    /* ------------------------------------------------------------ step twelve */
+
+    /*
+     * Who you have sat with, and what came of it. The intro says why it is
+     * worth keeping: it is easy to forget how many there have been, and easy to
+     * remember only the ones that went badly. So the page leads with the count,
+     * and the outcome is recorded without ever being scored.
+     */
+    function renderPeopleWorkedWith(step, work) {
+        var wrap = document.createElement('div');
+        var tableId = work.tableId || work.kind;
+        var spec = {
+            id: tableId,
+            title: 'Someone you sat with',
+            prompt: 'A first name or initials is enough.',
+            columns: work.columns || [],
+            dated: true,
+            dateLabel: work.promptLabel || 'First sat down'
+        };
+
+        var people = Store.inventoryFor(step.id, tableId).slice().sort(function (a, b) {
+            return (b.on || '').localeCompare(a.on || '');
+        });
+
+        var add = document.createElement('button');
+        add.className = 'btn btn-primary btn-block';
+        add.textContent = people.length ? 'Add someone else' : 'Add the first';
+        add.addEventListener('click', function () { openInvSheet(step, spec, null); });
+        wrap.appendChild(add);
+
+        if (!people.length) {
+            var none = document.createElement('p');
+            none.className = 'hint';
+            none.textContent = 'Nobody written down yet.';
+            wrap.appendChild(none);
+            return wrap;
+        }
+
+        var tally = document.createElement('p');
+        tally.className = 'hint';
+        tally.textContent = people.length === 1
+            ? 'One person.'
+            : people.length + ' people.';
+        wrap.appendChild(tally);
+
+        var list = document.createElement('div');
+        list.className = 'people-list';
+
+        people.forEach(function (row) {
+            var values = row.values || {};
+            var current = Store.rowState(row, step.id);
+
+            var card = document.createElement('div');
+            card.className = 'person';
+            card.innerHTML =
+                '<div class="person-head">' +
+                    '<span class="person-who">' + escapeHtml(values.who || 'Someone') + '</span>' +
+                    '<span class="person-when">' + escapeHtml(formatDay(row.on)) + '</span>' +
+                '</div>' +
+                (values.how ? '<p class="person-line">' + escapeHtml(values.how) + '</p>' : '') +
+                (values.what ? '<p class="person-line person-what">' + escapeHtml(values.what) + '</p>' : '');
+
+            var states = document.createElement('div');
+            states.className = 'person-states';
+            (work.states || []).forEach(function (option) {
+                var on = current === option.id;
+                var b = document.createElement('button');
+                b.className = 'chip' + (on ? ' is-active' : '');
+                b.textContent = option.label;
+                b.addEventListener('click', function () {
+                    Store.setRowState(row.id, step.id, on ? '' : option.id)
+                        .then(function () { renderStepWork(step); });
+                });
+                states.appendChild(b);
+            });
+            card.appendChild(states);
+
+            var chosen = (work.states || []).filter(function (o) { return o.id === current; })[0];
+            if (chosen && chosen.hint) {
+                var hint = document.createElement('p');
+                hint.className = 'person-hint';
+                hint.textContent = chosen.hint;
+                card.appendChild(hint);
+            }
+
+            var actions = document.createElement('div');
+            actions.className = 'card-actions';
+            var edit = document.createElement('button');
+            edit.className = 'chip';
+            edit.textContent = 'Edit';
+            edit.addEventListener('click', function () { openInvSheet(step, spec, row); });
+            actions.appendChild(edit);
+            card.appendChild(actions);
+
+            list.appendChild(card);
+        });
+
+        wrap.appendChild(list);
+        return wrap;
     }
 
     /* --------------------------------------------------------------- step six */

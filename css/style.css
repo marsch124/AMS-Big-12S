@@ -351,6 +351,38 @@ button { cursor: pointer; }
 
 /* ════════════════════════════════════════════════════════════════ steps ══ */
 
+/* ── Step twelve: who you have sat with ──────────────────────────────────── */
+
+.people-list { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+
+.person {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--bg-raised);
+  padding: 13px 14px 4px;
+}
+.person-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.person-who { font-size: 15px; font-weight: 600; }
+.person-when {
+  flex: none;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.person-line { margin: 7px 0 0; font-size: 14px; line-height: 1.55; white-space: pre-wrap; }
+.person-what { color: var(--text-dim); }
+.person-states { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 11px; }
+.person-states .chip { flex: 0 1 auto; }
+.person-hint {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  border-left: 2px solid var(--rule-firm, var(--rule));
+  padding-left: 10px;
+}
+.person .card-actions { padding: 10px 0 8px; }
+
 /* ── Step six: the defects step four named ───────────────────────────────── */
 
 .defect-list { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }

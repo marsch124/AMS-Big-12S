@@ -271,17 +271,23 @@ async function shot(page, name) {
         (await page.$$eval('.inv-title', (e) =>
             e.map((x) => x.textContent.replace(/\d+$/, '').trim()))).join(' / '));
 
-    // A step whose work module has no renderer yet shows no work section at all,
-    // rather than an empty one. Step twelve (people-worked-with) is the last one
-    // unbuilt; when it is built this check has nowhere left to point, and only
-    // then should it go.
-    await page.click('#step-back');
-    await page.click('.step-item >> nth=11');
-    await page.waitForSelector('#screen-step.is-active');
-    check('a step whose work is not built yet shows no work section',
-        (await page.textContent('#step-title')) === 'Step 12' &&
-        !(await page.isVisible('#step-work')),
-        await page.textContent('#step-title'));
+    /*
+     * Every declared kind now has a renderer, so this can no longer be tested by
+     * pointing at an unbuilt step. It asks the dispatcher directly instead: a
+     * kind this build does not know must hide its section rather than show an
+     * empty one. The kind is put back afterwards.
+     */
+    const hidesUnknown = await page.evaluate(() => {
+        const step = Store.getStep('step12');
+        const real = step.work.kind;
+        step.work.kind = 'not-a-real-kind';
+        UI.openStep('step12');
+        const hidden = document.getElementById('step-work').hidden;
+        step.work.kind = real;
+        UI.openStep('step12');
+        return hidden;
+    });
+    check('a work kind this build does not know hides its section', hidesUnknown);
     await page.click('#step-back');
     await page.click('.step-item >> nth=3');
     await page.waitForSelector('#screen-step.is-active');
@@ -853,6 +859,72 @@ async function shot(page, name) {
         carried.length === 3 && carriedAnswers.length === 2 &&
         carried.every((n) => !n.sectionId),
         carried.length + ' notes, ' + carriedAnswers.length + ' answers');
+
+    // ── step twelve: who you have sat with ────────────────────────────────
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=11');
+    await page.waitForSelector('#screen-step.is-active');
+    check('step twelve now has its work section', await page.isVisible('#step-work'));
+
+    await page.click('#step-work-body .btn');
+    await page.waitForSelector('#inv-sheet:not([hidden])');
+    check('it is dated by when you first sat down',
+        (await page.$eval('#inv-sheet-fields .sheet-label', (e) => e.textContent)) === 'First sat down');
+    await page.fill('#inv-sheet-fields input[type=date]', '2024-06-11');
+    let people = await page.$$('#inv-sheet-fields textarea');
+    await people[0].fill('D.');
+    await people[1].fill('Asked after a meeting.');
+    await people[2].fill('Went back out after a month. Rang me at Christmas.');
+    await page.click('#inv-save');
+    await page.waitForTimeout(300);
+    check('the first person is counted in words, not left at 1',
+        (await page.textContent('#step-work-body .hint')) === 'One person.');
+
+    await page.click('#step-work-body .btn');
+    await page.waitForSelector('#inv-sheet:not([hidden])');
+    await page.fill('#inv-sheet-fields input[type=date]', '2026-02-03');
+    people = await page.$$('#inv-sheet-fields textarea');
+    await people[0].fill('K.');
+    await people[1].fill('His wife phoned mine.');
+    await page.click('#inv-save');
+    await page.waitForTimeout(300);
+    check('a second is added, newest first, and the count follows',
+        JSON.stringify(await page.$$eval('.person-who', (e) => e.map((x) => x.textContent))) ===
+            JSON.stringify(['K.', 'D.']) &&
+        (await page.textContent('#step-work-body .hint')) === '2 people.');
+    check('someone can be recorded before you know what happened',
+        (await page.locator('.person', { hasText: 'K.' }).first()
+            .locator('.person-what').count()) === 0);
+
+    const person = page.locator('.person', { hasText: 'D.' }).first();
+    await person.locator('.chip', { hasText: 'Do not know' }).click();
+    await page.waitForTimeout(250);
+    check('not knowing how it went is offered, and not treated as a failure',
+        (await person.locator('.person-hint').textContent()).indexOf('not a failure') !== -1);
+    await person.locator('.chip', { hasText: 'Still in touch' }).click();
+    await page.waitForTimeout(250);
+    check('the outcome can be changed later',
+        (await person.locator('.person-hint').count()) === 0);
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=11');
+    await page.waitForSelector('#screen-step.is-active');
+    check('the people survive a reload',
+        (await page.$$eval('.person', (e) => e.length)) === 2);
+    await page.click('#step-back');
+
+    // the whole point of the phase: nothing declared is left unbuilt
+    const everyStepHasWork = [];
+    for (let i = 0; i < 12; i++) {
+        await page.click('.step-item >> nth=' + i);
+        await page.waitForSelector('#screen-step.is-active');
+        everyStepHasWork.push(await page.isVisible('#step-work'));
+        await page.click('#step-back');
+    }
+    check('all twelve steps show their own work',
+        everyStepHasWork.every(Boolean),
+        everyStepHasWork.filter(Boolean).length + '/12');
 
     // ── step six: the defects step four named ─────────────────────────────
     // Seeded through the store: the same fault written twice, and once written

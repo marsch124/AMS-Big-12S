@@ -8,7 +8,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
-- **Current version:** 1.21 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 1.22 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -22,22 +22,16 @@ https://claude.ai/code/artifact/b467fb04-03e9-4f26-aa77-7f8f18b8c433
 | Phase 2 | done | Steps tab, list of twelve, step page: wording, explanation, references, questions |
 | Phase 3 | done | Dated notes per step, folded when long |
 | Phase 4 | done | Answerable questions keeping every earlier answer; hide, add your own |
-| Phase 5 | **done** | Writing the twelve. **All twelve are written. 83 references resolve, none ambiguous. No stubs remain.** |
-| Phase 6 | **in progress** | Each step's own work — block 5 below. **Built: `inventory-tables` (4), `amends-list` (8), `amends-progress` (9), `daily-entries` (10), `daily-practice` (11), `prayer` (3, 7), `two-lists` (1, 2), `sittings` (5), `carried-defects` (6). One kind still declared-only, so one of twelve steps shows no work section.** |
+| Phase 5 | **done** | Writing the twelve. **All twelve are written. 85 references resolve, none ambiguous. No stubs remain.** |
+| Phase 6 | **done** | Each step's own work. **All ten kinds built; all twelve steps show a work section.** |
 | Phase 7 | to do | Progress on the list, copy a step out for a sponsor, docs, v2.0 |
 
 **Audited 2026-08-27 against the running app, not from memory.** Every step page
-was opened in a browser and checked for a work section. Eleven of twelve now show one
-(1–11); only step 12 does not, because its declared
-`work.kind` has no branch in `renderStepWork()`. The dispatcher hides the section
-rather than showing an empty one, so this is invisible unless you go looking.
-
-Remaining kinds, smallest first:
-
-| kind | steps | note |
-|---|---|---|
-| `carried-defects` | 6 | Annotates step 4's rows exactly as step 9 annotates step 8's. |
-| `people-worked-with` | 12 | Ties to the sponsee tag the Notes tab already has. |
+was opened in a browser and checked for a work section. All twelve now show one.
+Phase 6 is finished: every declared `work.kind` has a branch in
+`renderStepWork()`. The dispatcher still hides the section for a kind it does not
+know, and a smoke check proves that directly by handing it a bogus kind, rather
+than by pointing at an unbuilt step as it used to.
 
 Also open, all Phase 7:
 
@@ -210,7 +204,7 @@ data/steps.json                     Built steps with references resolved
 tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
-tools/smoke-test.js    164 end-to-end browser checks
+tools/smoke-test.js    173 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -222,7 +216,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 164 checks, expect 164/164
+node tools/smoke-test.js                  # 173 checks, expect 173/173
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.
