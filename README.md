@@ -82,8 +82,10 @@ Every one of them goes somewhere. When a new tile is added ahead of what it
 does, it says "Not built yet" when tapped rather than doing nothing quietly.
 
 **Where you have got to** is four counts: how far through the book, what you have
-written, how many of the twelve steps you have worked on, and how many days you
-are running on a daily step. Each is of exactly what its own screen shows, and a
+written, how many of the twelve steps you have worked on, and how many days in a
+row you have opened the app — showing up, rather than any particular piece of
+work. That last one was seeded from the days you already had something dated
+against, so it did not start from one. Each is of exactly what its own screen shows, and a
 morning with nothing written says so.
 
 ## When you have a craving
@@ -436,7 +438,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 293 checks
+node tools/smoke-test.js      # 301 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that

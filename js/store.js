@@ -51,7 +51,8 @@
         stepPrefs: { hidden: {}, custom: {} },  // questions hidden, questions added
         inventory: [],           // step four's rows: { id, stepId, tableId, values, ... }
         cravings: [],            // { id, startedAt, endedAt, outcome, what }
-        meetings: []             // { id, on, where, shared, what }
+        meetings: [],            // { id, on, where, shared, what }
+        visits: null             // the days the app has been opened, ascending
     };
 
     function uid(prefix) {
@@ -1253,17 +1254,92 @@
         return run;
     }
 
-    // The longest run currently going among the daily steps — ten and eleven.
-    // Ties go to the earlier step, so a first day on both reads as step ten.
-    function dailyRun() {
-        var best = null;
-        allSteps().forEach(function (step) {
-            var work = workFor(step);
-            if (!work || String(work.kind).indexOf('daily') !== 0) return;
-            var run = stepStreak(step);
-            if (!best || run > best.run) best = { run: run, step: step };
+    /* ------------------------------------------------------- showing up */
+
+    /*
+     * The days the app has been opened. Kept as a plain list of local dates,
+     * rather than a running total, so anything about them can be worked out
+     * later — a run, a best run, how many in a month — without having had the
+     * foresight to count it at the time.
+     */
+    function loadVisits() {
+        return DB.get(DB.STORE_META, 'visits').then(function (saved) {
+            state.visits = Array.isArray(saved) ? saved.slice() : null;
+            return state.visits;
+        }).catch(function () {
+            state.visits = null;
+            return null;
         });
-        return best || { run: 0, step: null };
+    }
+
+    /*
+     * The first time this runs there is no list, but there is a year of work
+     * with dates on it — and a day something was written is a day the app was
+     * open. Seeding from that means the run does not start at one for somebody
+     * who has been here every morning since March.
+     */
+    function seedVisits() {
+        var days = {};
+        function consider(at) {
+            if (!at) return;
+            var d = new Date(at);
+            if (!isNaN(d)) days[dayISO(d)] = true;
+        }
+        function stamps(row) { consider(row.updatedAt || row.createdAt); }
+
+        if (state.position) consider(state.position.updatedAt);
+        state.notes.forEach(stamps);
+        state.bookmarks.forEach(stamps);
+        state.inventory.forEach(function (row) { stamps(row); if (row.on) days[row.on] = true; });
+        state.cravings.forEach(function (row) { stamps(row); consider(row.startedAt); });
+        state.meetings.forEach(function (row) { stamps(row); if (row.on) days[row.on] = true; });
+
+        return Object.keys(days).sort();
+    }
+
+    function recordVisit(date) {
+        var today = dayISO(date);
+        var had = Array.isArray(state.visits);
+        if (!had) state.visits = seedVisits();
+
+        var known = state.visits.indexOf(today) !== -1;
+        if (!known) {
+            state.visits.push(today);
+            state.visits.sort();
+        }
+        // Nothing new to write: the list existed and today was already in it.
+        if (had && known) return Promise.resolve(state.visits);
+
+        return DB.put(DB.STORE_META, state.visits, 'visits').then(function () {
+            return state.visits;
+        });
+    }
+
+    // Counted back from today — or from yesterday, if today has not been
+    // recorded yet, so a run does not read zero for the moment before the app
+    // has finished starting up.
+    function daysRunning(date) {
+        var days = {};
+        (state.visits || []).forEach(function (day) { days[day] = true; });
+
+        var cursor = dayISO(date);
+        if (!days[cursor]) cursor = shiftDay(cursor, -1);
+        var run = 0;
+        while (days[cursor]) { run++; cursor = shiftDay(cursor, -1); }
+        return run;
+    }
+
+    function bestRun() {
+        var days = (state.visits || []).slice().sort();
+        var best = 0;
+        var run = 0;
+        var previous = null;
+        days.forEach(function (day) {
+            run = (previous && shiftDay(previous, 1) === day) ? run + 1 : 1;
+            previous = day;
+            if (run > best) best = run;
+        });
+        return best;
     }
 
     /* ------------------------------------------------------------ cravings */
@@ -1496,9 +1572,12 @@
             .then(loadInventory)
             .then(loadCravings)
             .then(loadMeetings)
+            .then(loadVisits)
             .then(loadNotes)
             .then(loadBookmarks)
             .then(loadPosition)
+            // Last, because seeding a first list reads everything above it.
+            .then(function () { return recordVisit(); })
             .then(function () { return state; });
     }
 
@@ -1525,7 +1604,11 @@
         passageForCraving: passageForCraving,
         dayNumber: dayNumber,
         stepStreak: stepStreak,
-        dailyRun: dailyRun,
+
+        loadVisits: loadVisits,
+        recordVisit: recordVisit,
+        daysRunning: daysRunning,
+        bestRun: bestRun,
         dayISO: dayISO,
         shiftDay: shiftDay,
         todayISO: todayISO,

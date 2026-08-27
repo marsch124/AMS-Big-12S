@@ -45,7 +45,10 @@
             cravings: state.cravings,
             // Meetings you were at. The count is the thing, so it moves phones
             // with everything else.
-            meetings: state.meetings
+            meetings: state.meetings,
+            // The days the app has been opened. A run of them is worth nothing
+            // if it starts again on a new phone.
+            visits: state.visits || []
         };
 
         if (options.includeBookText && state.book && state.book.textIncluded) {
@@ -266,6 +269,20 @@
             }
             summary.stepPrefs = true;
             return Store.saveStepPrefs();
+        }).then(function () {
+            // Days the app was opened. A union on merge: a day either happened
+            // or it did not, and two devices can each know days the other does
+            // not. Absent from anything written before 2.13, which must leave
+            // what is here alone.
+            if (!Array.isArray(payload.visits)) return;
+            var days = {};
+            if (mode !== 'replace') {
+                (Store.state.visits || []).forEach(function (day) { days[day] = true; });
+            }
+            payload.visits.forEach(function (day) { days[day] = true; });
+            Store.state.visits = Object.keys(days).sort();
+            summary.visits = Store.state.visits.length;
+            return DB.put(DB.STORE_META, Store.state.visits, 'visits');
         }).then(function () {
             // Only adopt the backup's position if it is newer than what is here.
             var incoming = payload.position;

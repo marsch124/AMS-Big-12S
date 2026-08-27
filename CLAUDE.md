@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.12 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.13 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -331,6 +331,30 @@ HTML, which is why it is shaped this way — do not collapse it back.
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
 
+## Days running (2.13)
+
+**It counts days the app was opened, not days a step was worked.** Martin asked
+for that explicitly — "more or less, that I've opened the app". The step ten and
+eleven runs still exist on their own step pages via `Store.stepStreak()`; the
+home tile no longer uses them, and `dailyRun()` was removed rather than left
+lying about.
+
+**`meta.visits` is a plain list of local dates**, not a running total, so a run,
+a best run or a month's tally can all be worked out later without having had the
+foresight to count them at the time. `recordVisit()` runs last in `Store.init()`
+— it seeds a first list from every dated thing on the device, and that seeding
+reads notes, bookmarks, inventory, cravings, meetings and the position, so they
+all have to be loaded before it. It also runs on `visibilitychange`, for a phone
+left open across midnight.
+
+**Two different questions, and they can disagree.** "Nothing read or written for
+9 days" is about *doing*; days running is about *showing up*. Opening the app
+counts for one and deliberately not for the other. That is not an inconsistency
+— do not "fix" it by making them agree.
+
+**Backups union the days on merge.** A day either happened or it did not, and two
+devices can each know days the other does not.
+
 ## Whether you have been here (2.7)
 
 **Only reading and writing count as activity.** `Store.lastActivity()` takes the
@@ -462,7 +486,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    293 end-to-end browser checks
+tools/smoke-test.js    301 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -474,7 +498,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 293 checks, expect 293/293
+node tools/smoke-test.js                  # 301 checks, expect 301/301
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

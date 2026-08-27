@@ -157,6 +157,61 @@ async function openContents(page) {
     check('tapping it goes to the day it counts from',
         (await page.inputValue('#set-sober-since')) === '2023-03-03');
 
+    // ── days running ──────────────────────────────────────────────────────
+    const running = await page.evaluate(() => ({
+        run: Store.daysRunning(),
+        today: Store.state.visits.indexOf(Store.todayISO()) !== -1
+    }));
+    check('opening the app is recorded as a day of its own',
+        running.today && running.run >= 1, JSON.stringify(running));
+
+    const runs = await page.evaluate(async (today) => {
+        async function set(days) {
+            Store.state.visits = days;
+            await DB.put(DB.STORE_META, days, 'visits');
+        }
+        const back = (n) => Store.shiftDay(today, -n);
+        const out = {};
+        await set([back(2), back(1), today]);
+        out.three = Store.daysRunning();
+        await set([back(9), back(8), back(7), back(1), today]);
+        out.broken = Store.daysRunning();
+        out.best = Store.bestRun();
+        await set([back(1)]);
+        out.yesterdayOnly = Store.daysRunning();
+        return out;
+    }, await page.evaluate(() => Store.todayISO()));
+    check('three days in a row read as three', runs.three === 3, String(runs.three));
+    check('a gap starts the run again', runs.broken === 2, String(runs.broken));
+    check('but the longest run is remembered', runs.best === 3, String(runs.best));
+    check('yesterday still counts before today is recorded',
+        runs.yesterdayOnly === 1, String(runs.yesterdayOnly));
+
+    // Seeding: a day something was written is a day the app was open.
+    const seeded = await page.evaluate(async (today) => {
+        await DB.remove(DB.STORE_META, 'visits');
+        Store.state.visits = null;
+        const back = (n) => Store.shiftDay(today, -n);
+        await Store.saveMeeting({ on: back(1), where: 'Seeded', shared: false, what: '' });
+        await Store.saveMeeting({ on: back(2), where: 'Seeded', shared: false, what: '' });
+        await Store.recordVisit();
+        const run = Store.daysRunning();
+        // Clear up after the seed so the meeting counts elsewhere still hold.
+        for (const row of Store.state.meetings.filter((m) => m.where === 'Seeded')) {
+            await Store.deleteMeeting(row.id);
+        }
+        return run;
+    }, await page.evaluate(() => Store.todayISO()));
+    check('a first list is seeded from the days already written about',
+        seeded === 3, String(seeded));
+
+    await page.evaluate(() => { UI.showScreen('home'); });
+    check('and the tile shows what the store says',
+        (await page.textContent('#stats .stat:last-child')).indexOf(
+            String(await page.evaluate(() => Store.daysRunning()))) === 0);
+    check('with a plain line saying what it counts',
+        (await page.textContent('#stats .stat:last-child')).includes('opened the app'));
+
     // ── the rules ─────────────────────────────────────────────────────────
     await page.click('.tab[data-screen="settings"]');
     await page.waitForSelector('#screen-settings.is-active');

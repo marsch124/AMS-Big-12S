@@ -342,7 +342,8 @@
             return Store.stepProgress(step.id).total > 0;
         }).length;
 
-        var run = Store.dailyRun();
+        var run = Store.daysRunning();
+        var best = Store.bestRun();
         var bookmarks = Store.state.bookmarks.length;
 
         [{
@@ -361,12 +362,17 @@
             note: touched === 12 ? 'all of them' : 'notes, answers, work',
             go: function () { showScreen('steps'); }
         }, {
-            value: String(run.run),
-            label: run.run === 1 ? 'Day running' : 'Days running',
-            // Named by number rather than by its short title: "Continued" is
-            // what step ten is called, and on its own it says nothing.
-            note: run.run && run.step ? 'Step ' + run.step.number : 'nothing logged yet',
-            go: function () { if (run.step) openStep(run.step.id); else showScreen('steps'); }
+            // Days you have opened the app, not days you have done a particular
+            // piece of work. Showing up is the thing being counted.
+            value: String(run),
+            label: run === 1 ? 'Day running' : 'Days running',
+            note: 'opened the app',
+            go: function () {
+                toast(run === 1
+                    ? 'Days in a row you have opened the app. This is the first.'
+                    : 'Days in a row you have opened the app. Your longest run is ' +
+                      best + '.', 4000);
+            }
         }].forEach(function (stat) {
             var tile = document.createElement('button');
             tile.className = 'stat';
@@ -3861,10 +3867,12 @@
         document.addEventListener('visibilitychange', function () {
             if (document.visibilityState === 'visible') {
                 if (current.screen === 'reader') requestWakeLock();
-                // A phone left on the home screen overnight would otherwise
-                // wake up showing yesterday — the wrong time, and the passage
-                // for a day that has been and gone.
-                if (current.screen === 'home') renderHome();
+                // A phone left open overnight would otherwise wake up showing
+                // yesterday — the wrong time, the passage for a day that has
+                // been and gone, and a day of its own not counted.
+                Store.recordVisit().then(function () {
+                    if (current.screen === 'home') renderHome();
+                });
             } else {
                 stopClock();
                 flushPosition();
