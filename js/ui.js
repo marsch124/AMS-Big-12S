@@ -13,7 +13,8 @@
     var notesFilter = 'all';   // all | sponsor | sponsee | steps | own
     var noteTag = '';          // the chip currently lit in the note sheet
     var noteOnPassage = false; // whether that sheet has a passage behind it
-    var browsing = false;      // reading without keeping your place
+    var browsing = false;      // reading without keeping your place, until told otherwise
+    var looking = false;       // a passing look at one passage; ends on leaving the reader
 
     /* ------------------------------------------------------------ helpers */
 
@@ -111,6 +112,9 @@
 
     function showScreen(name) {
         if (name !== 'reader') flushPosition();
+        // A passing look is over the moment you leave the reader. Browsing, set
+        // by hand, is not.
+        if (name !== 'reader' && looking) { looking = false; showBrowsingStrip(); }
         ['home', 'library', 'reader', 'steps', 'step', 'notes', 'search', 'settings',
          'craving', 'meeting']
             .forEach(function (screen) {
@@ -271,7 +275,8 @@
 
         card.onclick = function () {
             if (passage.paraIndex === null) return;
-            openReader(passage.sectionId, { paraIndex: passage.paraIndex, highlight: true });
+            openReader(passage.sectionId,
+                { paraIndex: passage.paraIndex, highlight: true, justLooking: true });
         };
     }
 
@@ -474,7 +479,8 @@
             : passage.sectionTitle + ' · tap to read it in place';
         card.onclick = function () {
             if (passage.paraIndex === null) return;
-            openReader(passage.sectionId, { paraIndex: passage.paraIndex, highlight: true });
+            openReader(passage.sectionId,
+                { paraIndex: passage.paraIndex, highlight: true, justLooking: true });
         };
     }
 
@@ -819,8 +825,13 @@
      */
     function setBrowsing(on, keepHere) {
         browsing = !!on;
-        $('browsing').hidden = !browsing;
+        if (!browsing) looking = false;
+        showBrowsingStrip();
         if (!browsing && keepHere) recordPosition();
+    }
+
+    function showBrowsingStrip() {
+        $('browsing').hidden = !(browsing || looking);
     }
 
     function refreshContinueCards() {
@@ -831,8 +842,21 @@
 
     /* ------------------------------------------------------------- reader */
 
+    /*
+     * options.justLooking — going to one passage rather than reading on: today's
+     * passage, a step's reference, the passage behind a note, a search hit.
+     * Those are an extra reading in the middle of the day and must not move
+     * where you are up to; the percentage on the card belongs to the read you
+     * are actually doing. Opening a whole chapter is the other thing, and
+     * counts.
+     *
+     * A look ends when you leave the reader, so the next chapter opened from
+     * the contents is remembered as usual. Browsing, switched on by hand,
+     * outlasts it.
+     */
     function openReader(sectionId, options) {
         options = options || {};
+        looking = !!options.justLooking;
         // Remember where the reader was opened from, so leaving it goes back
         // there rather than dumping you on the Read tab. Chapter-to-chapter
         // moves inside the reader must not overwrite it.
@@ -847,6 +871,7 @@
         }
         current.sectionId = sectionId;
         renderReader(section, options);
+        showBrowsingStrip();
         showScreen('reader');
     }
 
@@ -952,8 +977,9 @@
     function recordPosition() {
         // Every save of a reading position comes through here — on opening a
         // chapter, on scroll, on leaving the reader, on pagehide. One guard, so
-        // browsing cannot leave a trail through some other door.
-        if (browsing || !current.sectionId) return;
+        // neither browsing nor a passing look can leave a trail through some
+        // other door.
+        if (browsing || looking || !current.sectionId) return;
         var body = $('reader-body');
         var scrollable = body.scrollHeight - body.clientHeight;
         Store.savePosition({
@@ -1239,7 +1265,8 @@
                     '<span class="ref-quote">' +
                         escapeHtml(firstWords(section.paragraphs[index], 20)) + '</span>';
                 row.addEventListener('click', function () {
-                    UI.openReader(ref.sectionId, { paraIndex: index, highlight: true });
+                    UI.openReader(ref.sectionId,
+                        { paraIndex: index, highlight: true, justLooking: true });
                 });
             }
             refs.appendChild(row);
@@ -1773,7 +1800,8 @@
             read.className = 'chip';
             read.textContent = 'Read it in ' + section.title;
             read.addEventListener('click', function () {
-                UI.openReader(work.prayerRef.sectionId, { paraIndex: index, highlight: true });
+                UI.openReader(work.prayerRef.sectionId,
+                    { paraIndex: index, highlight: true, justLooking: true });
             });
             passage.appendChild(read);
             wrap.appendChild(passage);
@@ -3152,7 +3180,8 @@
         main.addEventListener('click', function () {
             if (step) { openStep(step.id); return; }
             if (standalone || note.orphan) { openNoteSheet(note.sectionId, note.paraIndex, note); return; }
-            openReader(note.sectionId, { paraIndex: note.paraIndex, highlight: true });
+            openReader(note.sectionId,
+                { paraIndex: note.paraIndex, highlight: true, justLooking: true });
         });
         card.appendChild(main);
 
@@ -3254,7 +3283,8 @@
                 '<div class="card-where">' + escapeHtml(hit.sectionTitle) + '</div>' +
                 '<p class="card-quote" style="-webkit-line-clamp:3">' + before + '<mark>' + match + '</mark>' + after + '</p>';
             card.addEventListener('click', function () {
-                openReader(hit.sectionId, { paraIndex: hit.paraIndex, highlight: true });
+                openReader(hit.sectionId,
+                    { paraIndex: hit.paraIndex, highlight: true, justLooking: true });
             });
             results.appendChild(card);
         });

@@ -1838,6 +1838,60 @@ async function openContents(page) {
     await page.evaluate(() => Store.savePosition({ sectionId: 'ch05', paraIndex: 12, ratio: 0.2 }));
     await page.click('.tab[data-screen="settings"]');
 
+    // ── a passing look does not move where you are up to ──────────────────
+    await page.click('.tab[data-screen="library"]');
+    await page.click('.toc-item:not([disabled]) >> nth=6');   // How It Works
+    await page.waitForSelector('#screen-reader.is-active');
+    await page.evaluate(() => {
+        const b = document.getElementById('reader-body');
+        b.scrollTop = Math.floor(b.scrollHeight * 0.5);
+    });
+    await page.waitForTimeout(900);
+    await page.click('#reader-back');
+    await page.waitForTimeout(300);
+    const place = await page.evaluate(() =>
+        Store.state.position.sectionId + ' ¶' + Store.state.position.paraIndex);
+
+    await page.click('.tab[data-screen="home"]');
+    await page.click('#passage-card');
+    await page.waitForSelector('#screen-reader.is-active');
+    check('a look at today\u2019s passage says it is not keeping your place',
+        await page.isVisible('#browsing'));
+    await page.evaluate(() => { document.getElementById('reader-body').scrollTop += 900; });
+    await page.waitForTimeout(900);
+    await page.click('#reader-back');
+    await page.waitForTimeout(300);
+    const afterLook = await page.evaluate(() =>
+        Store.state.position.sectionId + ' ¶' + Store.state.position.paraIndex);
+    check('and reading it leaves the percentage exactly where it was',
+        afterLook === place, place + ' → ' + afterLook);
+
+    // A search hit is the same kind of thing.
+    await page.click('.tab[data-screen="search"]');
+    await page.fill('#search-input', 'resentment');
+    await page.waitForTimeout(500);
+    await page.click('#search-results .card');
+    await page.waitForSelector('#screen-reader.is-active');
+    await page.waitForTimeout(600);
+    await page.click('#reader-back');
+    await page.waitForTimeout(300);
+    check('so does jumping to a search hit',
+        (await page.evaluate(() =>
+            Store.state.position.sectionId + ' ¶' + Store.state.position.paraIndex)) === place);
+
+    // But the look is over the moment you leave, and reading counts again.
+    await page.click('.tab[data-screen="library"]');
+    await page.click('.toc-item:not([disabled]) >> nth=3');   // There Is A Solution
+    await page.waitForSelector('#screen-reader.is-active');
+    check('opening a chapter afterwards is reading again, and says nothing',
+        !(await page.isVisible('#browsing')));
+    await page.waitForTimeout(400);
+    check('and is remembered as usual',
+        (await page.evaluate(() => Store.state.position.sectionId)) === 'ch02');
+    await page.click('#reader-back');
+    await page.evaluate(() => Store.savePosition({ sectionId: 'ch05', paraIndex: 12, ratio: 0.2 }));
+    await page.click('.tab[data-screen="settings"]');
+
     // A morning time reads the same either way, so prove it on an evening one.
     const evening = await page.evaluate(async () => {
         const at = new Date();

@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.11 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.12 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -295,6 +295,20 @@ screen without being asked. `loadSettings()` migrates the old single `rules`
 key onto the sponsor list; leave that migration in place, it costs nothing and
 an install that skipped 2.9 would otherwise lose what was written.
 
+**A jump to one passage passes `justLooking: true` (2.12).** Today's passage, a
+step reference, a step's prayer passage, the passage behind a note, a search
+hit — all of them set `looking`, which `recordPosition()` guards on exactly as
+it guards on `browsing`. Reading today's passage used to drag *Continue reading*
+onto it, percentage and all, which was the bug Martin reported. Every one of
+those call sites also passes `highlight: true`; that correspondence is not the
+mechanism and must not be relied on — a new jump to a passage needs the flag
+written out. Opening a whole chapter (contents, prev/next, the craving screen's
+chapter row) is reading, and counts.
+
+`looking` clears in `showScreen()` when you leave the reader, *after*
+`flushPosition()` has been called and refused — order matters there. `browsing`,
+set by hand, outlasts it.
+
 **Browsing is guarded in one place (2.10).** `recordPosition()` is the only
 route by which a reading position is ever written — opening a chapter, the
 debounced scroll, leaving the reader, `pagehide` — so the `browsing` flag is
@@ -448,7 +462,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    288 end-to-end browser checks
+tools/smoke-test.js    293 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -460,7 +474,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 288 checks, expect 288/288
+node tools/smoke-test.js                  # 293 checks, expect 293/293
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

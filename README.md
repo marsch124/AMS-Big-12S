@@ -121,7 +121,13 @@ keeping my place*. For an hour spent somewhere in the book that is not where you
 are up to.
 
 Nothing is written while it is on — not on opening a chapter, not as you scroll,
-not on leaving. The card stays exactly where it was. The reader says **Not
+not on leaving. The card stays exactly where it was.
+
+The same applies, without being asked for, to **going to a single passage**:
+today's passage, a step's reference, the passage behind a note, a search hit.
+Those are an extra reading in the middle of the day, not where you are up to, so
+they leave your place alone — and say so while you are there. That look ends the
+moment you leave the reader. Opening a whole chapter is reading, and counts. The reader says **Not
 keeping your place** at the top the whole time, and one tap there goes back to
 keeping it, from wherever you have actually got to. It also switches itself off
 when the app is next started, so it cannot quietly stay on for a fortnight.
@@ -430,7 +436,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 288 checks
+node tools/smoke-test.js      # 293 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that
