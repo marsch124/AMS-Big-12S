@@ -23,12 +23,12 @@
   --bg-sunken: #f1ede4;
   --paper:     #faf5e9;
   --text:      #2b2925;
-  --text-dim:  #6d6761;
+  --text-dim:  #68625c;
   --rule:      #ebe6db;
-  --accent:    #006bb8;
+  --accent:    #0067b0;
   --accent-on: #ffffff;
   --mark:      #ffe08a;
-  --danger:    #b7412c;
+  --danger:    #af3e2a;
 
   /* Cards sit on the page rather than being drawn onto it. */
   --shadow:      0 1px 2px rgba(52, 46, 36, 0.04), 0 5px 14px rgba(52, 46, 36, 0.055);
@@ -38,22 +38,22 @@
 
   /* One colour per place. Each clears 4.5:1 on both grounds — --accent is
      small bold type in a dozen places, not only icons. */
-  --hue-home:     #b24800;
-  --hue-library:  #006bb8;
+  --hue-home:     #aa4500;
+  --hue-library:  #0067b0;
   --hue-steps:    #6d28d9;
-  --hue-notes:    #007a28;
-  --hue-search:   #007575;
+  --hue-notes:    #007225;
+  --hue-search:   #007070;
   --wash: #fff4d9;
 
   /* Every screen stands on a soft wash of its own colour. The cards stay white
      on top of it, so nothing that has to be read is on a tint — the colour is
      the room, and the card is the paper you read off in it. */
-  --tint-home:     #fbf1ea;
-  --tint-library:  #eaf3fb;
-  --tint-steps:    #f0eafb;
-  --tint-notes:    #eafbf1;
-  --tint-search:   #eafbfb;
-  --tint-settings: #fbeaf4;
+  --tint-home:     #f9eae0;
+  --tint-library:  #e0edf9;
+  --tint-steps:    #e9e0f9;
+  --tint-notes:    #e0f9ea;
+  --tint-search:   #e0f9f9;
+  --tint-settings: #f9e0ee;
 
   /* The home tiles. A tile is coloured by where it takes you, not by where it
      sits, so Read is the Read tab's blue. The chip is a solid bright fill and
@@ -70,9 +70,9 @@
      the edge on their cards. These were aliases of --tile-* until 2.29, and a
      tile is a bright fill chosen against white: as small bold text the sponsee
      green measured 2.41:1. Same hue as the tile, made fit for reading. */
-  --who-sponsor:  #764ed3;
-  --who-sponsee:  #167842;
-  --who-spouse:   #cc1a42;
+  --who-sponsor:  #704ac9;
+  --who-sponsee:  #15733f;
+  --who-spouse:   #c41940;
 
   /* The craving screen. Five rows that look identical are five things to read
      at the worst possible moment; a colour each is a thing to reach for, and
@@ -86,7 +86,7 @@
   --move-reach:   #ff4fa3;  --move-reach-on:   #7a023c;
   --move-prayer:  #94a3b8;  --move-prayer-on:  #263141;
 
-  --hue-settings: #b03a7a;
+  --hue-settings: #ab3876;
 
   --reader-size: 19px;
   --reader-leading: 1.65;
@@ -97,33 +97,47 @@
   --tabbar-h: 56px;
 }
 
+/* Light is not a slightly different Morning, and it had become one. Morning is
+   warm: cream grounds, tinted rooms, soft shadows and first light coming up
+   behind the home screen. Light is the other kind of day — cool, nearly white,
+   flat and even, with the edges drawn rather than implied. The colours are the
+   same; the weather is not. Morning has some. Light has none. */
 [data-theme="light"] {
-  --bg:        #f7f8fa;
+  --bg:        #f4f6fa;
   --bg-raised: #ffffff;
-  --bg-sunken: #eceef2;
+  --bg-sunken: #e9edf3;
   --paper:     #ffffff;
-  --text:      #1c1a17;
-  --text-dim:  #6b6862;
-  --rule:      #e4e7ec;
-  --accent:    #006bb8;
+  --text:      #16191f;
+  --text-dim:  #666d78;
+  /* A drawn edge rather than a hinted one: Light does its separating with
+     lines where Morning does it with warmth. */
+  --rule:      #d8dee7;
+  --accent:    #0067b0;
   --mark:      #ffe08a;
-  --shadow:      0 1px 2px rgba(20, 24, 32, 0.05), 0 5px 14px rgba(20, 24, 32, 0.06);
-  --shadow-lift: 0 2px 5px rgba(20, 24, 32, 0.08), 0 12px 28px rgba(20, 24, 32, 0.10);
+  /* Tighter and colder than Morning's. A card in Light sits on the page; a
+     card in Morning floats a little above it. */
+  --shadow:      0 1px 1px rgba(18, 24, 38, 0.05), 0 2px 6px rgba(18, 24, 38, 0.05);
+  --shadow-lift: 0 1px 2px rgba(18, 24, 38, 0.08), 0 6px 16px rgba(18, 24, 38, 0.09);
 
-  --hue-home:     #b24800;
-  --hue-library:  #006bb8;
+  --hue-home:     #aa4500;
+  --hue-library:  #0067b0;
   --hue-steps:    #6d28d9;
-  --hue-notes:    #007a28;
-  --hue-search:   #007575;
-  --hue-settings: #b03a7a;
-  --wash: #fdf1e3;
+  --hue-notes:    #007225;
+  --hue-search:   #007070;
+  --hue-settings: #ab3876;
 
-  --tint-home:     #fdf3ed;
-  --tint-library:  #eef5fc;
-  --tint-steps:    #f3edfc;
-  --tint-notes:    #edfcf3;
-  --tint-search:   #edfcfc;
-  --tint-settings: #fcedf6;
+  /* No sunrise. --wash matching the home room makes the gradient flat, which
+     is the point: the light in here is even and already up. */
+  --wash: #fff8f6;
+
+  /* A whisper of cool colour on white, where Morning's rooms are warmer and
+     deeper. Every one is lighter than its Morning counterpart. */
+  --tint-home:     #fff8f6;
+  --tint-library:  #f6fcff;
+  --tint-steps:    #f8f6ff;
+  --tint-notes:    #f6fffb;
+  --tint-search:   #f6feff;
+  --tint-settings: #fff6fd;
 }
 
 /* Night, not a switched-off day. The hues lift and desaturate so they read at

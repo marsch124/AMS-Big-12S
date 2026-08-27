@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.33 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.34 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,29 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## Two kinds of day (2.34)
+
+**Morning and Light must not converge, and three checks now hold them apart:**
+no room within ΔE 3 of its counterpart (they sit at 6.5+), Morning warmer on
+the b* axis, and Morning's wash ΔE >5 from its home room while Light's is <1.
+
+- **Morning** — warm, deeper rooms (`sat .10 / val .975`), soft warm shadows,
+  and the sunrise gradient behind the home screen.
+- **Light** — cool, near-white rooms (`sat .035 / val 1.0` on a hue nudged 10°
+  cooler), tighter colder shadows, a stronger `--rule` because it separates with
+  drawn lines rather than warmth, and **no wash**: `--wash` equals `--tint-home`
+  so the gradient is flat. The light in Light is already up.
+
+**Deepening Morning's rooms moves the type.** `--tint-steps` is the darkest
+ground in the app and everything used as type is solved against it; deepening it
+dropped eleven colours below 4.5:1 at once. Change a tint and re-run the audit —
+it is not optional.
+
+**A sunrise is a change of warmth, not of lightness.** The first version of the
+wash check measured L* only and reported Morning's gradient — ΔE 10 from its own
+room — as a lift of 0.67, i.e. invisible. It measures full ΔE now. **Pick the
+axis that carries the meaning.**
 
 ## color-scheme (2.33)
 
@@ -1190,7 +1213,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    492 end-to-end browser checks
+tools/smoke-test.js    495 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -1202,7 +1225,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 492 checks, expect 492/492
+node tools/smoke-test.js                  # 495 checks, expect 495/495
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

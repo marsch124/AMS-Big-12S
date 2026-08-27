@@ -293,6 +293,72 @@ async function openContents(page) {
         probe.remove();
         return bad;
     });
+    // Morning and Light had drifted into near-identical themes — same hues,
+    // near-identical tints, and Light's wash warmed until it matched. They are
+    // meant to be two kinds of day: Morning warm and lit from one side, Light
+    // cool and even. Measured, so they cannot quietly converge again.
+    const twoDays = await page.evaluate(() => {
+        const probe = document.createElement('span');
+        document.body.appendChild(probe);
+        const read = (v) => {
+            probe.style.color = 'var(' + v + ')';
+            return getComputedStyle(probe).color.match(/\d+/g).slice(0, 3).map(Number);
+        };
+        const lab = ([r, g, b]) => {
+            const f = (c) => {
+                const x = c / 255;
+                return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+            };
+            const [R, G, B] = [f(r), f(g), f(b)];
+            const X = (0.4124 * R + 0.3576 * G + 0.1805 * B) / 0.95047;
+            const Y = 0.2126 * R + 0.7152 * G + 0.0722 * B;
+            const Z = (0.0193 * R + 0.1192 * G + 0.9505 * B) / 1.08883;
+            const g2 = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+            return [116 * g2(Y) - 16, 500 * (g2(X) - g2(Y)), 200 * (g2(Y) - g2(Z))];
+        };
+        const grab = (theme) => {
+            document.documentElement.setAttribute('data-theme', theme);
+            const o = {};
+            ['home', 'library', 'steps', 'notes', 'search', 'settings']
+                .forEach((h) => { o[h] = read('--tint-' + h); });
+            o.wash = read('--wash');
+            o.rule = read('--rule');
+            return o;
+        };
+        const was = document.documentElement.getAttribute('data-theme');
+        const m = grab('morning');
+        const l = grab('light');
+        document.documentElement.setAttribute('data-theme', was);
+        probe.remove();
+        const rooms = ['home', 'library', 'steps', 'notes', 'search', 'settings'];
+        const gaps = rooms.map((h) => {
+            const a = lab(m[h]);
+            const b = lab(l[h]);
+            return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+        });
+        return {
+            closest: Math.min(...gaps),
+            // b* is the blue–yellow axis: warm is positive, cool is negative.
+            morningWarmth: lab(m.home)[2],
+            lightWarmth: lab(l.home)[2],
+            morningWash: (() => { const a = lab(m.wash), b = lab(m.home);
+                return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]); })(),
+            lightWash: (() => { const a = lab(l.wash), b = lab(l.home);
+                return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]); })(),
+        };
+    });
+    check('no room in Light looks like the same room in Morning',
+        twoDays.closest >= 3, 'closest ΔE ' + twoDays.closest.toFixed(1));
+    check('and Morning is the warmer of the two',
+        twoDays.morningWarmth > twoDays.lightWarmth,
+        'b* ' + twoDays.morningWarmth.toFixed(1) + ' vs ' + twoDays.lightWarmth.toFixed(1));
+    // Not a lightness difference — a sunrise is a change of warmth, and the
+    // first version of this check looked at the wrong axis and called a
+    // perfectly visible gradient invisible.
+    check('Morning has first light behind the home screen and Light does not',
+        twoDays.morningWash > 5 && twoDays.lightWash < 1,
+        'wash ΔE ' + twoDays.morningWash.toFixed(1) + ' vs ' + twoDays.lightWash.toFixed(1));
+
     // The browser draws the checkbox, the date field, the selects and the
     // scrollbars, and it draws them light unless the page says otherwise.
     const schemes = await page.evaluate(() => {
