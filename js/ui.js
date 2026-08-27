@@ -548,10 +548,10 @@
         var body = $('step-work-body');
 
         // Kinds still declared in the data with no renderer show no work section
-        // rather than an empty one. Remaining: sittings, carried-defects,
+        // rather than an empty one. Remaining: carried-defects,
         // people-worked-with.
         var kinds = ['inventory-tables', 'amends-list', 'amends-progress',
-            'daily-entries', 'daily-practice', 'prayer', 'two-lists'];
+            'daily-entries', 'daily-practice', 'prayer', 'two-lists', 'sittings'];
         if (!work || kinds.indexOf(work.kind) === -1) {
             holder.hidden = true;
             body.innerHTML = '';
@@ -574,9 +574,117 @@
             body.appendChild(renderPrayer(step, work));
         } else if (work.kind === 'two-lists') {
             body.appendChild(renderTwoLists(step, work));
+        } else if (work.kind === 'sittings') {
+            body.appendChild(renderSittings(step, work));
         } else {
             body.appendChild(renderDaily(step, work));
         }
+    }
+
+    /* -------------------------------------------------------------- step five */
+
+    // Which sittings have their held-back field showing. Deliberately not
+    // remembered: it starts closed again every time the page is opened.
+    var sittingOpen = {};
+
+    /*
+     * A record that the telling happened, kept with the date it happened on
+     * rather than the date it was typed up. Going back later to say the thing
+     * you left out is a second sitting, not an edit of the first.
+     *
+     * What was held back is folded away by default. That is discretion, not
+     * security — anyone holding an unlocked phone can open it — but it keeps
+     * the most private line in the app off the screen at a glance.
+     */
+    function renderSittings(step, work) {
+        var wrap = document.createElement('div');
+        var tableId = work.tableId || work.kind;
+        var spec = {
+            id: tableId,
+            title: 'A sitting',
+            prompt: 'A record that it happened. Not a second inventory.',
+            fields: work.fields || [],
+            dated: true,
+            dateLabel: work.promptLabel || 'On'
+        };
+
+        var sittings = Store.inventoryFor(step.id, tableId).slice().sort(function (a, b) {
+            return (b.on || '').localeCompare(a.on || '');
+        });
+
+        var add = document.createElement('button');
+        add.className = 'btn btn-primary btn-block';
+        add.textContent = sittings.length ? 'Record another sitting' : 'Record a sitting';
+        add.addEventListener('click', function () { openInvSheet(step, spec, null); });
+        wrap.appendChild(add);
+
+        if (!sittings.length) {
+            var none = document.createElement('p');
+            none.className = 'hint';
+            none.textContent = 'Nothing recorded yet.';
+            wrap.appendChild(none);
+            return wrap;
+        }
+
+        var list = document.createElement('div');
+        list.className = 'sitting-list';
+
+        sittings.forEach(function (row, index) {
+            var values = row.values || {};
+            var card = document.createElement('div');
+            card.className = 'sitting' + (index === 0 ? ' is-latest' : '');
+
+            var head = document.createElement('div');
+            head.className = 'sitting-head';
+            head.innerHTML =
+                '<span class="sitting-when">' + escapeHtml(formatDay(row.on)) + '</span>' +
+                (values.who ? '<span class="sitting-who">' + escapeHtml(values.who) + '</span>' : '');
+            card.appendChild(head);
+
+            if (values.covered) {
+                var covered = document.createElement('p');
+                covered.className = 'sitting-covered';
+                covered.textContent = values.covered;
+                card.appendChild(covered);
+            }
+
+            if (values.heldBack) {
+                var open = !!sittingOpen[row.id];
+                var held = document.createElement('div');
+                held.className = 'sitting-held' + (open ? ' is-open' : '');
+
+                var toggle = document.createElement('button');
+                toggle.className = 'sitting-held-toggle';
+                toggle.textContent = open ? 'Hide what you held back' : 'What you held back';
+                toggle.addEventListener('click', function () {
+                    sittingOpen[row.id] = !sittingOpen[row.id];
+                    renderStepWork(step);
+                });
+                held.appendChild(toggle);
+
+                if (open) {
+                    var text = document.createElement('p');
+                    text.className = 'sitting-held-text';
+                    text.textContent = values.heldBack;
+                    held.appendChild(text);
+                }
+                card.appendChild(held);
+            }
+
+            var actions = document.createElement('div');
+            actions.className = 'card-actions';
+            var edit = document.createElement('button');
+            edit.className = 'chip';
+            edit.textContent = 'Edit';
+            edit.addEventListener('click', function () { openInvSheet(step, spec, row); });
+            actions.appendChild(edit);
+            card.appendChild(actions);
+
+            list.appendChild(card);
+        });
+
+        wrap.appendChild(list);
+        return wrap;
     }
 
     /* -------------------------------------------------- steps one and two */
@@ -1546,6 +1654,12 @@
         openSheet('inv-sheet');
     }
 
+    /*
+     * The row editor for every table-shaped work module. A spec may name its
+     * inputs `columns` (step four's tables) or `fields` (step five's sittings),
+     * and may ask for a date of its own — a sitting happened on a day, and that
+     * day is not the day it was typed up.
+     */
     function openInvSheet(step, table, existing) {
         $('inv-sheet-title').textContent =
             (existing ? 'Edit' : 'New') + ' — ' + table.title;
@@ -1554,8 +1668,25 @@
         var fields = $('inv-sheet-fields');
         fields.innerHTML = '';
         var inputs = {};
+        var dateInput = null;
 
-        table.columns.forEach(function (col) {
+        if (table.dated) {
+            var dateWrap = document.createElement('label');
+            dateWrap.className = 'inv-input';
+            var dateLabel = document.createElement('span');
+            dateLabel.className = 'sheet-label';
+            dateLabel.textContent = table.dateLabel || 'On';
+            dateWrap.appendChild(dateLabel);
+            dateInput = document.createElement('input');
+            dateInput.type = 'date';
+            dateInput.className = 'field';
+            dateInput.value = (existing && existing.on) || dayISO();
+            dateInput.max = dayISO();
+            dateWrap.appendChild(dateInput);
+            fields.appendChild(dateWrap);
+        }
+
+        (table.columns || table.fields || []).forEach(function (col) {
             var wrap = document.createElement('label');
             wrap.className = 'inv-input';
             var label = document.createElement('span');
@@ -1563,10 +1694,10 @@
             label.textContent = col.label;
             wrap.appendChild(label);
 
-            if (col.hint) {
+            if (col.hint || col.prompt) {
                 var hint = document.createElement('span');
                 hint.className = 'hint';
-                hint.textContent = col.hint;
+                hint.textContent = col.hint || col.prompt;
                 wrap.appendChild(hint);
             }
 
@@ -1607,6 +1738,7 @@
                 createdAt: existing ? existing.createdAt : null,
                 stepId: step.id,
                 tableId: table.id,
+                on: dateInput ? (dateInput.value || dayISO()) : (existing ? existing.on : null),
                 values: values
             }).then(function () {
                 closeSheets();

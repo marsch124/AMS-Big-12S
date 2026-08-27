@@ -272,13 +272,13 @@ async function shot(page, name) {
             e.map((x) => x.textContent.replace(/\d+$/, '').trim()))).join(' / '));
 
     // A step whose work module has no renderer yet shows no work section at all,
-    // rather than an empty one. Step five (sittings) is the check — move this to
-    // another unbuilt step when five is built, do not simply delete it.
+    // rather than an empty one. Step six (carried-defects) is the check — move
+    // this to another unbuilt step when six is built, do not simply delete it.
     await page.click('#step-back');
-    await page.click('.step-item >> nth=4');
+    await page.click('.step-item >> nth=5');
     await page.waitForSelector('#screen-step.is-active');
     check('a step whose work is not built yet shows no work section',
-        (await page.textContent('#step-title')) === 'Step 5' &&
+        (await page.textContent('#step-title')) === 'Step 6' &&
         !(await page.isVisible('#step-work')),
         await page.textContent('#step-title'));
     await page.click('#step-back');
@@ -852,6 +852,58 @@ async function shot(page, name) {
         carried.length === 3 && carriedAnswers.length === 2 &&
         carried.every((n) => !n.sectionId),
         carried.length + ' notes, ' + carriedAnswers.length + ' answers');
+
+    // ── step five: a record of the telling ────────────────────────────────
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=4');
+    await page.waitForSelector('#screen-step.is-active');
+    check('step five now has its work section', await page.isVisible('#step-work'));
+
+    await page.click('#step-work-body .btn');
+    await page.waitForSelector('#inv-sheet:not([hidden])');
+    check('a sitting is dated by when it happened, not when it was typed up',
+        (await page.$$eval('#inv-sheet-fields input[type=date]', (e) => e.length)) === 1 &&
+        (await page.$eval('#inv-sheet-fields .sheet-label', (e) => e.textContent)) === 'Sat down on');
+    await page.fill('#inv-sheet-fields input[type=date]', '2025-11-02');
+    let sitFields = await page.$$('#inv-sheet-fields textarea');
+    await sitFields[0].fill('My sponsor, at his kitchen table.');
+    await sitFields[1].fill('The whole resentment column, then the fears.');
+    await sitFields[2].fill('One thing about money I skated over.');
+    await page.click('#inv-save');
+    await page.waitForTimeout(300);
+    check('the sitting is kept', (await page.$$eval('.sitting', (e) => e.length)) === 1 &&
+        (await page.textContent('.sitting-when')) === 'Nov 2, 2025');
+
+    check('what was held back is folded away, not on screen at a glance',
+        !(await page.isVisible('.sitting-held-text')) &&
+        (await page.textContent('.sitting-held-toggle')) === 'What you held back');
+    await page.click('.sitting-held-toggle');
+    await page.waitForTimeout(200);
+    check('and opens when asked for', await page.isVisible('.sitting-held-text'));
+
+    // going back later is a second sitting, not an edit of the first
+    await page.click('#step-work-body .btn');
+    await page.waitForSelector('#inv-sheet:not([hidden])');
+    await page.fill('#inv-sheet-fields input[type=date]', '2026-01-20');
+    sitFields = await page.$$('#inv-sheet-fields textarea');
+    await sitFields[0].fill('Same sponsor, went back.');
+    await sitFields[1].fill('The bit I left out.');
+    await page.click('#inv-save');
+    await page.waitForTimeout(300);
+    check('a later sitting is a second entry, ordered by the day it happened',
+        JSON.stringify(await page.$$eval('.sitting-when', (e) => e.map((x) => x.textContent))) ===
+        JSON.stringify(['Jan 20, 2026', 'Nov 2, 2025']));
+    check('a sitting with nothing held back grows no toggle',
+        (await page.$$eval('.sitting-held-toggle', (e) => e.length)) === 1);
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=4');
+    await page.waitForSelector('#screen-step.is-active');
+    check('sittings survive a reload, with the held-back field closed again',
+        (await page.$$eval('.sitting', (e) => e.length)) === 2 &&
+        !(await page.isVisible('.sitting-held-text')));
+    await page.click('#step-back');
 
     // ── steps one and two: two lists side by side ─────────────────────────
     await page.click('.tab[data-screen="steps"]');

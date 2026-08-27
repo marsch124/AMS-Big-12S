@@ -351,6 +351,61 @@ button { cursor: pointer; }
 
 /* ════════════════════════════════════════════════════════════════ steps ══ */
 
+/* ── Step five: a record of the telling ──────────────────────────────────── */
+
+.sitting-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+
+.sitting {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--bg-raised);
+  padding: 13px 14px 4px;
+}
+.sitting.is-latest { border-left: 3px solid var(--accent); }
+
+.sitting-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.sitting-when {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.sitting-who {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+.sitting-covered {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+/* Folded away by default. Discretion, not security — the app has no lock. */
+.sitting-held { margin-top: 10px; }
+.sitting-held-toggle {
+  border: 1px dashed var(--rule-firm, var(--rule));
+  border-radius: 20px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 12px;
+  padding: 5px 12px;
+}
+.sitting-held.is-open .sitting-held-toggle { color: var(--accent); border-style: solid; }
+.sitting-held-text {
+  margin: 9px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--rule-firm, var(--rule));
+  background: var(--bg);
+  border-radius: 0 8px 8px 0;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.sitting .card-actions { padding: 10px 0 8px; }
+
 /* ── Steps one and two: two lists kept side by side ──────────────────────── */
 
 .twolists { display: flex; flex-direction: column; gap: 16px; }
