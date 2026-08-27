@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.4 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.6 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -270,6 +270,36 @@ not match the edition people quote. Explanations in my voice, editable by him.
 Step 4 gets full tables, not free text. Step work rides the normal backup, with a
 plain warning at the moment of export. **No lock and no encryption** — asked and
 declined explicitly.
+
+## The day count (2.6)
+
+**Counted inclusively, and that is deliberate.** `Store.daysAbstinent()` returns
+`dayNumber(today) - dayNumber(first) + 1`, so the day it is set reads *1 day*.
+Day nought is not a thing anybody says, and day one is the one worth counting
+most. A future date returns 0 rather than a negative number.
+
+**No date, no counter.** The row turns into a dashed invitation rather than
+showing a nought — the same reasoning as the placeholder tiles. Never show a
+zero day count on the home screen.
+
+**It lives in settings** (`soberSince`, a `YYYY-MM-DD` string), so it rides the
+backup with everything else. There is deliberately no history of previous counts
+and no "reset" button: resetting is editing the date, and what a relapse looks
+like in this app is a craving recorded with `outcome: 'drank'`. If a history of
+runs is ever wanted, that is a new feature — ask first.
+
+## Times (2.5)
+
+**Twenty-four hours everywhere, and `clockTime()` is the only place that
+decides.** Built by hand rather than by `toLocaleTimeString`: with `hour12`
+off, some locales still render midnight as "24:00", and the point of this is
+that there is no a.m. or p.m. anywhere in the app. `formatDate()` and
+`timeOfDay()` both go through it.
+
+**The Settings tab carries the running version** (`#tab-version`, filled from
+`APP_VERSION` in `bind()`, not from the markup). 8px, `--text-dim`, and
+absolutely positioned so it cannot push the icon or the label about — and not
+the accent colour, so it stays quiet when that tab is lit.
 
 ## The meeting screen (2.3)
 
