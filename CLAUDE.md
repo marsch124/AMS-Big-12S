@@ -265,7 +265,8 @@ Notes tab's All list contains, answers included. "Steps worked on" goes through
 `Store.stepProgress()`, never a hand count.
 
 **Settled already — do not re-ask.** Publishing: green suite, then merge and say
-so. Sponsor (not "spindrift", a transcription
+so. Dictation is the phone keyboard's job, never a microphone button of ours
+(2.19). Sponsor (not "spindrift", a transcription
 slip). Chapter-and-passage references, no page numbers: the Dover pagination does
 not match the edition people quote. Explanations in my voice, editable by him.
 Step 4 gets full tables, not free text. Step work rides the normal backup, with a
@@ -348,8 +349,12 @@ Apple's or Google's servers, which would break the promise made in `db.js`'s own
 header, in the About panel and in the README — nothing leaves the device unless
 the reader sends it — and it is unreliable in an installed PWA on iOS besides.
 The keyboard's dictation is largely on-device and is what he already uses (step
-four's card view is "the view you dictate into"). If he asks again for a record
-button, he has heard the argument and it is his call.
+four's card view is "the view you dictate into").
+
+**Martin settled this on 2026-08-27** — shown both readings, he said "let's try
+it without the microphone button". So it is not an open question and not a
+placeholder waiting to be filled: do not add a record button, and do not offer
+one. If he raises it himself later, that is a new decision and his to make.
 
 **The draft is in `localStorage`, not IndexedDB, and that is the point.**
 `MESSAGE_DRAFT_KEY` is written synchronously, so it survives iOS killing a
