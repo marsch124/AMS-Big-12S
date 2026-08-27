@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.6 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.7 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -271,6 +271,28 @@ Step 4 gets full tables, not free text. Step work rides the normal backup, with 
 plain warning at the moment of export. **No lock and no encryption** — asked and
 declined explicitly.
 
+## Whether you have been here (2.7)
+
+**Only reading and writing count as activity.** `Store.lastActivity()` takes the
+newest timestamp across position, notes, bookmarks, inventory, cravings and
+meetings. Opening the app is deliberately not activity — the question the line
+answers is whether the practice is still happening, and standing in the doorway
+is not the practice. A smoke check holds that line.
+
+**That line is coloured; the day count is not.** Grey to one day, `--accent` to
+six, `--danger` at seven and beyond. The abstinence count above it stays plain
+whatever it says: a low number there is not a warning, and an app that turns
+somebody's third day red is scolding them. Martin raised colour-coding the day
+count and this is the answer given — if he asks again, he has heard the argument
+and it is his call.
+
+**Three numbers, one panel.** `sponsorName`/`sponsorPhone`,
+`sponsee…`, `spouse…` in settings, rendered by a loop over
+`['sponsor','sponsee','spouse']` in both directions — add a fourth role by
+extending that list and `RING_PEOPLE`, not by writing more branches. The craving
+screen builds one row per person who has a number, sponsor first; with none set
+it shows a single row that goes to `#settings-people`.
+
 ## The day count (2.6)
 
 **Counted inclusively, and that is deliberate.** `Store.daysAbstinent()` returns
@@ -380,7 +402,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    254 end-to-end browser checks
+tools/smoke-test.js    262 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -392,7 +414,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 254 checks, expect 254/254
+node tools/smoke-test.js                  # 262 checks, expect 262/262
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

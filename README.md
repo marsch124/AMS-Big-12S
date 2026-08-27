@@ -43,6 +43,12 @@ without a signal.
 The app opens here rather than in the contents, because reading is not the only
 reason anyone picks it up.
 
+**Whether you have been here** sits just under the day count: how long since you
+actually read or wrote something. Opening the app does not count — standing in
+the doorway is not the practice. It stays grey for a day or two, takes the accent
+colour after that, and goes red past a week. The day count itself is *not*
+coloured, on purpose: a low number there is not a warning.
+
 **The day count** sits at the top. Set the first day in **Settings → Counting
 the days** and it counts inclusively, so the day you set it reads *1 day* —
 which is how anybody says it. Leave the date empty and the counter is not there
@@ -81,12 +87,14 @@ morning with nothing written says so.
 *I have cravings* opens a screen with three things on it, in the order they tend
 to be wanted.
 
-**Something to do this minute.** Ring your sponsor — put their number in
-**Settings → Your sponsor** and the button dials it; leave it empty and the
-button offers to take you there instead. It is kept on the device like
-everything else and is used for nothing but that. Or write down what is going
-on, which puts a note on the list for them. Or open *More About Alcoholism*,
-which is the chapter on exactly this.
+**Something to do this minute.** Ring somebody — sponsor, sponsee or spouse.
+Put their numbers in **Settings → People you can ring** and whoever has one is a
+tap away; leave them all empty and the screen offers to take you there instead.
+The sponsee is on that list on purpose: the book's own answer to a shaky evening
+is to work with another alcoholic. The numbers are kept on the device like
+everything else and are used for nothing but those buttons. Or write down what is
+going on, which puts a note on the list for your sponsor. Or open *More About
+Alcoholism*, which is the chapter on exactly this.
 
 **Something from the book**, drawn from eleven passages chosen for this moment
 and weighted towards what to do rather than what is wrong with you. Verified
@@ -391,7 +399,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 254 checks
+node tools/smoke-test.js      # 262 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that

@@ -18,6 +18,10 @@
         // ride the backup.
         sponsorName: '',
         sponsorPhone: '',
+        sponseeName: '',
+        sponseePhone: '',
+        spouseName: '',
+        spousePhone: '',
         // The first day. Empty until it is set, and the counter stays off the
         // home screen until then rather than showing a nought.
         soberSince: ''
@@ -1345,6 +1349,34 @@
         return Math.max(0, dayNumber(date) - dayNumber(start) + 1);
     }
 
+    /*
+     * The last time anything was actually done in here — a page read, a note, a
+     * step row, a craving, a meeting. Opening the app does not count: the
+     * question is whether the practice is still happening, and standing in the
+     * doorway is not the practice.
+     */
+    function lastActivity() {
+        var latest = '';
+        function consider(at) { if (at && at > latest) latest = at; }
+
+        if (state.position) consider(state.position.updatedAt);
+        state.notes.forEach(function (row) { consider(row.updatedAt || row.createdAt); });
+        state.bookmarks.forEach(function (row) { consider(row.updatedAt || row.createdAt); });
+        state.inventory.forEach(function (row) { consider(row.updatedAt || row.createdAt); });
+        state.cravings.forEach(function (row) { consider(row.updatedAt || row.createdAt); });
+        state.meetings.forEach(function (row) { consider(row.updatedAt || row.createdAt); });
+
+        return latest || null;
+    }
+
+    // Whole days, so "today" means today whatever the hour. Null when nothing
+    // has ever been written.
+    function daysSinceActivity(date) {
+        var last = lastActivity();
+        if (!last) return null;
+        return Math.max(0, dayNumber(date) - dayNumber(new Date(last)));
+    }
+
     /* ------------------------------------------------------------ meetings */
 
     /*
@@ -1526,6 +1558,8 @@
         cravingSummary: cravingSummary,
 
         daysAbstinent: daysAbstinent,
+        lastActivity: lastActivity,
+        daysSinceActivity: daysSinceActivity,
 
         loadMeetings: loadMeetings,
         saveMeeting: saveMeeting,

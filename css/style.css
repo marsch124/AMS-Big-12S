@@ -252,6 +252,18 @@ button { cursor: pointer; }
 .daycount.is-unset { border-style: dashed; background: transparent; }
 .daycount.is-unset .daycount-label { color: var(--text-dim); }
 
+/* Whether the practice is still happening. Quiet by default; it only takes a
+   colour once it has been long enough to be worth noticing. */
+.lastuse {
+  margin: -4px 0 12px;
+  padding: 0 3px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.lastuse:empty { display: none; }
+.lastuse.is-warm { color: var(--accent); }
+.lastuse.is-cold { color: var(--danger); font-weight: 600; }
+
 .passage-card {
   display: block;
   width: 100%;

@@ -198,6 +198,7 @@
         var days = Store.daysAbstinent();
         var since = String(Store.state.settings.soberSince || '').trim();
 
+        renderLastUse();
         card.classList.toggle('is-unset', days === null);
         if (days === null) {
             $('daycount-n').textContent = '';
@@ -208,6 +209,29 @@
             $('daycount-label').textContent = days === 1 ? 'day' : 'days';
             $('daycount-since').textContent = 'since ' + formatDay(since);
         }
+    }
+
+    /*
+     * How long since anything was actually done in here. Coloured because it has
+     * a direction — quiet at a day or two, accent when it has been most of a
+     * week, and the danger colour past that. The abstinence count above it is
+     * deliberately not coloured: a low number there is not a warning, and an app
+     * that turns somebody's third day red is scolding them.
+     */
+    function renderLastUse() {
+        var line = $('lastuse');
+        var days = Store.daysSinceActivity();
+
+        line.classList.remove('is-warm', 'is-cold');
+        if (days === null) {
+            line.textContent = 'Nothing read or written yet.';
+            return;
+        }
+        if (days === 0) { line.textContent = 'You read or wrote something today.'; return; }
+        if (days === 1) { line.textContent = 'You read or wrote something yesterday.'; return; }
+
+        line.textContent = 'Nothing read or written for ' + days + ' days.';
+        line.classList.add(days >= 7 ? 'is-cold' : 'is-warm');
     }
 
     /*
@@ -437,21 +461,60 @@
         };
     }
 
+    var PHONE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M8.1 3.9c.9 1.3 1.7 2.6 2.4 4l-1.9 2c.7 1.9 2 3.4 3.7 4.4l2.1-1.7c1.4.8 ' +
+        '2.7 1.7 3.9 2.7-.5 1.6-1.6 2.7-3.2 3.1-5.3-.5-9.7-4.9-10.2-10.2.4-1.7 1.5-2.8 ' +
+        '3.2-4.3z"/></svg>';
+
+    // Sponsor first, because that is who you are supposed to ring. Then the
+    // sponsee — the book's own answer to a shaky evening is to work with another
+    // alcoholic — and then the person you live with.
+    var RING_PEOPLE = [
+        { role: 'sponsor', label: 'Your sponsor' },
+        { role: 'sponsee', label: 'Your sponsee' },
+        { role: 'spouse', label: 'Your spouse' }
+    ];
+
     function renderCravingActions() {
         var settings = Store.state.settings;
-        var phone = String(settings.sponsorPhone || '').trim();
-        var name = String(settings.sponsorName || '').trim();
-        var ring = $('craving-ring');
+        var box = $('craving-rings');
+        box.innerHTML = '';
 
-        if (phone) {
+        var anyone = false;
+        RING_PEOPLE.forEach(function (person) {
+            var phone = String(settings[person.role + 'Phone'] || '').trim();
+            if (!phone) return;
+            anyone = true;
+
+            var name = String(settings[person.role + 'Name'] || '').trim();
+            var row = document.createElement('a');
+            row.className = 'do-row';
             // Spaces and brackets are for reading, not for dialling.
-            ring.href = 'tel:' + phone.replace(/[^+0-9]/g, '');
-            $('craving-ring-label').textContent = 'Ring ' + (name || 'your sponsor');
-            $('craving-ring-note').textContent = phone;
-        } else {
-            ring.href = '#';
-            $('craving-ring-label').textContent = 'Add your sponsor\u2019s number';
-            $('craving-ring-note').textContent = 'It stays on this device, like everything else';
+            row.href = 'tel:' + phone.replace(/[^+0-9]/g, '');
+            row.innerHTML =
+                '<span class="do-icon">' + PHONE_ICON + '</span>' +
+                '<span class="do-text">' +
+                    '<span class="do-label">Ring ' + escapeHtml(name || person.label.toLowerCase()) +
+                        '</span>' +
+                    '<span class="do-note">' + escapeHtml(person.label + ' · ' + phone) + '</span>' +
+                '</span>' +
+                '<span class="do-go">›</span>';
+            box.appendChild(row);
+        });
+
+        if (!anyone) {
+            var add = document.createElement('button');
+            add.className = 'do-row';
+            add.id = 'craving-ring';
+            add.innerHTML =
+                '<span class="do-icon">' + PHONE_ICON + '</span>' +
+                '<span class="do-text">' +
+                    '<span class="do-label" id="craving-ring-label">Add a number to ring</span>' +
+                    '<span class="do-note">Sponsor, sponsee or spouse — it stays on this device</span>' +
+                '</span>' +
+                '<span class="do-go">›</span>';
+            add.addEventListener('click', function () { showSettingsAt('settings-people'); });
+            box.appendChild(add);
         }
 
         // The chapter is only offered if this copy of the text has it.
@@ -3153,8 +3216,10 @@
         $('set-keepawake').checked = !!settings.keepAwake;
         $('set-sober-since').value = settings.soberSince || '';
         $('set-sober-since').max = Store.todayISO();
-        $('set-sponsor-name').value = settings.sponsorName || '';
-        $('set-sponsor-phone').value = settings.sponsorPhone || '';
+        ['sponsor', 'sponsee', 'spouse'].forEach(function (role) {
+            $('set-' + role + '-name').value = settings[role + 'Name'] || '';
+            $('set-' + role + '-phone').value = settings[role + 'Phone'] || '';
+        });
         $('about-version').textContent = 'v' + (global.APP_VERSION || '1.0');
         // On the folded row, so the version you are running shows without
         // opening anything — and cannot drift from what is actually running.
@@ -3354,14 +3419,6 @@
             openReader('ch03', { paraIndex: 0 });
         });
 
-        $('craving-ring').addEventListener('click', function (event) {
-            // With no number saved there is nothing to dial, so the button does
-            // the next useful thing rather than nothing at all.
-            if (String(Store.state.settings.sponsorPhone || '').trim()) return;
-            event.preventDefault();
-            showSettingsAt('settings-sponsor');
-        });
-
         Array.prototype.forEach.call(document.querySelectorAll('#craving-outcome .chip'), function (chip) {
             chip.addEventListener('click', function () { setCravingOutcome(chip.dataset.outcome); });
         });
@@ -3475,11 +3532,17 @@
         $('set-sober-since').addEventListener('change', function () {
             Store.saveSettings({ soberSince: this.value });
         });
-        $('set-sponsor-name').addEventListener('change', function () {
-            Store.saveSettings({ sponsorName: this.value.trim() });
-        });
-        $('set-sponsor-phone').addEventListener('change', function () {
-            Store.saveSettings({ sponsorPhone: this.value.trim() });
+        ['sponsor', 'sponsee', 'spouse'].forEach(function (role) {
+            $('set-' + role + '-name').addEventListener('change', function () {
+                var patch = {};
+                patch[role + 'Name'] = this.value.trim();
+                Store.saveSettings(patch);
+            });
+            $('set-' + role + '-phone').addEventListener('change', function () {
+                var patch = {};
+                patch[role + 'Phone'] = this.value.trim();
+                Store.saveSettings(patch);
+            });
         });
 
         // Settings — backup

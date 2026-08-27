@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=24">
+<link rel="stylesheet" href="css/style.css?v=25">
 </head>
 <body>
 
@@ -40,6 +40,10 @@
         <span class="daycount-label" id="daycount-label"></span>
         <span class="daycount-since" id="daycount-since"></span>
       </button>
+
+      <!-- Whether the practice is still happening. Coloured, because it has a
+           direction: quiet while it is recent, warmer as it stretches out. -->
+      <p class="lastuse" id="lastuse"></p>
 
       <button class="passage-card" id="passage-card">
         <span class="passage-label">Today’s passage</span>
@@ -329,16 +333,7 @@
 
       <h2 class="section-heading">What helps</h2>
       <div class="panel panel-flush">
-        <a class="do-row" id="craving-ring" href="#">
-          <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M8.1 3.9c.9 1.3 1.7 2.6 2.4 4l-1.9 2c.7 1.9 2 3.4 3.7 4.4l2.1-1.7c1.4.8 2.7 1.7 3.9 2.7-.5 1.6-1.6 2.7-3.2 3.1-5.3-.5-9.7-4.9-10.2-10.2.4-1.7 1.5-2.8 3.2-4.3z"/>
-          </svg></span>
-          <span class="do-text">
-            <span class="do-label" id="craving-ring-label">Ring your sponsor</span>
-            <span class="do-note" id="craving-ring-note"></span>
-          </span>
-          <span class="do-go">›</span>
-        </a>
+        <div id="craving-rings"></div>
         <button class="do-row" id="craving-write">
           <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3.8 20.4 8.6 15.4"/>
@@ -455,21 +450,41 @@
         </label>
       </div>
 
-      <h2 class="section-heading" id="settings-sponsor">Your sponsor</h2>
+      <h2 class="section-heading" id="settings-people">People you can ring</h2>
       <div class="panel">
         <p class="panel-note">
-          Kept on this device like everything else, and used for one thing: the
-          <strong>Ring your sponsor</strong> button on the craving screen. Leave it empty and
-          that button offers to bring you back here instead.
+          Kept on this device like everything else, and used for one thing: the buttons at the
+          top of the craving screen. Whoever has a number here is one tap away when it is bad.
+          Leave them all empty and that screen offers to bring you back here instead.
         </p>
         <label class="row">
-          <span>Name</span>
+          <span>Sponsor</span>
           <input type="text" id="set-sponsor-name" class="row-input" autocomplete="off"
                  placeholder="What you call them">
         </label>
         <label class="row">
-          <span>Number</span>
+          <span>Their number</span>
           <input type="tel" id="set-sponsor-phone" class="row-input" autocomplete="off"
+                 placeholder="+43 …">
+        </label>
+        <label class="row">
+          <span>Sponsee</span>
+          <input type="text" id="set-sponsee-name" class="row-input" autocomplete="off"
+                 placeholder="What you call them">
+        </label>
+        <label class="row">
+          <span>Their number</span>
+          <input type="tel" id="set-sponsee-phone" class="row-input" autocomplete="off"
+                 placeholder="+43 …">
+        </label>
+        <label class="row">
+          <span>Spouse</span>
+          <input type="text" id="set-spouse-name" class="row-input" autocomplete="off"
+                 placeholder="What you call them">
+        </label>
+        <label class="row">
+          <span>Their number</span>
+          <input type="tel" id="set-spouse-phone" class="row-input" autocomplete="off"
                  placeholder="+43 …">
         </label>
       </div>
@@ -706,6 +721,24 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Whether you have been here, and who to ring</span><span class="ver-tag">2.7</span></summary>
+          <div class="disclosure-body">
+            <p>Under the day count, a line saying how long it is since you actually read or
+               wrote something in here. Opening the app does not count — standing in the
+               doorway is not the practice. It stays grey for a day or two, takes the accent
+               colour after that, and goes red past a week.</p>
+            <p>The day count itself is <strong>not</strong> coloured, on purpose. A low number
+               there is not a warning, and an app that turns somebody's third day red is
+               scolding them.</p>
+            <p><strong>Sponsee and spouse</strong> now sit alongside your sponsor in
+               <strong>Settings → People you can ring</strong>. Whoever has a number is a tap
+               away at the top of the craving screen — the book's own answer to a shaky
+               evening is to work with another alcoholic, so the sponsee belongs on that
+               list.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Counting the days</span><span class="ver-tag">2.6</span></summary>
@@ -1520,9 +1553,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=4"></script>
-<script src="js/store.js?v=12"></script>
+<script src="js/store.js?v=13"></script>
 <script src="js/backup.js?v=5"></script>
-<script src="js/ui.js?v=23"></script>
-<script src="js/app.js?v=11"></script>
+<script src="js/ui.js?v=24"></script>
+<script src="js/app.js?v=12"></script>
 </body>
 </html>

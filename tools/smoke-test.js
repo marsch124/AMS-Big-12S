@@ -157,6 +157,54 @@ async function openContents(page) {
     check('tapping it goes to the day it counts from',
         (await page.inputValue('#set-sober-since')) === '2023-03-03');
 
+    // ── whether you have been here ────────────────────────────────────────
+    check('with nothing written, the line says exactly that',
+        (await page.textContent('#lastuse')) === 'Nothing read or written yet.');
+
+    // Back-dated straight into the store: savePosition stamps "now" by design.
+    async function lastUseAfter(days) {
+        return page.evaluate(async (back) => {
+            const at = new Date(Date.now() - back * 86400000).toISOString();
+            await DB.remove(DB.STORE_META, 'position');
+            await Store.loadPosition();
+            await DB.clear(DB.STORE_NOTES);
+            await DB.put(DB.STORE_NOTES, { id: 'lastuse-seed', sectionId: null, paraIndex: null,
+                anchor: '', body: 'x', tag: '', discussedAt: null, createdAt: at, updatedAt: at });
+            await Store.loadNotes();
+            UI.showScreen('home');
+            const el = document.getElementById('lastuse');
+            return { text: el.textContent, cls: el.className };
+        }, days);
+    }
+
+    const today = await lastUseAfter(0);
+    check('something written today reads as today',
+        today.text.includes('today') && today.cls === 'lastuse', today.text);
+    const yesterday = await lastUseAfter(1);
+    check('yesterday reads as yesterday, and stays quiet',
+        yesterday.text.includes('yesterday') && yesterday.cls === 'lastuse', yesterday.text);
+    const fewDays = await lastUseAfter(3);
+    check('a few days takes a colour', fewDays.text.includes('for 3 days') &&
+        fewDays.cls.includes('is-warm'), fewDays.text + ' [' + fewDays.cls + ']');
+    const longer = await lastUseAfter(9);
+    check('past a week it says so louder', longer.text.includes('for 9 days') &&
+        longer.cls.includes('is-cold'), longer.text + ' [' + longer.cls + ']');
+
+    // Opening the app is not activity — only reading or writing is.
+    const stillNine = await page.evaluate(() => {
+        UI.showScreen('library');
+        UI.showScreen('home');
+        return document.getElementById('lastuse').textContent;
+    });
+    check('opening the app does not count as having been here',
+        stillNine.includes('for 9 days'), stillNine);
+
+    // Put the seed note back where the rest of the run expects nothing.
+    await page.evaluate(async () => {
+        await DB.clear(DB.STORE_NOTES);
+        await Store.loadNotes();
+    });
+
     // ── the book ships with the app ───────────────────────────────────────
     await openContents(page);
     check('no "import the text" notice — text is bundled', !(await page.isVisible('#import-notice')));
@@ -369,9 +417,29 @@ async function openContents(page) {
     await page.click('.shortcut[data-shortcut="craving"]');
     await page.waitForSelector('#screen-craving.is-active');
     check('with a number saved it offers to ring them by name',
-        (await page.textContent('#craving-ring-label')) === 'Ring Karl');
+        (await page.textContent('#craving-rings .do-row .do-label')) === 'Ring Karl');
     check('and the number is dialled without the spaces in it',
-        (await page.getAttribute('#craving-ring', 'href')) === 'tel:+436601234567');
+        (await page.getAttribute('#craving-rings .do-row', 'href')) === 'tel:+436601234567');
+
+    // A sponsee and a spouse can be on that list too. Working with another
+    // alcoholic is the book's own answer to a shaky evening, so the sponsee
+    // belongs there as much as the sponsor does.
+    await page.evaluate(() => Store.saveSettings({
+        sponseeName: 'Tobias', sponseePhone: '+43 664 987 6543',
+        spouseName: 'Anna', spousePhone: '+43 676 555 1212'
+    }));
+    await page.evaluate(() => UI.showScreen('craving'));
+    await page.waitForTimeout(120);
+    const ringing = await page.$$eval('#craving-rings .do-row', (rows) => rows.map((r) => ({
+        label: r.querySelector('.do-label').textContent,
+        href: r.getAttribute('href')
+    })));
+    check('everyone with a number is offered, sponsor first', ringing.length === 3 &&
+        ringing[0].label === 'Ring Karl' && ringing[1].label === 'Ring Tobias' &&
+        ringing[2].label === 'Ring Anna',
+        ringing.map((r) => r.label).join(', '));
+    check('and each dials their own number',
+        ringing[1].href === 'tel:+436649876543' && ringing[2].href === 'tel:+436765551212');
 
     check('nothing recorded yet says so plainly',
         (await page.textContent('#craving-summary')).includes('Nothing written down yet'));
