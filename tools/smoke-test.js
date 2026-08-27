@@ -2127,7 +2127,76 @@ async function openContents(page) {
     await page.waitForSelector('#note-sheet', { state: 'hidden' });
     const flag = await page.textContent('#reader-content .para[data-index="3"] .para-flag');
     check('the page says who a passage note is waiting for', flag.includes('Sponsee'), flag.trim());
+
+    // ── the page carries the same colours as the lists ────────────────────
+    // One colour per person, including in the middle of a chapter: the edge on
+    // the paragraph is the same green as the card on the Notes tab and the
+    // tile on the home screen.
+    const paraEdge = await page.$eval('#reader-content .para[data-index="3"]',
+        (n) => ({ tag: n.dataset.tag, edge: getComputedStyle(n).borderLeftColor }));
+    const sponseeTile = await page.evaluate(() => {
+        const probe = document.createElement('span');
+        document.body.appendChild(probe);
+        probe.style.color = 'var(--tile-sponsee)';
+        const c = getComputedStyle(probe).color;
+        probe.remove();
+        return c;
+    });
+    check('a passage note wears the colour of the person it is for',
+        paraEdge.tag === 'sponsee' && paraEdge.edge === sponseeTile,
+        paraEdge.tag + ' ' + paraEdge.edge + ' vs tile ' + sponseeTile);
+
+    // A distinctive word out of that same paragraph, so the search below is
+    // guaranteed to turn up a passage this reader has already written on.
+    const notedWords = await page.$eval('#reader-content .para[data-index="3"]',
+        (n) => n.firstChild.textContent.split(/\s+/)
+            .map((w) => w.replace(/[^A-Za-z]/g, ''))
+            .filter((w) => w.length > 7));
     await page.click('#reader-back');
+
+    // ── the contents says where you left off ──────────────────────────────
+    await openContents(page);
+    await page.waitForSelector('#toc .toc-item');
+    const here = await page.$$eval('#toc .toc-item.is-here',
+        (nodes) => nodes.map((n) => n.querySelector('.toc-title').textContent.trim()));
+    const openAt = await page.evaluate(() => {
+        const p = Store.state.position;
+        return p ? Store.getSection(p.sectionId).title : '';
+    });
+    check('the contents marks the one chapter you left off in',
+        here.length === 1 && here[0] === openAt, here.join(', ') + ' / at ' + openAt);
+
+    // ── a search that turns up your own paragraph says so ─────────────────
+    if (notedWords.length) {
+        await page.click('.tab[data-screen="search"]');
+        await page.waitForSelector('#screen-search.is-active');
+        await page.fill('#search-input', notedWords[0]);
+        await page.waitForTimeout(400);
+        const mine = await page.$$eval('#search-results .hit-card.is-mine',
+            (nodes) => nodes.map((n) => (n.querySelector('.hit-mine') || {}).textContent || ''));
+        check('a search hit on a passage you have written on says so',
+            mine.length >= 1 && mine[0].indexOf('your note') > -1,
+            'searched "' + notedWords[0] + '", marked ' + mine.length);
+        // No focus styles existed at all before this, so the search box drew
+        // whatever ring the browser fancied — an orange one, on a teal screen.
+        const ring = await page.$eval('#search-input', (n) => {
+            n.focus();
+            const cs = getComputedStyle(n);
+            return cs.outlineColor + ' ' + cs.outlineWidth;
+        });
+        const searchHue = await page.evaluate(() => {
+            const probe = document.createElement('span');
+            document.body.appendChild(probe);
+            probe.style.color = 'var(--hue-search)';
+            const c = getComputedStyle(probe).color;
+            probe.remove();
+            return c;
+        });
+        check('a focused field draws the screen\'s own colour, not the browser\'s',
+            ring.indexOf(searchHue) === 0, ring + ' vs ' + searchHue);
+        await page.fill('#search-input', '');
+    }
+    await openContents(page);
 
     await page.click('.tab[data-screen="notes"]');
     await page.waitForSelector('#screen-notes.is-active');

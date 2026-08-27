@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.25 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.26 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,35 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## The page, the contents and the search (2.26)
+
+**A paragraph carries `data-tag` when its note is kept for somebody**, so the
+edge in the margin is the same violet or green as the note card and the home
+tile. A check compares the rendered paragraph edge against the rendered tile
+colour, the same invariant as 2.25.
+
+**The book text itself takes no colour, ever.** `--paper`, serif, and the 1939
+words as they are. Colour goes on the reader's own marks — the note edge, the
+bookmark, the target highlight — and never on the text. If a future change
+would tint a paragraph's *words*, it is wrong.
+
+**`.toc-item.is-here` marks the section named by `Store.state.position`** with
+a filled number, deliberately the same visual language as `.step-item.is-worked`:
+a filled marker means *you have been here*, everywhere in the app. The check
+asserts exactly one is marked and that it is the one the position names.
+
+**Search results mark passages that already carry a note or bookmark.**
+`renderSearch()` builds a `sectionId:paraIndex` map up front rather than
+scanning per hit — with 200 possible hits, per-hit lookups over every note
+would be the slow path. Notes are resolved through `resolveNote()` first, so an
+imported copy of the text still matches.
+
+**There were no `:focus` styles in the whole stylesheet** before this, so every
+field fell back to the browser's ring — an orange one, on a teal screen, which
+is what put it on the list. `:focus-visible` with `outline: 2px solid
+var(--accent)` now covers inputs, textareas, selects, buttons and anything with
+a tabindex. Do not remove it: it is the only keyboard-visible focus the app has.
 
 ## One colour per person (2.25)
 
@@ -982,7 +1011,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    472 end-to-end browser checks
+tools/smoke-test.js    476 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -994,7 +1023,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 472 checks, expect 472/472
+node tools/smoke-test.js                  # 476 checks, expect 476/476
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

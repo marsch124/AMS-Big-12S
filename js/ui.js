@@ -1917,13 +1917,17 @@
 
         var toc = $('toc');
         toc.innerHTML = '';
+        var position = Store.state.position;
         book.sections.forEach(function (section) {
             var hasText = section.paragraphs.length > 0;
             var noteCount = Store.notesForSection(section.id).length;
 
             var item = document.createElement('button');
+            // Where you left off. The contents is what you open to get back to
+            // it, so it should not make you remember which one it was.
+            var here = position && position.sectionId === section.id && hasText;
             item.className = 'toc-item' + (hasText ? '' : ' is-empty') +
-                (section.kind === 'part' ? ' toc-part' : '');
+                (section.kind === 'part' ? ' toc-part' : '') + (here ? ' is-here' : '');
             item.disabled = !hasText;
             item.innerHTML =
                 '<span class="toc-num">' + (section.number ? section.number : '') + '</span>' +
@@ -2060,8 +2064,12 @@
             var classes = ['para'];
             if (notes[index]) classes.push('has-note');
             if (bookmarks[index]) classes.push('has-bookmark');
-            html += '<p class="' + classes.join(' ') + '" data-index="' + index + '">' +
-                escapeHtml(paragraph);
+            // Who the note is for, so the edge on the page is the same colour
+            // as the card on the Notes tab and the tile on the home screen.
+            var forWhom = notes[index] && notes[index].tag
+                ? ' data-tag="' + notes[index].tag + '"' : '';
+            html += '<p class="' + classes.join(' ') + '"' + forWhom +
+                ' data-index="' + index + '">' + escapeHtml(paragraph);
             if (notes[index]) {
                 // A note kept for a conversation says so on the page itself, so
                 // you meet it again while reading rather than only in a list.
@@ -4808,15 +4816,33 @@
             ? hits.length + (hits.length === 200 ? '+ matches' : ' match' + (hits.length === 1 ? '' : 'es'))
             : 'Nothing found for “' + query + '”.';
 
+        // Passages you have already written on or marked. Finding one of your
+        // own paragraphs in a search is worth knowing before you tap it.
+        var marked = {};
+        Store.state.notes.forEach(function (note) {
+            if (!note.sectionId) return;
+            var resolved = Store.resolveNote(note);
+            if (!resolved.orphan) marked[resolved.sectionId + ':' + resolved.paraIndex] = 'note';
+        });
+        Store.state.bookmarks.forEach(function (bm) {
+            var key = bm.sectionId + ':' + bm.paraIndex;
+            if (!marked[key]) marked[key] = 'bookmark';
+        });
+
         hits.forEach(function (hit) {
             var before = escapeHtml(hit.excerpt.slice(0, hit.matchAt));
             var match = escapeHtml(hit.excerpt.substr(hit.matchAt, hit.matchLength));
             var after = escapeHtml(hit.excerpt.slice(hit.matchAt + hit.matchLength));
 
+            var mine = marked[hit.sectionId + ':' + hit.paraIndex];
             var card = document.createElement('button');
-            card.className = 'card';
+            card.className = 'card hit-card' + (mine ? ' is-mine' : '');
             card.innerHTML =
-                '<div class="card-where">' + escapeHtml(hit.sectionTitle) + '</div>' +
+                '<div class="card-where">' + escapeHtml(hit.sectionTitle) +
+                    (mine ? '<span class="hit-mine">' +
+                        (mine === 'note' ? '\u270e your note' : '\u2691 bookmarked') +
+                        '</span>' : '') +
+                '</div>' +
                 '<p class="card-quote" style="-webkit-line-clamp:3">' + before + '<mark>' + match + '</mark>' + after + '</p>';
             card.addEventListener('click', function () {
                 openReader(hit.sectionId,
