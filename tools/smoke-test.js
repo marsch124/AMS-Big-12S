@@ -110,6 +110,114 @@ async function openContents(page) {
         (await page.isVisible('#home-craving')));
     check('every shortcut now goes somewhere',
         (await page.$$eval('#shortcuts .shortcut.is-soon', (e) => e.length)) === 0);
+
+    // ── the look of it ────────────────────────────────────────────────────
+    // A tile is coloured by where it takes you. The guard that matters is the
+    // fallback: --tile unset silently paints a tile in the screen's own
+    // colour, which is exactly how the "write" tile shipped coral for an
+    // afternoon and looked deliberate.
+    const tiles = await page.$$eval('#shortcuts .shortcut', (nodes) =>
+        nodes.map((n) => ({
+            id: n.dataset.shortcut,
+            tile: getComputedStyle(n).getPropertyValue('--tile').trim(),
+            chip: getComputedStyle(n.querySelector('.shortcut-icon')).color,
+        })));
+    check('every home tile names its own colour',
+        tiles.every((t) => t.tile !== ''),
+        tiles.filter((t) => t.tile === '').map((t) => t.id).join(', ') || 'all set');
+    // Distinct values are not distinct colours: two of these shipped as
+    // near-identical greens and passed a set-size check. Measured in Lab, so
+    // the assertion is about what an eye can tell apart. ΔE 25 is roughly
+    // "nobody would call these the same colour".
+    const spread = (() => {
+        const lab = (rgb) => {
+            const [r, g, b] = rgb.match(/\d+/g).slice(0, 3).map((n) => {
+                const c = n / 255;
+                return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+            });
+            const X = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047;
+            const Y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            const Z = (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883;
+            const f = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+            return [116 * f(Y) - 16, 500 * (f(X) - f(Y)), 200 * (f(Y) - f(Z))];
+        };
+        let worst = { d: Infinity, pair: '' };
+        for (let i = 0; i < tiles.length; i += 1) {
+            for (let j = i + 1; j < tiles.length; j += 1) {
+                const a = lab(tiles[i].chip);
+                const b = lab(tiles[j].chip);
+                const d = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+                if (d < worst.d) worst = { d: d, pair: tiles[i].id + '/' + tiles[j].id };
+            }
+        }
+        return worst;
+    })();
+    check('and no two of them look alike',
+        spread.d >= 25,
+        'closest ' + spread.pair + ' ΔE ' + spread.d.toFixed(1));
+    // "Coloured by where it takes you" is a claim about hue, not about an
+    // exact value: a chip is a bright fill and a tab label is type that has to
+    // clear 4.5:1, so the two are the same colour at different lightnesses.
+    // Compare the hue angle, which is the part that carries the meaning.
+    const hueAngle = (rgb) => {
+        const [r, g, b] = rgb.match(/\d+/g).slice(0, 3).map((n) => n / 255);
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        if (max === min) return 0;
+        const d = max - min;
+        let h;
+        if (max === r) h = ((g - b) / d) % 6;
+        else if (max === g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
+        return ((h * 60) + 360) % 360;
+    };
+    const readTabColour = await page.$eval('.tab[data-screen="library"]', (n) => {
+        const was = n.className;
+        const hue = document.documentElement.getAttribute('data-hue');
+        n.className = was + ' is-active';
+        document.documentElement.setAttribute('data-hue', 'library');
+        const c = getComputedStyle(n).color;
+        n.className = was;
+        document.documentElement.setAttribute('data-hue', hue);
+        return c;
+    });
+    const readGap = Math.abs(hueAngle(tiles.filter((t) => t.id === 'read')[0].chip) -
+                             hueAngle(readTabColour));
+    check('the read tile is the Read tab\'s colour, brightened',
+        Math.min(readGap, 360 - readGap) < 15,
+        readGap.toFixed(1) + '° apart');
+
+    // The craving row is the loudest thing on the home screen. Its accent
+    // border was claimed in a comment for three versions while .do-row-alone,
+    // declared later at equal specificity, quietly won it.
+    const urgent = await page.$eval('#home-craving', (n) => {
+        const c = getComputedStyle(n);
+        return { w: c.borderTopWidth, colour: c.borderTopColor };
+    });
+    const homeHue = await page.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue('--hue-home').trim());
+    check('the craving row really draws its accent border',
+        urgent.w === '2px' && urgent.colour !== 'rgba(0, 0, 0, 0)',
+        urgent.w + ' ' + urgent.colour + ' vs --hue-home ' + homeHue);
+
+    // Each tab colours the screen it opened, so --accent has to actually move.
+    const hues = {};
+    for (const tab of ['home', 'library', 'steps', 'notes', 'search', 'settings']) {
+        await page.click(`.tab[data-screen="${tab}"]`);
+        await page.waitForTimeout(120);
+        hues[tab] = await page.evaluate(() => ({
+            hue: document.documentElement.getAttribute('data-hue'),
+            accent: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
+        }));
+    }
+    check('every tab sets its own hue on the document',
+        Object.keys(hues).every((t) => hues[t].hue === t),
+        Object.keys(hues).map((t) => t + '→' + hues[t].hue).join(' '));
+    check('and each one is a different colour',
+        new Set(Object.keys(hues).map((t) => hues[t].accent)).size === 6,
+        Object.keys(hues).map((t) => hues[t].accent).join(' '));
+    await page.click('.tab[data-screen="home"]');
+    await page.waitForTimeout(120);
     check('four counts', (await page.$$eval('#stats .stat', (e) => e.length)) === 4);
     check('a fresh install counts nothing rather than flattering you',
         (await page.textContent('#stats .stat')).includes('0%'));

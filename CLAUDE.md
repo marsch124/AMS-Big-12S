@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.22 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.23 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,66 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## Morning, and the colour system (2.23)
+
+**Martin's brief:** "it feels very much like a book and a reading place, but I
+would like it to be much more happy and whimsical, maybe with a focus on being
+abstinent as a feeling."
+
+**The palette was the whole cause.** Sepia was one hue at four lightnesses —
+ink on paper, which is exactly what a book is. `:root` is now **Morning**: warm
+white, and a colour per place. Sepia is kept whole under `[data-theme="sepia"]`
+and kept deliberately monochrome; it is the reading theme and the one way back.
+`loadSettings()` moves an install off sepia **once**, marked with `themeMoved`,
+because sepia was the stored default on every existing install and nobody would
+otherwise have seen the change. Choosing sepia again sticks.
+
+**`[data-hue]` on `<html>`, set by `showScreen()` from the lit tab, rewrites
+`--accent`.** So a step page is violet like the Steps tab it was pushed from,
+and the craving screen keeps home's coral. Every theme must define the whole
+`--hue-*` and `--tile-*` set: the `[data-hue]` rules are declared after the
+themes, so a theme that omits one silently inherits another's colour. The reader
+is the one screen that does not take a tab's hue — it takes the book's.
+
+**The book keeps its paper.** `--paper` is the reading surface and only that.
+Everything else follows `--bg`. Reading has to feel like reading whatever the
+app around it is doing.
+
+**Two jobs, two brightnesses.** `--hue-*` is *type* — tab labels, headings,
+borders — so it stops where 4.5:1 on white stops, and that ceiling is what had
+made the first attempt at this look muted and tasteful when Martin had asked for
+pop. `--tile-*` is *fill*, which has no such ceiling, so the bright colour lives
+in the chips and the deep one in the words. A yellow tile is possible; yellow
+type on white is not. Each `--tile-*-on` is a deep tone of its own hue clearing
+3.6:1 on its own fill — **an icon is a graphic, so 3:1 is its bar, not 4.5.**
+
+**Home tiles are coloured by destination, not position** — `--tile-read` is the
+Read tab's blue, brightened; the stat cards under them follow the same rule via
+`data-stat`. A tile with no `--tile` falls back to `--accent` and looks
+deliberate, which is how the `write` tile shipped orange for an afternoon.
+
+Three smoke checks hold it: every tile names its own colour, no two are within
+**ΔE 25** of each other in Lab, and the read tile is within 15° of hue of the
+Read tab. The set-size check that preceded the ΔE one passed happily on two
+near-identical greens, and then on an orange and a yellow at ΔE 18 —
+**distinct values are not distinct colours.** Orange and yellow are adjacent
+hues and need pushing apart on purpose (`#f26419` / `#f7d117` sit at ΔE 39).
+
+**Do not make the craving screen cheerful.** It takes home's coral for its
+chrome and nothing else changed there. An app that is bright at somebody in the
+middle of one has misunderstood what it is for. Same reason the day count stays
+plain: it is a fact, not a trophy, and the unset row is an invitation that must
+never out-shout the craving row above it.
+
+**Things that bit me here.** Replacing the `:root` block dropped `--tabbar-h`,
+the safe-area insets and the reader vars that were living in it, which
+invalidated every `calc()` using them and silently removed all screen padding —
+a custom property that does not resolve kills the whole declaration. And
+`.do-row-urgent` had claimed an accent border since 2.20 while `.do-row-alone`,
+declared later at equal specificity, won it; it is written
+`.do-row-alone.do-row-urgent` now. **Check a computed style, not the rule you
+wrote.**
 
 ## How this works, rewritten (2.22)
 
@@ -862,7 +922,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    453 end-to-end browser checks
+tools/smoke-test.js    459 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -874,7 +934,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 453 checks, expect 453/453
+node tools/smoke-test.js                  # 459 checks, expect 459/459
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

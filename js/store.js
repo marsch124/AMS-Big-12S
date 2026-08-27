@@ -8,7 +8,7 @@
     'use strict';
 
     var DEFAULT_SETTINGS = {
-        theme: 'sepia',          // sepia | light | dark | auto
+        theme: 'morning',        // morning | sepia | light | dark | auto
         fontSize: 19,            // px
         lineHeight: 1.65,
         typeface: 'serif',       // serif | sans
@@ -817,6 +817,16 @@
                 }
                 delete state.settings.rules;
             }
+
+            // Sepia was the default until 2.23, so every install carries it
+            // saved whether it was ever chosen or not — and leaving those on
+            // sepia would mean nobody ever sees the new one. Moved once, and
+            // marked, so a reader who goes back to sepia on purpose keeps it.
+            if (state.settings.theme === 'sepia' && !state.settings.themeMoved) {
+                state.settings.theme = 'morning';
+            }
+            state.settings.themeMoved = true;
+
             return state.settings;
         });
     }

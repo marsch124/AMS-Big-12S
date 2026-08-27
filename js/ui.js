@@ -130,6 +130,12 @@
         Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
             tab.classList.toggle('is-active', tab.dataset.screen === litTab);
         });
+        // Each tab has its own colour, and it colours the screen it opened —
+        // so a step page is violet like the tab it came from, and the craving
+        // screen stays home's coral. The reader is the exception: it is the
+        // book's own page and takes the book's own colour, not a tab's.
+        document.documentElement.setAttribute(
+            'data-hue', name === 'reader' ? 'library' : litTab);
         // The reader gets the whole screen; the tab bar would only steal room.
         $('tabbar').hidden = name === 'reader';
         current.screen = name;
@@ -365,16 +371,19 @@
 
         [{
             value: String(Store.progressPercent()), unit: '%',
+            kind: 'read',
             label: 'Through the book',
             note: section ? section.title : 'Not opened yet',
             go: function () { runShortcut('read'); }
         }, {
             value: String(Store.state.notes.length),
+            kind: 'notes',
             label: 'Notes written',
             note: bookmarks ? bookmarks + (bookmarks === 1 ? ' bookmark' : ' bookmarks') : '',
             go: function () { openNotesWith('all'); }
         }, {
             value: String(touched), unit: ' of 12',
+            kind: 'steps',
             label: 'Steps worked on',
             note: touched === 12 ? 'all of them' : 'notes, answers, work',
             go: function () { showScreen('steps'); }
@@ -382,6 +391,7 @@
             // Days you have opened the app, not days you have done a particular
             // piece of work. Showing up is the thing being counted.
             value: String(run),
+            kind: 'days',
             label: run === 1 ? 'Day running' : 'Days running',
             note: 'opened the app',
             go: function () {
@@ -393,6 +403,9 @@
         }].forEach(function (stat) {
             var tile = document.createElement('button');
             tile.className = 'stat';
+            // Coloured by where it takes you, same rule as the tiles above:
+            // the count for the book is the Read tab's blue.
+            tile.dataset.stat = stat.kind;
             tile.innerHTML =
                 '<span class="stat-value">' + escapeHtml(stat.value) +
                     (stat.unit ? '<span class="stat-unit">' + escapeHtml(stat.unit) + '</span>' : '') +

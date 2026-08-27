@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=34">
+<link rel="stylesheet" href="css/style.css?v=35">
 </head>
 <body>
 
@@ -742,6 +742,7 @@
         <label class="row">
           <span>Theme</span>
           <select id="set-theme">
+            <option value="morning">Morning</option>
             <option value="sepia">Sepia</option>
             <option value="light">Light</option>
             <option value="dark">Dark</option>
@@ -1218,6 +1219,45 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Morning</span><span class="ver-tag">2.23</span></summary>
+          <div class="disclosure-body">
+            <p>The app looked like the book it carries, and the palette was doing it: one
+               brown at four lightnesses is ink on paper, which is what a book is and why
+               the whole app read as one. <strong>Morning</strong> is the new default —
+               warm white, first light behind the home screen, and colour everywhere the
+               book is not.</p>
+            <p><strong>Every tab has its own colour, and it colours the screen it
+               opens.</strong> Home is orange, Read is blue, Steps and the Traditions are
+               violet, Notes is green, Search is teal. A step page is violet like the tab
+               it was opened from. Moving about feels like moving between rooms rather
+               than turning pages of the same one.</p>
+            <p><strong>The home tiles are colour-coded by where they take you</strong> —
+               blue, orange, violet, green, pink, yellow — each icon on a solid chip of
+               its own colour. <em>I want to read</em> is the Read tab's blue, brightened.
+               The four counts underneath are coloured the same way, by what they count.
+               Learn them once and the screen is readable before a word of it is.</p>
+            <ul>
+              <li><strong>The book keeps its paper.</strong> The reader carries its own
+                  warm ground in every theme. Reading should feel like reading whatever
+                  the app around it is doing.</li>
+              <li><strong>Sepia is still there</strong>, whole and still deliberately one
+                  colour, under Reading. It is the way back to an app that feels entirely
+                  like a book. Every install that was on it has been moved across once —
+                  choose it again and it stays chosen.</li>
+              <li><strong>Cards lift off the page</strong> and give a little under the
+                  thumb, and twenty-three small labels stopped shouting in capitals.
+                  <em>TODAY’S PASSAGE</em> is <em>Today’s passage</em>.</li>
+              <li><strong>The craving row was never drawing its accent border.</strong> The
+                  rule had claimed it since 2.20 while a later rule at equal specificity
+                  quietly won. It is a real orange edge now, and the loudest thing on the
+                  home screen, which was always the point of it.</li>
+            </ul>
+            <p>Nothing on the craving screen was made cheerful. An app that is bright at
+               somebody in the middle of one has misunderstood what it is for.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Start here</span><span class="ver-tag">2.22</span></summary>
@@ -2406,6 +2446,7 @@
   <label class="row"><span>Size</span><input type="range" id="type-fontsize" min="14" max="30" step="1"></label>
   <label class="row"><span>Spacing</span><input type="range" id="type-lineheight" min="130" max="220" step="5"></label>
   <div class="theme-swatches">
+    <button class="swatch swatch-morning" data-theme-pick="morning" aria-label="Morning">Aa</button>
     <button class="swatch swatch-sepia" data-theme-pick="sepia" aria-label="Sepia">Aa</button>
     <button class="swatch swatch-light" data-theme-pick="light" aria-label="Light">Aa</button>
     <button class="swatch swatch-dark" data-theme-pick="dark" aria-label="Dark">Aa</button>
@@ -2548,9 +2589,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=8"></script>
-<script src="js/store.js?v=24"></script>
+<script src="js/store.js?v=25"></script>
 <script src="js/backup.js?v=10"></script>
-<script src="js/ui.js?v=38"></script>
-<script src="js/app.js?v=25"></script>
+<script src="js/ui.js?v=39"></script>
+<script src="js/app.js?v=26"></script>
 </body>
 </html>

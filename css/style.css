@@ -1,16 +1,56 @@
 /* ═══════════════════════════════════════════════════ AMS Big 12S — theme ══ */
 
+/* The app has weather. Sepia was one hue at four lightnesses — ink on paper,
+   which is exactly what a book is and exactly why the whole app read as one.
+   Morning is the default now: warm white, real light, and a colour for each
+   place you can be in. The book keeps its paper (--paper) and nothing else
+   does, so reading still feels like reading while the app around it is awake.
+
+   Every theme must define the whole --hue-* set: [data-hue] follows the lit
+   tab and rewrites --accent from it, and it is declared after the themes, so
+   a theme that leaves one out gets another theme's colour. */
+
 :root {
-  --bg:        #f4ecd8;
-  --bg-raised: #fbf6ea;
-  --bg-sunken: #ebe0c8;
-  --text:      #3a3226;
-  --text-dim:  #7a6b55;
-  --rule:      #ddceb0;
-  --accent:    #8c6d46;
+  --bg:        #fcfaf6;
+  --bg-raised: #ffffff;
+  --bg-sunken: #f1ede4;
+  --paper:     #faf5e9;
+  --text:      #2b2925;
+  --text-dim:  #77716a;
+  --rule:      #ebe6db;
+  --accent:    #0078cf;
   --accent-on: #ffffff;
-  --mark:      #e8c98a;
-  --danger:    #a4402f;
+  --mark:      #ffe08a;
+  --danger:    #c4452f;
+
+  /* Cards sit on the page rather than being drawn onto it. */
+  --shadow:      0 1px 2px rgba(52, 46, 36, 0.04), 0 5px 14px rgba(52, 46, 36, 0.055);
+  --shadow-lift: 0 2px 5px rgba(52, 46, 36, 0.07), 0 12px 28px rgba(52, 46, 36, 0.10);
+  --radius:      18px;
+  --radius-sm:   13px;
+
+  /* One colour per place. Each clears 4.5:1 on both grounds — --accent is
+     small bold type in a dozen places, not only icons. */
+  --hue-home:     #c95100;
+  --hue-library:  #0078cf;
+  --hue-steps:    #6d28d9;
+  --hue-notes:    #00872d;
+  --hue-search:   #008282;
+  --wash: #fff4d9;
+
+  /* The home tiles. A tile is coloured by where it takes you, not by where it
+     sits, so Read is the Read tab's blue. The chip is a solid bright fill and
+     the icon is a deep tone of the same hue — the colour has to carry at a
+     glance, and a 14% tint of it did not. Every --on clears 3.6:1 on its own
+     fill: an icon is a graphic, so 3:1 is the bar it has to meet, not 4.5. */
+  --tile-read:    #2e9bf0;  --tile-read-on:    #00406e;
+  --tile-meeting: #f26419;  --tile-meeting-on: #662502;
+  --tile-sponsor: #8b5cf6;  --tile-sponsor-on: #2c0275;
+  --tile-sponsee: #22bb66;  --tile-sponsee-on: #0a542f;
+  --tile-message: #f0559b;  --tile-message-on: #730039;
+  --tile-write:   #f7d117;  --tile-write-on:   #7d690a;
+
+  --hue-settings: #5c6470;
 
   --reader-size: 19px;
   --reader-leading: 1.65;
@@ -21,29 +61,103 @@
   --tabbar-h: 56px;
 }
 
-[data-theme="light"] {
-  --bg:        #ffffff;
-  --bg-raised: #f7f7f5;
-  --bg-sunken: #eeeeec;
-  --text:      #1c1a17;
-  --text-dim:  #6b6862;
-  --rule:      #e2e0dc;
-  --accent:    #7a5c38;
-  --mark:      #f5dc9a;
+/* The old default, kept whole and kept monochrome. It is the reading theme,
+   and the one way back to an app that feels entirely like a book. */
+[data-theme="sepia"] {
+  --bg:        #f4ecd8;
+  --bg-raised: #fbf6ea;
+  --bg-sunken: #ebe0c8;
+  --paper:     #f4ecd8;
+  --text:      #3a3226;
+  --text-dim:  #7a6b55;
+  --rule:      #ddceb0;
+  --accent:    #8c6d46;
+  --accent-on: #ffffff;
+  --mark:      #e8c98a;
+  --danger:    #a4402f;
+  --shadow:      0 1px 2px rgba(58, 50, 38, 0.05), 0 4px 12px rgba(58, 50, 38, 0.05);
+  --shadow-lift: 0 2px 5px rgba(58, 50, 38, 0.08), 0 10px 24px rgba(58, 50, 38, 0.09);
+
+  --hue-home:     #8c6d46;
+  --hue-library:  #8c6d46;
+  --hue-steps:    #8c6d46;
+  --hue-notes:    #8c6d46;
+  --hue-search:   #8c6d46;
+  --hue-settings: #8c6d46;
+  --wash: #f4ecd8;
+
+  --tile-read:    #8c6d46;  --tile-read-on:    #fbf6ea;
+  --tile-meeting: #8c6d46;  --tile-meeting-on: #fbf6ea;
+  --tile-sponsor: #8c6d46;  --tile-sponsor-on: #fbf6ea;
+  --tile-sponsee: #8c6d46;  --tile-sponsee-on: #fbf6ea;
+  --tile-message: #8c6d46;  --tile-message-on: #fbf6ea;
+  --tile-write:   #8c6d46;  --tile-write-on:   #fbf6ea;
 }
 
-[data-theme="dark"] {
-  --bg:        #12100e;
-  --bg-raised: #1d1a17;
-  --bg-sunken: #0b0a09;
-  --text:      #ddd6cc;
-  --text-dim:  #948b7e;
-  --rule:      #322d27;
-  --accent:    #c39a63;
-  --accent-on: #12100e;
-  --mark:      #5c4520;
-  --danger:    #d9755f;
+[data-theme="light"] {
+  --bg:        #f7f8fa;
+  --bg-raised: #ffffff;
+  --bg-sunken: #eceef2;
+  --paper:     #ffffff;
+  --text:      #1c1a17;
+  --text-dim:  #6b6862;
+  --rule:      #e4e7ec;
+  --accent:    #0078cf;
+  --mark:      #ffe08a;
+  --shadow:      0 1px 2px rgba(20, 24, 32, 0.05), 0 5px 14px rgba(20, 24, 32, 0.06);
+  --shadow-lift: 0 2px 5px rgba(20, 24, 32, 0.08), 0 12px 28px rgba(20, 24, 32, 0.10);
+
+  --hue-home:     #c95100;
+  --hue-library:  #0078cf;
+  --hue-steps:    #6d28d9;
+  --hue-notes:    #00872d;
+  --hue-search:   #008282;
+  --hue-settings: #5c6470;
+  --wash: #e6f1fb;
 }
+
+/* Night, not a switched-off day. The hues lift and desaturate so they read at
+   7:1 or better on the ground, and the shadow becomes a lighter edge, since a
+   black shadow on a black card is nothing at all. */
+[data-theme="dark"] {
+  --bg:        #16181c;
+  --bg-raised: #21242a;
+  --bg-sunken: #101216;
+  --paper:     #191713;
+  --text:      #e4e1da;
+  --text-dim:  #969ba6;
+  --rule:      #31353d;
+  --accent:    #5cbde0;
+  --accent-on: #10141a;
+  --mark:      #6b5320;
+  --danger:    #e58a72;
+  --shadow:      0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.34);
+  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.5), 0 14px 32px rgba(0, 0, 0, 0.44);
+
+  --hue-home:     #f0906a;
+  --hue-library:  #5cbde0;
+  --hue-steps:    #b294e8;
+  --hue-notes:    #6fc985;
+  --hue-search:   #3fbdb2;
+  --hue-settings: #9aa4b2;
+  --wash: #24282f;
+
+  --tile-read:    #2e9bf0;  --tile-read-on:    #00294a;
+  --tile-meeting: #f26419;  --tile-meeting-on: #431800;
+  --tile-sponsor: #8b5cf6;  --tile-sponsor-on: #1c0050;
+  --tile-sponsee: #22bb66;  --tile-sponsee-on: #00351a;
+  --tile-message: #f0559b;  --tile-message-on: #4d0025;
+  --tile-write:   #f7d117;  --tile-write-on:   #4f4300;
+}
+
+/* The lit tab colours the screen it opened. Set on <html> by showScreen, so a
+   sheet or a sub-screen keeps the colour of the tab it belongs to. */
+[data-hue="home"]     { --accent: var(--hue-home); }
+[data-hue="library"]  { --accent: var(--hue-library); }
+[data-hue="steps"]    { --accent: var(--hue-steps); }
+[data-hue="notes"]    { --accent: var(--hue-notes); }
+[data-hue="search"]   { --accent: var(--hue-search); }
+[data-hue="settings"] { --accent: var(--hue-settings); }
 
 [data-typeface="sans"] {
   --reader-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -78,7 +192,25 @@ button { cursor: pointer; }
   flex-direction: column;
   background: var(--bg);
 }
-.screen.is-active { display: flex; }
+.screen.is-active { display: flex; animation: screen-in 200ms ease-out; }
+
+/* The one surface that is still a page. Reading should feel like reading
+   whatever the app around it is doing, so the reader carries its own ground
+   in every theme rather than following --bg. */
+#screen-reader { background: var(--paper); }
+
+/* First light, behind the home screen only. Sepia sets --wash to its own
+   ground, so the one theme that is meant to feel like paper stays flat. */
+#screen-home .screen-body {
+  background: linear-gradient(to bottom, var(--wash) 0, var(--bg) 190px);
+}
+#screen-home .topbar { background: var(--wash); border-bottom-color: transparent; }
+#screen-reader .topbar { background: var(--paper); }
+
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
 
 .screen-body {
   flex: 1;
@@ -231,14 +363,16 @@ button { cursor: pointer; }
   width: 100%;
   text-align: left;
   border: 1px solid var(--rule);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--bg-raised);
   color: var(--text);
-  padding: 11px 15px;
+  padding: 13px 16px;
   margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  transition: transform 140ms ease, box-shadow 140ms ease;
 }
 .daycount[hidden] { display: none; }
-.daycount:active { background: var(--bg-sunken); }
+.daycount:active { background: var(--bg-sunken); transform: scale(0.985); }
 .daycount-n {
   font-size: 22px;
   font-weight: 600;
@@ -249,7 +383,12 @@ button { cursor: pointer; }
 .daycount-label { font-size: 14px; }
 .daycount-since { margin-left: auto; font-size: 12px; color: var(--text-dim); }
 /* Nothing set yet: the row is an invitation rather than a statistic. */
-.daycount.is-unset { border-style: dashed; background: transparent; }
+.daycount.is-unset {
+  border-style: dashed;
+  border-color: var(--rule);
+  background: transparent;
+  box-shadow: none;
+}
 .daycount.is-unset .daycount-label { color: var(--text-dim); }
 
 /* Whether the practice is still happening. Quiet by default; it only takes a
@@ -270,20 +409,21 @@ button { cursor: pointer; }
   text-align: left;
   border: 1px solid var(--rule);
   border-left: 3px solid var(--accent);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--bg-raised);
-  padding: 15px 16px 14px;
+  padding: 16px 17px 15px;
   margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  transition: transform 140ms ease;
 }
 .passage-card[hidden] { display: none; }
-.passage-card:active { background: var(--bg-sunken); }
+.passage-card:active { background: var(--bg-sunken); transform: scale(0.99); }
 .passage-card[disabled] { opacity: 0.75; }
 .passage-label {
   display: block;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+  letter-spacing: 0.015em;
   color: var(--accent);
 }
 /* The book's own typeface, at the book's own pace — this is a passage to read,
@@ -310,19 +450,41 @@ button { cursor: pointer; }
   min-height: 112px;
   text-align: left;
   border: 1px solid var(--rule);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--bg-raised);
   color: var(--text);
-  padding: 13px 13px 12px;
+  padding: 14px 14px 13px;
+  box-shadow: var(--shadow);
+  transition: transform 140ms ease;
 }
-.shortcut:active { background: var(--bg-sunken); }
+.shortcut:active { background: var(--bg-sunken); transform: scale(0.97); }
 /* Nothing behind it yet. Dashed rather than greyed out: it is a place held
    open, not a thing switched off. */
 .shortcut.is-soon { border-style: dashed; background: transparent; }
-.shortcut-icon { display: inline-flex; line-height: 1; color: var(--accent); }
+.shortcut[data-shortcut="read"]    { --tile: var(--tile-read); --tile-on: var(--tile-read-on); }
+.shortcut[data-shortcut="meeting"] { --tile: var(--tile-meeting); --tile-on: var(--tile-meeting-on); }
+.shortcut[data-shortcut="sponsor"] { --tile: var(--tile-sponsor); --tile-on: var(--tile-sponsor-on); }
+.shortcut[data-shortcut="sponsee"] { --tile: var(--tile-sponsee); --tile-on: var(--tile-sponsee-on); }
+.shortcut[data-shortcut="message"] { --tile: var(--tile-message); --tile-on: var(--tile-message-on); }
+.shortcut[data-shortcut="write"]   { --tile: var(--tile-write); --tile-on: var(--tile-write-on); }
+
+.shortcut-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  line-height: 1;
+  background: var(--tile, var(--accent));
+  color: var(--tile-on, var(--accent-on));
+}
+
 .shortcut-icon svg {
-  width: 26px;
-  height: 26px;
+  position: relative;
+  width: 22px;
+  height: 22px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.6;
@@ -330,7 +492,7 @@ button { cursor: pointer; }
   stroke-linejoin: round;
   pointer-events: none;
 }
-.shortcut.is-soon .shortcut-icon { color: var(--text-dim); }
+.shortcut.is-soon .shortcut-icon { background: var(--bg-sunken); color: var(--text-dim); }
 .shortcut-label { font-size: 14px; font-weight: 500; line-height: 1.35; }
 .shortcut-note { margin-top: auto; font-size: 11.5px; color: var(--text-dim); }
 .shortcut-note:empty { display: none; }
@@ -346,15 +508,23 @@ button { cursor: pointer; }
   width: 100%;
   text-align: left;
   border: 1px solid var(--rule);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--bg-raised);
   color: var(--text);
-  padding: 12px 13px;
+  padding: 13px 14px;
+  box-shadow: var(--shadow);
+  transition: transform 140ms ease;
 }
-.stat:active { background: var(--bg-sunken); }
+.stat:active { background: var(--bg-sunken); transform: scale(0.97); }
+.stat[data-stat="read"]  { --stat: var(--hue-library); }
+.stat[data-stat="notes"] { --stat: var(--hue-notes); }
+.stat[data-stat="steps"] { --stat: var(--hue-steps); }
+.stat[data-stat="days"]  { --stat: var(--hue-home); }
+
 .stat-value {
   display: block;
-  font-size: 25px;
+  color: var(--stat, var(--text));
+  font-size: 27px;
   font-weight: 600;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -369,7 +539,7 @@ button { cursor: pointer; }
 
 .craving-live {
   border: 1px solid var(--accent);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--bg-raised);
   padding: 14px 16px 12px;
   margin-bottom: 14px;
@@ -379,8 +549,7 @@ button { cursor: pointer; }
   display: block;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+  letter-spacing: 0.015em;
   color: var(--accent);
 }
 .craving-live-since {
@@ -448,7 +617,6 @@ button { cursor: pointer; }
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--accent);
 }
 .craving-card.is-drank .craving-outcome { color: var(--danger); }
@@ -477,7 +645,6 @@ button { cursor: pointer; }
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--accent);
 }
 .meeting-what { margin: 7px 0 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
@@ -531,7 +698,6 @@ button { cursor: pointer; }
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--accent);
 }
 .tradlog-card.is-missed .tradlog-held { color: var(--danger); }
@@ -546,16 +712,23 @@ button { cursor: pointer; }
 
 /* ═══════════════════════════════════════════════════ when it is bad (2.20) ══ */
 
-/* High and prominent, at Martin's ask. The accent border and the weight are
-   the whole difference from #broken below it, which is deliberately quiet:
-   this row is for the minute it is happening. */
-.do-row-urgent {
+/* High and prominent, at Martin's ask. This row is for the minute it is
+   happening, and it has to be the loudest thing on the home screen — louder
+   than the day count above it and the tiles below.
+
+   Written .do-row-alone.do-row-urgent on purpose: the craving row carries
+   both classes, .do-row-alone is declared further down this file, and at
+   equal specificity it was quietly winning the border. The accent edge this
+   rule has always claimed to draw was never actually on screen until 2.23. */
+.do-row-alone.do-row-urgent {
   margin: 0 0 16px;
-  border: 1px solid var(--accent);
-  border-radius: 12px;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
   background: var(--bg-raised);
+  box-shadow: var(--shadow-lift);
 }
-.do-row-urgent .do-label { font-weight: 650; }
+.do-row-urgent .do-label { font-weight: 700; font-size: 16px; }
+.do-row-urgent .do-icon { color: var(--accent); }
 
 /* Each move opens where it stands. The + / – sits where the chevron does on
    a row that goes somewhere, so the two kinds of row are told apart before
@@ -691,7 +864,6 @@ button { cursor: pointer; }
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--accent);
 }
 .message-text {
@@ -709,13 +881,15 @@ button { cursor: pointer; }
 
 /* ═══════════════════════════════════════════════════════════════ library ══ */
 
+/* Sentence case, in the colour of the tab you are on. All-caps at 12px with a
+   tenth of an em of tracking is a filing cabinet; these are the small signs
+   over each part of a room. */
 .section-heading {
-  margin: 26px 0 10px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
-  color: var(--text-dim);
+  margin: 28px 0 11px;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0.005em;
+  color: var(--accent);
 }
 .screen-body > .section-heading:first-child { margin-top: 4px; }
 
@@ -751,7 +925,7 @@ button { cursor: pointer; }
   width: 100%;
   text-align: left;
   border: 1px solid var(--rule);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--bg-raised);
   padding: 16px;
   margin-top: 4px;
@@ -760,8 +934,7 @@ button { cursor: pointer; }
 .continue-label {
   display: block;
   font-size: 11px;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+  letter-spacing: 0.015em;
   color: var(--accent);
   font-weight: 700;
 }
@@ -791,7 +964,7 @@ button { cursor: pointer; }
    panels with the one you are on marked. */
 .do-row-alone {
   border: 1px solid var(--rule);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--bg-raised);
   margin-top: 10px;
   padding: 12px 14px;
@@ -800,7 +973,7 @@ button { cursor: pointer; }
 
 .bounce-day {
   border: 1px solid var(--rule);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--bg-raised);
   padding: 12px 14px 4px;
   margin-bottom: 12px;
@@ -816,8 +989,7 @@ button { cursor: pointer; }
   margin: 0 0 8px;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+  letter-spacing: 0.015em;
   color: var(--accent);
 }
 .bounce-day-when {
@@ -897,8 +1069,7 @@ button { cursor: pointer; }
   margin: 0;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
+  letter-spacing: 0.015em;
   color: var(--accent);
 }
 .ruleset-empty { margin: 8px 0 0; font-size: 14px; color: var(--text-dim); }
@@ -950,7 +1121,7 @@ button { cursor: pointer; }
 
 .notice {
   border: 1px solid var(--accent);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: var(--bg-raised);
   padding: 16px;
   margin-bottom: 8px;
@@ -1021,7 +1192,6 @@ button { cursor: pointer; }
   text-align: center;
   font-size: 0.68em;
   letter-spacing: 0.16em;
-  text-transform: uppercase;
   color: var(--text-dim);
   margin: 10px 0 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -1090,7 +1260,7 @@ button { cursor: pointer; }
 
 .person {
   border: 1px solid var(--rule);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--bg-raised);
   padding: 13px 14px 4px;
 }
@@ -1122,7 +1292,7 @@ button { cursor: pointer; }
 
 .defect {
   border: 1px solid var(--rule);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--bg-raised);
   padding: 13px 14px 4px;
 }
@@ -1133,7 +1303,6 @@ button { cursor: pointer; }
   margin: 5px 0 0;
   font-size: 11px;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--text-dim);
 }
 .defect-states { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 11px; }
@@ -1163,7 +1332,7 @@ button { cursor: pointer; }
 
 .sitting {
   border: 1px solid var(--rule);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--bg-raised);
   padding: 13px 14px 4px;
 }
@@ -1178,7 +1347,6 @@ button { cursor: pointer; }
 .sitting-who {
   font-size: 12px;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--accent);
   font-weight: 700;
 }
@@ -1218,7 +1386,7 @@ button { cursor: pointer; }
 
 .listpanel {
   border: 1px solid var(--rule);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--bg-raised);
   padding: 13px 14px;
 }
@@ -1300,7 +1468,6 @@ button { cursor: pointer; }
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.07em;
-  text-transform: uppercase;
   color: var(--accent);
   margin-left: 6px;
 }
@@ -1349,7 +1516,6 @@ button { cursor: pointer; }
 .entry-when {
   font-size: 11px;
   letter-spacing: 0.07em;
-  text-transform: uppercase;
   color: var(--accent);
   font-weight: 700;
 }
@@ -1420,7 +1586,6 @@ button { cursor: pointer; }
   flex: none;
   font-size: 10px;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--text-dim);
   border: 1px solid var(--rule);
   border-radius: 20px;
@@ -1467,7 +1632,6 @@ button { cursor: pointer; }
   margin-top: 3px;
   font-size: 11px;
   letter-spacing: 0.07em;
-  text-transform: uppercase;
   color: var(--accent);
 }
 .ref-why { display: block; margin-top: 6px; font-size: 13px; color: var(--text-dim); }
@@ -1485,7 +1649,7 @@ button { cursor: pointer; }
 
 .question {
   border: 1px solid var(--rule);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--bg-raised);
   padding: 14px;
 }
@@ -1502,7 +1666,6 @@ button { cursor: pointer; }
 .question-own {
   font-size: 10px;
   letter-spacing: 0.07em;
-  text-transform: uppercase;
   color: var(--text-dim);
   border: 1px solid var(--rule);
   border-radius: 20px;
@@ -1524,7 +1687,6 @@ button { cursor: pointer; }
   display: block;
   font-size: 11px;
   letter-spacing: 0.07em;
-  text-transform: uppercase;
   color: var(--accent);
   font-weight: 700;
   margin-bottom: 5px;
@@ -1571,7 +1733,7 @@ button { cursor: pointer; }
   width: 100%;
   text-align: left;
   border: 1px solid var(--rule);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--bg-raised);
   padding: 13px 14px;
 }
@@ -1579,7 +1741,6 @@ button { cursor: pointer; }
 .card-where {
   font-size: 11px;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--accent);
   font-weight: 700;
 }
@@ -1623,7 +1784,6 @@ button { cursor: pointer; }
   flex: none;
   font-size: 10px;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 999px;
@@ -1683,7 +1843,6 @@ button { cursor: pointer; }
   margin: 16px 0 0;
   font-size: 11px;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--text-dim);
   font-weight: 700;
 }
@@ -1700,9 +1859,10 @@ button { cursor: pointer; }
 
 .panel {
   border: 1px solid var(--rule);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--bg-raised);
-  padding: 4px 14px;
+  padding: 4px 15px;
+  box-shadow: var(--shadow);
 }
 .panel-note { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin: 12px 0; }
 .panel-note strong { color: var(--text); }
@@ -1792,7 +1952,7 @@ button { cursor: pointer; }
    carries its own panel, since there is no heading above it any more. */
 .disclosure-section {
   border: 1px solid var(--rule);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: var(--bg-raised);
   padding: 0 14px;
   margin-top: 26px;
@@ -1923,6 +2083,7 @@ button { cursor: pointer; }
   font-size: 17px;
 }
 .swatch.is-active { border-color: var(--accent); }
+.swatch-morning { background: #fcfaf6; color: #1f7fa8; }
 .swatch-sepia { background: #f4ecd8; color: #3a3226; }
 .swatch-light { background: #ffffff; color: #1c1a17; }
 .swatch-dark  { background: #12100e; color: #ddd6cc; }
@@ -2040,7 +2201,6 @@ button { cursor: pointer; }
 .inv-label {
   font-size: .7rem;
   letter-spacing: .04em;
-  text-transform: uppercase;
   color: var(--text-dim);
 }
 
@@ -2081,7 +2241,6 @@ button { cursor: pointer; }
 .inv-grid th {
   font-size: .7rem;
   letter-spacing: .04em;
-  text-transform: uppercase;
   color: var(--text-dim);
   font-weight: 600;
   background: var(--bg-sunken);
