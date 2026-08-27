@@ -5,20 +5,20 @@
  * works when the app is served from a GitHub Pages subpath or from the root of
  * a local dev server.
  */
-const APP_VERSION = '2.13';
-const CACHE_NAME = 'ams-big-12s-v38';
+const APP_VERSION = '2.14';
+const CACHE_NAME = 'ams-big-12s-v39';
 
 const SHELL = [
     './',
     'index.html',
     'manifest.json',
-    'css/style.css?v=28',
+    'css/style.css?v=29',
     'js/parser.js?v=1',
-    'js/db.js?v=4',
-    'js/store.js?v=16',
-    'js/backup.js?v=6',
-    'js/ui.js?v=30',
-    'js/app.js?v=18',
+    'js/db.js?v=5',
+    'js/store.js?v=17',
+    'js/backup.js?v=7',
+    'js/ui.js?v=31',
+    'js/app.js?v=19',
     'data/book.json',
     'data/steps.json',
     'data/daily.json',

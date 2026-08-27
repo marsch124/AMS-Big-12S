@@ -116,7 +116,7 @@
         // by hand, is not.
         if (name !== 'reader' && looking) { looking = false; showBrowsingStrip(); }
         ['home', 'library', 'reader', 'steps', 'step', 'notes', 'search', 'settings',
-         'craving', 'meeting']
+         'craving', 'meeting', 'checkin']
             .forEach(function (screen) {
                 $('screen-' + screen).classList.toggle('is-active', screen === name);
             });
@@ -124,7 +124,7 @@
         // screens from the home screen, so those tabs stay lit while you are
         // inside one.
         var litTab = name === 'step' ? 'steps'
-            : (name === 'craving' || name === 'meeting') ? 'home' : name;
+            : (name === 'craving' || name === 'meeting' || name === 'checkin') ? 'home' : name;
         Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
             tab.classList.toggle('is-active', tab.dataset.screen === litTab);
         });
@@ -138,7 +138,11 @@
         // wake-up a minute for a screen nobody is looking at.
         if (name === 'home') renderHome();
         else if (name === 'craving') renderCraving();
-        else { stopClock(); if (name === 'meeting') renderMeeting(); }
+        else {
+            stopClock();
+            if (name === 'meeting') renderMeeting();
+            if (name === 'checkin') renderCheckin();
+        }
         if (name === 'library') renderLibrary();
         if (name === 'notes') renderNotes();
         if (name === 'settings') renderSettings();
@@ -320,8 +324,8 @@
         }
         if (name === 'craving') { showScreen('craving'); return; }
         if (name === 'meeting') { showScreen('meeting'); return; }
-        if (name === 'sponsor') { openNotesWith('sponsor'); return; }
-        if (name === 'sponsee') { openNotesWith('sponsee'); return; }
+        if (name === 'sponsor') { openCheckin('sponsor'); return; }
+        if (name === 'sponsee') { openCheckin('sponsee'); return; }
         if (name === 'write') { openNoteSheet(null, null, null, { tag: '' }); return; }
         toast('Not built yet — this one is a place held open.');
     }
@@ -613,6 +617,210 @@
             closeSheets();
             renderCraving();
         });
+    }
+
+    /* ----------------------------------------------------------- check-ins */
+
+    /*
+     * The two daily conversations. Martin's own questions, and they differ by
+     * who is being talked to: the sponsor list is about him, the sponsee list is
+     * about them. "Notes from the meeting" closes both, because the thing you
+     * want tomorrow is what was actually said.
+     *
+     * Everything saves as you leave the field. There is no Save button: a form
+     * you fill in five minutes before a phone call should not be losable by
+     * putting the phone down.
+     */
+    var CHECKINS = {
+        sponsor: {
+            title: 'Talking to my sponsor',
+            heading: 'Before we talk',
+            empty: 'Nothing waiting for your sponsor. Mark a note for them and it turns up here.',
+            fields: [
+                { id: 'abstinent', label: 'Am I abstinent?', type: 'choice',
+                  choices: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }] },
+                { id: 'forMyself', label: 'What have I done for myself today?' },
+                { id: 'forOthers', label: 'What have I done for others today?' },
+                { id: 'hiding', label: 'Do I hide anything?' },
+                { id: 'feeling', label: 'How do I feel?' },
+                { id: 'questions', label: 'Do I have any questions?' }
+            ]
+        },
+        sponsee: {
+            title: 'Talking to my sponsee',
+            heading: 'Before we talk',
+            empty: 'Nothing waiting for your sponsee. Mark a note for them and it turns up here.',
+            fields: [
+                { id: 'abstinent', label: 'Is he abstinent?', type: 'choice',
+                  choices: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' },
+                            { value: 'unknown', label: 'Don\u2019t know' }] },
+                { id: 'forHimself', label: 'What has he done for himself?' },
+                { id: 'forOthers', label: 'What has he done for others?' },
+                { id: 'okay', label: 'Is he okay?' },
+                { id: 'questions', label: 'Any questions?' }
+            ]
+        }
+    };
+
+    var CHECKIN_NOTES = { id: 'notes', label: 'Notes from the meeting', rows: 4 };
+
+    function openCheckin(who, on) {
+        current.checkinWho = who;
+        current.checkinOn = on || Store.todayISO();
+        showScreen('checkin');
+    }
+
+    function renderCheckin() {
+        var who = current.checkinWho || 'sponsor';
+        var spec = CHECKINS[who];
+        var day = current.checkinOn || Store.todayISO();
+        var today = day === Store.todayISO();
+        var record = Store.checkinFor(who, day);
+
+        $('checkin-title').textContent = spec.title;
+        $('checkin-sub').textContent = today ? 'Today' : formatDay(day);
+        $('checkin-prep-heading').textContent = spec.heading;
+        $('checkin-today').hidden = today;
+
+        renderCheckinFields(who, day, spec, record);
+        renderCheckinRaise(who, spec);
+        renderCheckinHistory(who, day);
+    }
+
+    function renderCheckinFields(who, day, spec, record) {
+        var box = $('checkin-fields');
+        box.innerHTML = '';
+        var values = (record && record.values) || {};
+
+        spec.fields.forEach(function (field) {
+            box.appendChild(field.type === 'choice'
+                ? checkinChoice(who, day, field, values[field.id])
+                : checkinText(who, day, field, values[field.id]));
+        });
+
+        box.appendChild(checkinText(who, day, CHECKIN_NOTES, (record && record.notes) || '',
+            true));
+    }
+
+    function checkinText(who, day, field, value, isNotes) {
+        var wrap = document.createElement('label');
+        wrap.className = 'checkin-field';
+
+        var label = document.createElement('span');
+        label.className = 'checkin-label';
+        label.textContent = field.label;
+        wrap.appendChild(label);
+
+        var input = document.createElement('textarea');
+        input.className = 'note-input';
+        input.rows = field.rows || 2;
+        input.value = value || '';
+        // On change rather than on every keystroke: it fires when the field is
+        // left, which is every time it matters and no more often.
+        input.addEventListener('change', function () {
+            var patch = {};
+            if (isNotes) patch.notes = input.value;
+            else { patch.values = {}; patch.values[field.id] = input.value.trim(); }
+            Store.saveCheckin(who, day, patch).then(function () {
+                renderCheckinHistory(who, day);
+            });
+        });
+        wrap.appendChild(input);
+        return wrap;
+    }
+
+    function checkinChoice(who, day, field, value) {
+        var wrap = document.createElement('div');
+        wrap.className = 'checkin-field';
+
+        var label = document.createElement('span');
+        label.className = 'checkin-label';
+        label.textContent = field.label;
+        wrap.appendChild(label);
+
+        var row = document.createElement('div');
+        row.className = 'chip-row';
+        field.choices.forEach(function (choice) {
+            var chip = document.createElement('button');
+            chip.className = 'chip' + (value === choice.value ? ' is-active' : '');
+            chip.textContent = choice.label;
+            chip.addEventListener('click', function () {
+                // Tapping the lit one clears it: an answer can be taken back
+                // without a third button for "no answer".
+                var next = value === choice.value ? '' : choice.value;
+                var patch = { values: {} };
+                patch.values[field.id] = next;
+                Store.saveCheckin(who, day, patch).then(function () { renderCheckin(); });
+            });
+            row.appendChild(chip);
+        });
+        wrap.appendChild(row);
+        return wrap;
+    }
+
+    // The same list the Notes tab shows for this person, and the same card, so
+    // a point can be ticked off while you are standing in front of it.
+    function renderCheckinRaise(who, spec) {
+        var box = $('checkin-raise');
+        box.innerHTML = '';
+
+        var waiting = Store.state.notes
+            .filter(function (note) { return note.tag === who && !note.discussedAt; })
+            .map(Store.resolveNote);
+
+        waiting.forEach(function (note) { box.appendChild(noteCard(note)); });
+        $('checkin-raise-empty').hidden = waiting.length > 0;
+        $('checkin-raise-empty').textContent = spec.empty;
+        $('checkin-copy').hidden = !waiting.length;
+        $('checkin-copy').onclick = function () { copyTalkList(waiting, who); };
+    }
+
+    function checkinSummary(who, row) {
+        var spec = CHECKINS[who];
+        var values = row.values || {};
+        var parts = [];
+
+        var abstinent = spec.fields[0];
+        var chosen = (abstinent.choices || []).filter(function (choice) {
+            return choice.value === values[abstinent.id];
+        })[0];
+        if (chosen) parts.push(abstinent.label + ' ' + chosen.label);
+
+        var written = spec.fields.slice(1).filter(function (field) {
+            return String(values[field.id] || '').trim();
+        }).length;
+        if (written) parts.push(written + (written === 1 ? ' answer' : ' answers'));
+        if (String(row.notes || '').trim()) parts.push('notes from the meeting');
+
+        return parts.join(' · ');
+    }
+
+    function renderCheckinHistory(who, day) {
+        var box = $('checkin-history');
+        box.innerHTML = '';
+
+        var past = Store.checkinsFor(who).filter(function (row) {
+            return row.on !== day && !Store.checkinIsEmpty(row);
+        });
+
+        past.slice(0, 10).forEach(function (row) {
+            var card = document.createElement('button');
+            card.className = 'card checkin-card';
+            card.innerHTML =
+                '<span class="checkin-when">' + escapeHtml(formatDay(row.on)) + '</span>' +
+                '<span class="checkin-gist">' + escapeHtml(checkinSummary(who, row)) + '</span>' +
+                (row.notes ? '<p class="checkin-notes">' + escapeHtml(row.notes) + '</p>' : '');
+            card.addEventListener('click', function () { openCheckin(who, row.on); });
+            box.appendChild(card);
+        });
+
+        $('checkin-history-empty').hidden = past.length > 0;
+        if (past.length > 10) {
+            var more = document.createElement('p');
+            more.className = 'hint';
+            more.textContent = 'Showing the last 10 of ' + past.length + '.';
+            box.appendChild(more);
+        }
     }
 
     /* ------------------------------------------------------------ meeting */
@@ -1158,6 +1366,7 @@
         } else {
             if (current.screen === 'craving') renderCraving();
             if (current.screen === 'meeting') renderMeeting();
+            if (current.screen === 'checkin') renderCheckin();
             renderNotes();
         }
     }
@@ -3205,6 +3414,7 @@
                     // The same card is used on the Notes tab and on the meeting
                     // screen, so both have to be told.
                     if (current.screen === 'meeting') renderMeeting();
+                    if (current.screen === 'checkin') renderCheckin();
                     renderNotes();
                 });
             });
@@ -3562,6 +3772,15 @@
                 refreshContinueCards();
                 toast('Forgotten. The book starts from the beginning again.');
             });
+        });
+
+        // ── before we talk ─────────────────────────────────────────────────
+        $('checkin-back').addEventListener('click', function () { showScreen('home'); });
+        $('checkin-today').addEventListener('click', function () {
+            openCheckin(current.checkinWho, Store.todayISO());
+        });
+        $('checkin-write').addEventListener('click', function () {
+            openNoteSheet(null, null, null, { tag: current.checkinWho });
         });
 
         // ── a meeting ──────────────────────────────────────────────────────

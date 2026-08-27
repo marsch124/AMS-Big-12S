@@ -629,6 +629,104 @@ async function openContents(page) {
     check('what was going on is kept with it',
         (await page.textContent('.craving-card')).includes('Went to the shop.'));
 
+    // ── before we talk ────────────────────────────────────────────────────
+    await page.click('.tab[data-screen="home"]');
+    await page.click('.shortcut[data-shortcut="sponsor"]');
+    await page.waitForSelector('#screen-checkin.is-active');
+    check('the sponsor tile opens the page for that conversation',
+        (await page.textContent('#checkin-title')) === 'Talking to my sponsor' &&
+        (await page.textContent('#checkin-sub')) === 'Today');
+    check('the Home tab stays lit inside it',
+        await page.$eval('.tab[data-screen="home"]', (e) => e.classList.contains('is-active')));
+
+    const asked = await page.$$eval('.checkin-label', (e) => e.map((x) => x.textContent));
+    check('with the questions about me, and the meeting notes last',
+        asked.length === 7 && asked[0] === 'Am I abstinent?' &&
+        asked[6] === 'Notes from the meeting', asked.join(' · '));
+    check('abstinence is yes or no, not a box to type in',
+        (await page.$$eval('.checkin-field .chip', (e) => e.map((x) => x.textContent)))
+            .join('/') === 'Yes/No');
+
+    await page.click('.checkin-field .chip >> nth=0');
+    await page.waitForTimeout(200);
+    const areas = await page.$$('.checkin-field textarea');
+    await areas[0].fill('Swam before work.');
+    await areas[0].dispatchEvent('change');
+    await areas[5].fill('He said: the easy amends teach you the hard ones.');
+    await areas[5].dispatchEvent('change');
+    await page.waitForTimeout(250);
+
+    const saved = await page.evaluate(() => Store.checkinFor('sponsor'));
+    check('an answer and a note save as you go, with no Save button',
+        saved.values.abstinent === 'yes' && saved.values.forMyself === 'Swam before work.' &&
+        saved.notes.indexOf('easy amends') !== -1, JSON.stringify(saved.values));
+    check('and all of it is one record for the day',
+        (await page.evaluate(() => Store.checkinsFor('sponsor').length)) === 1);
+
+    // Tapping the lit answer takes it back, without a third button for it.
+    await page.click('.checkin-field .chip >> nth=0');
+    await page.waitForTimeout(250);
+    check('tapping the lit answer clears it',
+        !(await page.evaluate(() => Store.checkinFor('sponsor').values.abstinent)));
+    await page.click('.checkin-field .chip >> nth=0');
+    await page.waitForTimeout(250);
+
+    // The sponsee's page asks about him, and allows not knowing.
+    await page.click('#checkin-back');
+    await page.waitForSelector('#screen-home.is-active');
+    await page.click('.shortcut[data-shortcut="sponsee"]');
+    await page.waitForSelector('#screen-checkin.is-active');
+    const askedOfHim = await page.$$eval('.checkin-label', (e) => e.map((x) => x.textContent));
+    check('the sponsee page asks about him instead',
+        askedOfHim[0] === 'Is he abstinent?' && askedOfHim[1] === 'What has he done for himself?',
+        askedOfHim.join(' · '));
+    check('and lets you say you do not know',
+        (await page.$$eval('.checkin-field .chip', (e) => e.map((x) => x.textContent)))
+            .join('/') === 'Yes/No/Don\u2019t know');
+    check('the two pages keep their own records',
+        (await page.evaluate(() => Store.checkinsFor('sponsee').length)) === 0);
+
+    // What is waiting to be raised is on the page, and copies out.
+    await page.click('#checkin-write');
+    await page.waitForSelector('#note-sheet:not([hidden])');
+    check('writing one down comes up marked for them',
+        await page.$eval('#note-tags .chip[data-tag="sponsee"]',
+            (e) => e.classList.contains('is-active')));
+    await page.fill('#note-sheet-body', 'Ask how the first week went.');
+    await page.click('#note-save');
+    await page.waitForSelector('#note-sheet', { state: 'hidden' });
+    check('and turns up on the page at once',
+        (await page.$$eval('#checkin-raise .card', (e) => e.length)) === 1 &&
+        await page.isVisible('#checkin-copy'));
+
+    // Yesterday's page is behind today's, and the way back is a tap.
+    await page.evaluate(async () => {
+        await Store.saveCheckin('sponsee', Store.shiftDay(Store.todayISO(), -1),
+            { values: { abstinent: 'yes' }, notes: 'He rang. Twenty minutes, mostly him.' });
+        UI.showScreen('checkin');
+    });
+    await page.waitForTimeout(200);
+    check('a day already written is listed under today',
+        (await page.$$eval('.checkin-card', (e) => e.length)) === 1,
+        await page.textContent('#checkin-history'));
+    await page.click('.checkin-card');
+    await page.waitForTimeout(250);
+    check('opening it shows that day rather than today',
+        (await page.textContent('#checkin-sub')) !== 'Today' &&
+        await page.isVisible('#checkin-today'));
+    await page.click('#checkin-today');
+    await page.waitForTimeout(200);
+    check('and the way back to today is one tap',
+        (await page.textContent('#checkin-sub')) === 'Today');
+
+    // Clear up: later checks count notes.
+    await page.evaluate(async () => {
+        for (const note of Store.state.notes.filter((n) => n.tag === 'sponsee')) {
+            await Store.deleteNote(note.id);
+        }
+    });
+    await page.click('#checkin-back');
+
     // ── a meeting ─────────────────────────────────────────────────────────
     await page.click('.tab[data-screen="home"]');
     await page.click('.shortcut[data-shortcut="meeting"]');
@@ -721,18 +819,22 @@ async function openContents(page) {
         (slim.cravings || []).length + ' cravings');
     check('and the meetings', slim.meetings.length === 1,
         (slim.meetings || []).length + ' meetings');
+    check('and what was worked out before a conversation',
+        slim.checkins.length === 2, (slim.checkins || []).length + ' check-ins');
 
     // A backup written before the craving screen existed has no such key, and
     // must restore without emptying a list that is only worth anything whole.
     const older = JSON.parse(JSON.stringify(slim));
     delete older.cravings;
     delete older.meetings;
+    delete older.checkins;
     const keptThrough = await page.evaluate(async (json) => {
         await Backup.restoreBackup(Backup.parseBackup(json), 'merge');
-        return { cravings: Store.state.cravings.length, meetings: Store.state.meetings.length };
+        return { cravings: Store.state.cravings.length, meetings: Store.state.meetings.length,
+                 checkins: Store.state.checkins.length };
     }, JSON.stringify(older));
-    check('an older backup restores without wiping either of them',
-        keptThrough.cravings === 2 && keptThrough.meetings === 1,
+    check('an older backup restores without wiping any of them',
+        keptThrough.cravings === 2 && keptThrough.meetings === 1 && keptThrough.checkins === 2,
         JSON.stringify(keptThrough));
     check('backup stays small when the text is not included',
         !slim.includesBookText && JSON.stringify(slim).length < 4000,

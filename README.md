@@ -23,6 +23,8 @@ without a signal.
 - 📋 **The rules as they stand** — two lists, what you keep and what you have asked of a
   sponsee, in Settings
 - ✎ **Notes on any passage** — tap a paragraph, write a note; it stays attached to those words
+- 🤝 **Before we talk** — a page a day for the sponsor conversation and the sponsee one:
+  your own questions, what to raise, and notes from the meeting
 - 🗣 **Things to bring up** — mark anything for your sponsor, a sponsee or a meeting, keep a
   running count of what is still waiting, tick it off afterwards, and copy the list out first
 - 💭 **Notes of your own** — write down what did not come from a page at all
@@ -148,6 +150,26 @@ A little formatting is allowed where a word needs the weight: `**two stars**`
 makes a phrase **bold**, `*one star*` or `_an underscore_` makes it *italic*.
 Everything else is left exactly as typed — text is escaped before it is
 formatted, so nothing that looks like a tag is ever run as one.
+
+## Before we talk
+
+*I'm meeting my sponsor* and *I'm meeting my sponsee* each open a page a day for
+that conversation.
+
+**The questions differ by who you are talking to**, because one is about you and
+the other is about them. Yours: *Am I abstinent? What have I done for myself
+today? What have I done for others today? Do I hide anything? How do I feel? Do
+I have any questions?* His: the same asked of him, with **Don't know** allowed on
+the abstinence question, because sometimes you do not.
+
+**Notes from the meeting** closes both — what you want tomorrow is what was
+actually said.
+
+Everything saves as you leave a field. There is no Save button to forget when
+the phone rings, and coming back in the evening adds to the morning's answers
+rather than starting a second copy of them. What you have marked to bring up
+sits on the same page, ready to copy out, and the days already written are
+underneath.
 
 ## Meetings
 
@@ -438,7 +460,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 301 checks
+node tools/smoke-test.js      # 317 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that

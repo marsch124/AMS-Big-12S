@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=28">
+<link rel="stylesheet" href="css/style.css?v=29">
 </head>
 <body>
 
@@ -380,6 +380,43 @@
       <h2 class="section-heading">The ones before this</h2>
       <p class="hint" id="craving-summary"></p>
       <div id="craving-list" class="card-list"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ Before we talk / after ── -->
+  <!-- One page a day for each of the two conversations: what you work out
+       before it, what you want to raise in it, and what came of it. The
+       questions are Martin's own; they differ by who you are talking to,
+       because one is about you and the other is about them. -->
+  <section class="screen" id="screen-checkin">
+    <header class="topbar">
+      <button class="icon-btn" id="checkin-back" aria-label="Back">‹</button>
+      <div class="topbar-titles">
+        <h1 class="topbar-title" id="checkin-title"></h1>
+        <p class="topbar-sub" id="checkin-sub"></p>
+      </div>
+      <button class="icon-btn" id="checkin-today" hidden aria-label="Back to today">Today</button>
+    </header>
+
+    <div class="screen-body">
+      <h2 class="section-heading" id="checkin-prep-heading">Before we talk</h2>
+      <div class="panel" id="checkin-fields"></div>
+
+      <h2 class="section-heading">To bring up</h2>
+      <div id="checkin-raise" class="card-list"></div>
+      <p class="empty" id="checkin-raise-empty" hidden>
+        Nothing waiting. Mark any note for them and it turns up here.
+      </p>
+      <div class="btn-row">
+        <button class="btn btn-quiet" id="checkin-write">Write one down</button>
+        <button class="btn btn-quiet" id="checkin-copy" hidden>Copy this list</button>
+      </div>
+
+      <h2 class="section-heading">Before today</h2>
+      <p class="hint" id="checkin-history-empty" hidden>
+        Nothing written down yet. Today is the first.
+      </p>
+      <div id="checkin-history" class="card-list"></div>
     </div>
   </section>
 
@@ -760,6 +797,25 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Before we talk</span><span class="ver-tag">2.14</span></summary>
+          <div class="disclosure-body">
+            <p><strong>I'm meeting my sponsor</strong> and <strong>I'm meeting my sponsee</strong>
+               now open a page a day for that conversation, instead of just the list of points
+               waiting.</p>
+            <p>Each has its own questions, because one is about you and the other is about them
+               — <em>Am I abstinent? What have I done for myself today? For others? Do I hide
+               anything? How do I feel? Any questions?</em> — and on the sponsee's side the
+               same asked of him, with <strong>Don't know</strong> allowed, because sometimes
+               you do not.</p>
+            <p><strong>Notes from the meeting</strong> closes both, since what you want tomorrow
+               is what was actually said. Everything saves as you leave the field: there is no
+               Save button to forget when the phone rings.</p>
+            <p>What you have marked to bring up is on the same page, ready to copy out, and
+               the days already written are underneath — tap one to read it back.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Days running counts showing up</span><span class="ver-tag">2.13</span></summary>
@@ -1722,10 +1778,10 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="js/parser.js?v=1"></script>
-<script src="js/db.js?v=4"></script>
-<script src="js/store.js?v=16"></script>
-<script src="js/backup.js?v=6"></script>
-<script src="js/ui.js?v=30"></script>
-<script src="js/app.js?v=18"></script>
+<script src="js/db.js?v=5"></script>
+<script src="js/store.js?v=17"></script>
+<script src="js/backup.js?v=7"></script>
+<script src="js/ui.js?v=31"></script>
+<script src="js/app.js?v=19"></script>
 </body>
 </html>

@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.13 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.14 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -331,6 +331,28 @@ HTML, which is why it is shaped this way — do not collapse it back.
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
 
+## Before we talk (2.14)
+
+**The questions are Martin's own, and they are asymmetric on purpose.** The
+sponsor list is about him; the sponsee list is the same ground asked about
+someone else, with a third answer — *Don't know* — on the abstinence question,
+because you often do not. Both close with *Notes from the meeting*. Do not
+"tidy" the two lists into one shared set: the asymmetry is the point.
+
+**One record per person per day**, found by the day rather than created afresh —
+coming back in the evening adds to the morning's answers instead of starting a
+second copy. `Store.saveCheckin(who, on, patch)` merges: only what is passed
+changes.
+
+**No Save button, on purpose.** Fields save on `change`, which fires when the
+field is left. A form filled in five minutes before a phone call must not be
+losable by putting the phone down. `checkinIsEmpty()` keeps untouched days out
+of the history rather than out of the store.
+
+**`checkins` is a store of its own (`DB_VERSION` 5)** — the fifth to follow the
+same pattern: guarded upgrade, carried by `backup.js` both ways, and a check
+that an older backup does not empty it.
+
 ## Days running (2.13)
 
 **It counts days the app was opened, not days a step was worked.** Martin asked
@@ -471,7 +493,7 @@ sw.js               Service worker: offline shell + book cache
 css/style.css       Themes (sepia/light/dark/auto), reader typography
 js/parser.js        Plain text → sections. Shared with tools/build-book.js
 js/db.js            IndexedDB wrapper (meta, book, notes, bookmarks, inventory,
-                    cravings, meetings)
+                    cravings, meetings, checkins)
 js/store.js         Book, settings, position, notes, bookmarks, search
 js/backup.js        Export / restore
 js/ui.js            Screens, rendering, all event wiring
@@ -486,7 +508,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    301 end-to-end browser checks
+tools/smoke-test.js    317 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -498,7 +520,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 301 checks, expect 301/301
+node tools/smoke-test.js                  # 317 checks, expect 317/317
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

@@ -52,6 +52,7 @@
         inventory: [],           // step four's rows: { id, stepId, tableId, values, ... }
         cravings: [],            // { id, startedAt, endedAt, outcome, what }
         meetings: [],            // { id, on, where, shared, what }
+        checkins: [],            // { id, who, on, values, notes }
         visits: null             // the days the app has been opened, ascending
     };
 
@@ -1254,6 +1255,73 @@
         return run;
     }
 
+    /* ------------------------------------------------------- the check-ins */
+
+    /*
+     * What you worked out before a conversation, and what came of it. One
+     * record a day for each of the two people, found by the day rather than
+     * created afresh — coming back to it in the evening should add to the
+     * morning's answers, not start a second copy of them.
+     */
+    function loadCheckins() {
+        return DB.getAll(DB.STORE_CHECKINS).then(function (rows) {
+            state.checkins = (rows || []).sort(function (a, b) {
+                return String(b.on || '').localeCompare(String(a.on || ''));
+            });
+            return state.checkins;
+        }).catch(function () {
+            state.checkins = [];
+            return state.checkins;
+        });
+    }
+
+    function checkinFor(who, on) {
+        var day = on || todayISO();
+        return state.checkins.filter(function (row) {
+            return row.who === who && row.on === day;
+        })[0] || null;
+    }
+
+    function checkinsFor(who) {
+        return state.checkins.filter(function (row) { return row.who === who; });
+    }
+
+    // Only what is passed is changed; everything else on the day stands.
+    function saveCheckin(who, on, patch) {
+        var day = on || todayISO();
+        var existing = checkinFor(who, day);
+        var now = new Date().toISOString();
+        var record = {
+            id: (existing && existing.id) || uid('chk'),
+            who: who,
+            on: day,
+            values: Object.assign({}, existing && existing.values, patch && patch.values),
+            notes: patch && patch.notes !== undefined
+                ? String(patch.notes).trim()
+                : (existing ? existing.notes : ''),
+            createdAt: (existing && existing.createdAt) || now,
+            updatedAt: now
+        };
+        return DB.put(DB.STORE_CHECKINS, record).then(loadCheckins).then(function () {
+            return record;
+        });
+    }
+
+    function deleteCheckin(id) {
+        return DB.remove(DB.STORE_CHECKINS, id).then(loadCheckins);
+    }
+
+    // A day with nothing written on it is not a day you prepared. Used to keep
+    // empty records out of the history rather than to stop them being saved.
+    function checkinIsEmpty(row) {
+        if (!row) return true;
+        if (String(row.notes || '').trim()) return false;
+        var values = row.values || {};
+        return !Object.keys(values).some(function (key) {
+            return String(values[key] || '').trim().length > 0;
+        });
+    }
+
     /* ------------------------------------------------------- showing up */
 
     /*
@@ -1572,6 +1640,7 @@
             .then(loadInventory)
             .then(loadCravings)
             .then(loadMeetings)
+            .then(loadCheckins)
             .then(loadVisits)
             .then(loadNotes)
             .then(loadBookmarks)
@@ -1679,6 +1748,13 @@
         daysAbstinent: daysAbstinent,
         lastActivity: lastActivity,
         daysSinceActivity: daysSinceActivity,
+
+        loadCheckins: loadCheckins,
+        checkinFor: checkinFor,
+        checkinsFor: checkinsFor,
+        saveCheckin: saveCheckin,
+        deleteCheckin: deleteCheckin,
+        checkinIsEmpty: checkinIsEmpty,
 
         loadMeetings: loadMeetings,
         saveMeeting: saveMeeting,

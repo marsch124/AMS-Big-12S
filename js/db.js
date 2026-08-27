@@ -8,7 +8,7 @@
     'use strict';
 
     var DB_NAME = 'ams-big-12s';
-    var DB_VERSION = 4;
+    var DB_VERSION = 5;
 
     var STORE_META = 'meta';
     var STORE_BOOK = 'book';
@@ -22,6 +22,9 @@
     var STORE_CRAVINGS = 'cravings';
     // Meetings you were at: a day, a place, and what came of it.
     var STORE_MEETINGS = 'meetings';
+    // What you worked out before a conversation, and what came of it. One a day
+    // for each of the two people.
+    var STORE_CHECKINS = 'checkins';
 
     var dbPromise = null;
 
@@ -63,6 +66,11 @@
                 if (!db.objectStoreNames.contains(STORE_MEETINGS)) {
                     var meetings = db.createObjectStore(STORE_MEETINGS, { keyPath: 'id' });
                     meetings.createIndex('on', 'on', { unique: false });
+                }
+                // Added in DB_VERSION 5, guarded the same way as all of them.
+                if (!db.objectStoreNames.contains(STORE_CHECKINS)) {
+                    var checkins = db.createObjectStore(STORE_CHECKINS, { keyPath: 'id' });
+                    checkins.createIndex('on', 'on', { unique: false });
                 }
             };
 
@@ -155,6 +163,7 @@
         STORE_INVENTORY: STORE_INVENTORY,
         STORE_CRAVINGS: STORE_CRAVINGS,
         STORE_MEETINGS: STORE_MEETINGS,
+        STORE_CHECKINS: STORE_CHECKINS,
         open: open,
         get: get,
         getAll: getAll,

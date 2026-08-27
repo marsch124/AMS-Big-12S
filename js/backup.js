@@ -46,6 +46,8 @@
             // Meetings you were at. The count is the thing, so it moves phones
             // with everything else.
             meetings: state.meetings,
+            // What was worked out before a conversation, and what came of it.
+            checkins: state.checkins,
             // The days the app has been opened. A run of them is worth nothing
             // if it starts again on a new phone.
             visits: state.visits || []
@@ -161,7 +163,7 @@
     function restoreBackup(payload, mode) {
         mode = mode || 'merge';
         var summary = { notes: 0, bookmarks: 0, inventory: 0, cravings: 0, meetings: 0,
-                        bookText: false, mode: mode };
+                        checkins: 0, bookText: false, mode: mode };
 
         var prepare = mode === 'replace'
             ? Promise.all([
@@ -169,7 +171,8 @@
                 DB.clear(DB.STORE_BOOKMARKS),
                 DB.clear(DB.STORE_INVENTORY),
                 DB.clear(DB.STORE_CRAVINGS),
-                DB.clear(DB.STORE_MEETINGS)
+                DB.clear(DB.STORE_MEETINGS),
+                DB.clear(DB.STORE_CHECKINS)
             ])
             : Promise.resolve();
 
@@ -223,12 +226,23 @@
             });
             summary.meetings = meetings.length;
 
+            // Absent from anything written before 2.14, same rule again.
+            var existingCheckins = {};
+            if (mode === 'merge') {
+                Store.state.checkins.forEach(function (row) { existingCheckins[row.id] = row; });
+            }
+            var checkins = (payload.checkins || []).map(function (row) {
+                return newerOf(row, existingCheckins[row.id]);
+            });
+            summary.checkins = checkins.length;
+
             return Promise.all([
                 DB.putMany(DB.STORE_NOTES, notes),
                 DB.putMany(DB.STORE_BOOKMARKS, bookmarks),
                 DB.putMany(DB.STORE_INVENTORY, inventory),
                 DB.putMany(DB.STORE_CRAVINGS, cravings),
-                DB.putMany(DB.STORE_MEETINGS, meetings)
+                DB.putMany(DB.STORE_MEETINGS, meetings),
+                DB.putMany(DB.STORE_CHECKINS, checkins)
             ]);
         }).then(function () {
             if (payload.book && payload.book.sections && payload.book.sections.length) {
