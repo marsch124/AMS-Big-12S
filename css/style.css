@@ -18,7 +18,7 @@
   --text:      #2b2925;
   --text-dim:  #77716a;
   --rule:      #ebe6db;
-  --accent:    #0078cf;
+  --accent:    #0072c5;
   --accent-on: #ffffff;
   --mark:      #ffe08a;
   --danger:    #c4452f;
@@ -31,11 +31,11 @@
 
   /* One colour per place. Each clears 4.5:1 on both grounds — --accent is
      small bold type in a dozen places, not only icons. */
-  --hue-home:     #c95100;
-  --hue-library:  #0078cf;
+  --hue-home:     #bf4d00;
+  --hue-library:  #0072c5;
   --hue-steps:    #6d28d9;
-  --hue-notes:    #00872d;
-  --hue-search:   #008282;
+  --hue-notes:    #00822b;
+  --hue-search:   #007d7d;
   --wash: #fff4d9;
 
   /* The home tiles. A tile is coloured by where it takes you, not by where it
@@ -49,9 +49,13 @@
   --tile-sponsee: #22bb66;  --tile-sponsee-on: #0a542f;
   --tile-message: #f0559b;  --tile-message-on: #730039;
   --tile-write:   #f7d117;  --tile-write-on:   #7d690a;
-  --who-sponsor:  var(--tile-sponsor);
-  --who-sponsee:  var(--tile-sponsee);
-  --who-spouse:   #e11d48;
+  /* A person's colour, for TYPE — pills, headings, the flag under a paragraph,
+     the edge on their cards. These were aliases of --tile-* until 2.29, and a
+     tile is a bright fill chosen against white: as small bold text the sponsee
+     green measured 2.41:1. Same hue as the tile, made fit for reading. */
+  --who-sponsor:  #7f54e2;
+  --who-sponsee:  #178046;
+  --who-spouse:   #d91c46;
 
   /* The craving screen. Five rows that look identical are five things to read
      at the worst possible moment; a colour each is a thing to reach for, and
@@ -84,21 +88,21 @@
   --bg-sunken: #ebe0c8;
   --paper:     #f4ecd8;
   --text:      #3a3226;
-  --text-dim:  #7a6b55;
+  --text-dim:  #756751;
   --rule:      #ddceb0;
-  --accent:    #8c6d46;
+  --accent:    #7f6340;
   --accent-on: #ffffff;
   --mark:      #e8c98a;
   --danger:    #a4402f;
   --shadow:      0 1px 2px rgba(58, 50, 38, 0.05), 0 4px 12px rgba(58, 50, 38, 0.05);
   --shadow-lift: 0 2px 5px rgba(58, 50, 38, 0.08), 0 10px 24px rgba(58, 50, 38, 0.09);
 
-  --hue-home:     #8c6d46;
-  --hue-library:  #8c6d46;
-  --hue-steps:    #8c6d46;
-  --hue-notes:    #8c6d46;
-  --hue-search:   #8c6d46;
-  --hue-settings: #8c6d46;
+  --hue-home:     #7f6340;
+  --hue-library:  #7f6340;
+  --hue-steps:    #7f6340;
+  --hue-notes:    #7f6340;
+  --hue-search:   #7f6340;
+  --hue-settings: #7f6340;
   --wash: #f4ecd8;
 
   --tile-read:    #8c6d46;  --tile-read-on:    #fbf6ea;
@@ -107,9 +111,9 @@
   --tile-sponsee: #8c6d46;  --tile-sponsee-on: #fbf6ea;
   --tile-message: #8c6d46;  --tile-message-on: #fbf6ea;
   --tile-write:   #8c6d46;  --tile-write-on:   #fbf6ea;
-  --who-sponsor:  #8c6d46;
-  --who-sponsee:  #8c6d46;
-  --who-spouse:   #8c6d46;
+  --who-sponsor:  #7f6340;
+  --who-sponsee:  #7f6340;
+  --who-spouse:   #7f6340;
 
   --move-breathe: #8c6d46;  --move-breathe-on: #fbf6ea;
   --move-headon:  #8c6d46;  --move-headon-on:  #fbf6ea;
@@ -128,16 +132,16 @@
   --text:      #1c1a17;
   --text-dim:  #6b6862;
   --rule:      #e4e7ec;
-  --accent:    #0078cf;
+  --accent:    #0072c5;
   --mark:      #ffe08a;
   --shadow:      0 1px 2px rgba(20, 24, 32, 0.05), 0 5px 14px rgba(20, 24, 32, 0.06);
   --shadow-lift: 0 2px 5px rgba(20, 24, 32, 0.08), 0 12px 28px rgba(20, 24, 32, 0.10);
 
-  --hue-home:     #c95100;
-  --hue-library:  #0078cf;
+  --hue-home:     #bf4d00;
+  --hue-library:  #0072c5;
   --hue-steps:    #6d28d9;
-  --hue-notes:    #00872d;
-  --hue-search:   #008282;
+  --hue-notes:    #00822b;
+  --hue-search:   #007d7d;
   --hue-settings: #b03a7a;
   --wash: #e6f1fb;
 }
@@ -174,6 +178,12 @@
   --tile-sponsee: #22bb66;  --tile-sponsee-on: #00351a;
   --tile-message: #f0559b;  --tile-message-on: #4d0025;
   --tile-write:   #f7d117;  --tile-write-on:   #4f4300;
+  /* --who-* is aliased to the tiles in the light themes, but a tile colour is
+     a *fill* picked against white; used as type on a dark ground the sponsor
+     violet came out at 3.67:1. Lifted here, the same way every --hue-* is.
+     It is still one colour per person — the same hue, fit for the ground. */
+  --who-sponsor:  #a78bfa;
+  --who-sponsee:  #22bb66;
   --who-spouse:   #f4708d;
 
   --move-breathe: #0eb5c9;  --move-breathe-on: #04343b;

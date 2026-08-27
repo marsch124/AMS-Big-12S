@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.28 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.29 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,35 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## The palette audit (2.29)
+
+**There is now a smoke check that walks every type colour through all four
+themes** — Morning, Sepia, Light, Dark — and measures it against both `--bg`
+and `--bg-raised`, failing under 4.5:1. It exists because looking at dark mode
+for the first time after the colour work found `--who-sponsor` at 3.67:1, and
+running the audit properly then found seven more.
+
+**`--who-*` are TYPE colours and must never alias `--tile-*` again.** A tile is
+a bright fill chosen to sit under an icon; the same value as small bold text
+measured **2.41:1** for the sponsee green. They are now explicit per theme:
+deep in the light themes, lifted in dark. Same hue, fit for the job — exactly
+the split `--hue-*` and `--tile-*` already had, which I should have followed
+from the start.
+
+**Design against `--bg`, not against `#ffffff`.** Four `--hue-*` values were
+computed against pure white and landed at 4.24–4.47 on the app's actual
+off-white ground. The audit uses the real grounds, so this cannot recur.
+
+**Sepia had been at 4.06:1 since version one** (`#8c6d46` on `#fbf6ea`) and is
+now `#7f6340`. Barely a visible change; it puts the oldest colour in the app
+over the bar.
+
+**Cross-screen colour checks compare hue, not value.** `sameHue()` at the top of
+the smoke test is the shared helper. "One colour per person" is a claim about
+hue: the fill, the type and the dark-theme variant are all the same colour at
+different lightnesses, and asserting exact equality made five checks fail the
+moment the palette was corrected — the checks were wrong, not the fix.
 
 ## The message and bounce screens (2.28) — the last two
 
@@ -1079,7 +1108,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    485 end-to-end browser checks
+tools/smoke-test.js    486 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -1091,7 +1120,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 485 checks, expect 485/485
+node tools/smoke-test.js                  # 486 checks, expect 486/486
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

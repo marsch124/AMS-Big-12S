@@ -30,6 +30,28 @@ function check(name, ok, detail) {
     console.log((ok ? '  PASS  ' : '  FAIL  ') + name + (detail ? '  — ' + detail : ''));
 }
 
+/* "One colour per person" is a claim about hue, not about an exact value: a
+ * tile is a bright fill and a pill is type that has to clear 4.5:1, so the two
+ * are the same colour at different lightnesses, and differently again on a dark
+ * ground. Compare the part that carries the meaning. */
+function hueOf(rgb) {
+    const [r, g, b] = rgb.match(/\d+/g).slice(0, 3).map((n) => n / 255);
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    if (max === min) return 0;
+    const d = max - min;
+    let h;
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    return ((h * 60) + 360) % 360;
+}
+
+function sameHue(a, b, within = 15) {
+    const gap = Math.abs(hueOf(a) - hueOf(b));
+    return Math.min(gap, 360 - gap) < within;
+}
+
 async function shot(page, name) {
     if (!SHOT_DIR) return;
     fs.mkdirSync(SHOT_DIR, { recursive: true });
@@ -159,18 +181,6 @@ async function openContents(page) {
     // exact value: a chip is a bright fill and a tab label is type that has to
     // clear 4.5:1, so the two are the same colour at different lightnesses.
     // Compare the hue angle, which is the part that carries the meaning.
-    const hueAngle = (rgb) => {
-        const [r, g, b] = rgb.match(/\d+/g).slice(0, 3).map((n) => n / 255);
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        if (max === min) return 0;
-        const d = max - min;
-        let h;
-        if (max === r) h = ((g - b) / d) % 6;
-        else if (max === g) h = (b - r) / d + 2;
-        else h = (r - g) / d + 4;
-        return ((h * 60) + 360) % 360;
-    };
     const readTabColour = await page.$eval('.tab[data-screen="library"]', (n) => {
         const was = n.className;
         const hue = document.documentElement.getAttribute('data-hue');
@@ -181,11 +191,10 @@ async function openContents(page) {
         document.documentElement.setAttribute('data-hue', hue);
         return c;
     });
-    const readGap = Math.abs(hueAngle(tiles.filter((t) => t.id === 'read')[0].chip) -
-                             hueAngle(readTabColour));
     check('the read tile is the Read tab\'s colour, brightened',
-        Math.min(readGap, 360 - readGap) < 15,
-        readGap.toFixed(1) + '° apart');
+        sameHue(tiles.filter((t) => t.id === 'read')[0].chip, readTabColour),
+        Math.abs(hueOf(tiles.filter((t) => t.id === 'read')[0].chip) -
+                 hueOf(readTabColour)).toFixed(1) + '° apart');
 
     // The craving row is the loudest thing on the home screen. Its accent
     // border was claimed in a comment for three versions while .do-row-alone,
@@ -218,6 +227,53 @@ async function openContents(page) {
         Object.keys(hues).map((t) => hues[t].accent).join(' '));
     await page.click('.tab[data-screen="home"]');
     await page.waitForTimeout(120);
+
+    // ── the palette, in every theme ───────────────────────────────────────
+    // Every colour the app uses as *type* has to clear 4.5:1 on both grounds
+    // of whatever theme is on. This exists because --who-sponsor is aliased to
+    // a tile colour, tiles are fills picked against white, and on the dark
+    // ground it came out at 3.67:1 — invisible from inside the light themes.
+    const paletteTrouble = await page.evaluate(() => {
+        const asText = ['--who-sponsor', '--who-sponsee', '--who-spouse',
+            '--hue-home', '--hue-library', '--hue-steps', '--hue-notes',
+            '--hue-search', '--hue-settings', '--text', '--text-dim', '--danger'];
+        const probe = document.createElement('span');
+        document.body.appendChild(probe);
+        const read = (v) => {
+            probe.style.color = 'var(' + v + ')';
+            return getComputedStyle(probe).color.match(/\d+/g).slice(0, 3).map(Number);
+        };
+        const lum = ([r, g, b]) => {
+            const f = (c) => {
+                const x = c / 255;
+                return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+            };
+            return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+        };
+        const ratio = (a, b) => {
+            const [hi, lo] = lum(a) > lum(b) ? [lum(a), lum(b)] : [lum(b), lum(a)];
+            return (hi + 0.05) / (lo + 0.05);
+        };
+        const was = document.documentElement.getAttribute('data-theme');
+        const bad = [];
+        ['morning', 'sepia', 'light', 'dark'].forEach((theme) => {
+            document.documentElement.setAttribute('data-theme', theme);
+            const bg = read('--bg');
+            const raised = read('--bg-raised');
+            asText.forEach((token) => {
+                const c = read(token);
+                const worst = Math.min(ratio(c, bg), ratio(c, raised));
+                if (worst < 4.5) {
+                    bad.push(theme + ' ' + token + ' ' + worst.toFixed(2));
+                }
+            });
+        });
+        document.documentElement.setAttribute('data-theme', was);
+        probe.remove();
+        return bad;
+    });
+    check('every colour used as type clears 4.5:1 in all four themes',
+        paletteTrouble.length === 0, paletteTrouble.join(' | ') || 'all clear');
 
     // Headings are ink, not the accent. They were the accent colour for one
     // release and it was too much: the colour on a screen belongs in the chips
@@ -859,7 +915,7 @@ async function openContents(page) {
         return c;
     });
     check('and it wears your sponsor\'s colour, not the tab\'s',
-        checkinLook.who === 'sponsor' && checkinLook.strip === sponsorTileColour,
+        checkinLook.who === 'sponsor' && sameHue(checkinLook.strip, sponsorTileColour),
         checkinLook.who + ' strip ' + checkinLook.strip + ' vs tile ' + sponsorTileColour);
 
     const asked = await page.$$eval('#checkin-fields .checkin-label', (e) => e.map((x) => x.textContent));
@@ -2249,7 +2305,7 @@ async function openContents(page) {
         return c;
     });
     check('a passage note wears the colour of the person it is for',
-        paraEdge.tag === 'sponsee' && paraEdge.edge === sponseeTile,
+        paraEdge.tag === 'sponsee' && sameHue(paraEdge.edge, sponseeTile),
         paraEdge.tag + ' ' + paraEdge.edge + ' vs tile ' + sponseeTile);
 
     // A distinctive word out of that same paragraph, so the search below is
@@ -2347,10 +2403,10 @@ async function openContents(page) {
         return out;
     });
     check('a sponsor note is the colour of the sponsor tile on the home screen',
-        forSponsor.edge === tileColours.sponsor,
+        sameHue(forSponsor.edge, tileColours.sponsor),
         forSponsor.edge + ' vs tile ' + tileColours.sponsor);
     check('and the same holds for the sponsee',
-        forSponsee.edge === tileColours.sponsee,
+        sameHue(forSponsee.edge, tileColours.sponsee),
         forSponsee.edge + ' vs tile ' + tileColours.sponsee);
 
     // Settings tells the two conversations apart the same way.
@@ -2363,8 +2419,8 @@ async function openContents(page) {
         })));
     check('the two rule lists in Settings wear the same two colours',
         ruleTitles.length === 2 &&
-        ruleTitles.filter((r) => r.who === 'sponsor')[0].title === tileColours.sponsor &&
-        ruleTitles.filter((r) => r.who === 'sponsee')[0].title === tileColours.sponsee,
+        sameHue(ruleTitles.filter((r) => r.who === 'sponsor')[0].title, tileColours.sponsor) &&
+        sameHue(ruleTitles.filter((r) => r.who === 'sponsee')[0].title, tileColours.sponsee),
         ruleTitles.map((r) => r.who + '=' + r.title).join(' '));
     await page.click('.tab[data-screen="notes"]');
     await page.waitForSelector('#screen-notes.is-active');
