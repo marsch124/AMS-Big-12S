@@ -158,36 +158,64 @@ async function openContents(page) {
         (await page.inputValue('#set-sober-since')) === '2023-03-03');
 
     // ── the rules ─────────────────────────────────────────────────────────
-    // The block above ends on the Settings screen.
-    await page.click('.tab[data-screen="home"]');
-    await page.waitForSelector('#screen-home.is-active');
+    await page.click('.tab[data-screen="settings"]');
+    await page.waitForSelector('#screen-settings.is-active');
 
-    const rules = await page.$$eval('#rules-list li', (e) => e.map((x) => x.textContent));
-    check('the rules are there from the first run', rules.length === 4 &&
-        rules.indexOf('No alcohol') !== -1, rules.join(' · '));
+    const sponsorRules = await page.$$eval('#rules-sponsor-list li', (e) => e.map((x) => x.textContent));
+    check('the sponsor rules are there from the first run', sponsorRules.length === 4 &&
+        sponsorRules.indexOf('No alcohol') !== -1, sponsorRules.join(' · '));
+    check('and the sponsee list starts empty, and says so',
+        (await page.$$eval('#rules-sponsee-list li', (e) => e.length)) === 0 &&
+        await page.isVisible('#rules-sponsee-empty'));
+    check('they are in Settings, not on the home screen',
+        (await page.$$eval('#screen-home .rules-list', (e) => e.length)) === 0);
 
-    await page.click('#rules');
+    await page.click('[data-rules="sponsee"]');
     await page.waitForSelector('#rules-sheet:not([hidden])');
-    check('and the sheet opens on them, one to a line',
-        (await page.inputValue('#rules-sheet-text')).split('\n').length === 4);
-    await page.fill('#rules-sheet-text', 'No alcohol\n\nNo white sugar\nBed by eleven');
+    check('each list is edited on its own',
+        (await page.textContent('#rules-sheet-title')).includes('sponsee') &&
+        (await page.inputValue('#rules-sheet-text')) === '');
+    await page.fill('#rules-sheet-text', 'Ring me before you drink\n\nOne meeting a week');
     await page.click('#rules-save');
     await page.waitForSelector('#rules-sheet', { state: 'hidden' });
-    const edited = await page.$$eval('#rules-list li', (e) => e.map((x) => x.textContent));
+    const sponseeRules = await page.$$eval('#rules-sponsee-list li', (e) => e.map((x) => x.textContent));
     check('editing keeps the order and drops the blank lines',
-        edited.join('|') === 'No alcohol|No white sugar|Bed by eleven', edited.join(' · '));
+        sponseeRules.join('|') === 'Ring me before you drink|One meeting a week',
+        sponseeRules.join(' · '));
+    check('and the sponsor list is untouched by it',
+        (await page.$$eval('#rules-sponsor-list li', (e) => e.length)) === 4);
 
-    await page.click('#rules');
+    await page.click('[data-rules="sponsor"]');
+    await page.waitForSelector('#rules-sheet:not([hidden])');
+    check('the sponsor list opens on its own rules',
+        (await page.inputValue('#rules-sheet-text')).split('\n').length === 4);
     await page.fill('#rules-sheet-text', '');
     await page.click('#rules-save');
     await page.waitForTimeout(150);
-    check('emptying them takes the card off the home screen',
-        await page.$eval('#rules', (e) => e.hasAttribute('hidden')));
+    check('emptying one keeps it empty rather than bringing the defaults back',
+        (await page.$$eval('#rules-sponsor-list li', (e) => e.length)) === 0 &&
+        await page.isVisible('#rules-sponsor-empty'));
 
-    // Put them back, since the rest of the run is looked at as a whole.
-    await page.evaluate(() => Store.saveSettings({ rules: [
-        'No white flour', 'No alcohol', 'No white sugar', 'No substances that trigger'] }));
-    await page.evaluate(() => UI.showScreen('home'));
+    // A backup written under 2.8 carried one list. It belongs to the sponsor.
+    const migrated = await page.evaluate(async () => {
+        const settings = Object.assign({}, Store.state.settings);
+        delete settings.sponsorRules;
+        delete settings.sponseeRules;
+        settings.rules = ['No white flour', 'No alcohol'];
+        await DB.put(DB.STORE_META, settings, 'settings');
+        await Store.loadSettings();
+        return { sponsor: Store.state.settings.sponsorRules,
+                 old: Store.state.settings.rules };
+    });
+    check('an older single list is carried onto the sponsor side',
+        migrated.sponsor.join('|') === 'No white flour|No alcohol' && migrated.old === undefined,
+        JSON.stringify(migrated));
+
+    await page.evaluate(() => Store.saveSettings({
+        sponsorRules: ['No white flour', 'No alcohol', 'No white sugar',
+                       'No substances that trigger'] }));
+    await page.click('.tab[data-screen="home"]');
+    await page.waitForSelector('#screen-home.is-active');
 
     // ── whether you have been here ────────────────────────────────────────
     check('with nothing written, the line says exactly that',

@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=26">
+<link rel="stylesheet" href="css/style.css?v=27">
 </head>
 <body>
 
@@ -44,14 +44,6 @@
       <!-- Whether the practice is still happening. Coloured, because it has a
            direction: quiet while it is recent, warmer as it stretches out. -->
       <p class="lastuse" id="lastuse"></p>
-
-      <!-- The rules as they stand. Short enough to read every day without
-           deciding to, which is the whole point of having them written down. -->
-      <button class="rules" id="rules" hidden>
-        <span class="rules-label">The rules</span>
-        <ul class="rules-list" id="rules-list"></ul>
-        <span class="rules-edit" id="rules-edit"></span>
-      </button>
 
       <button class="passage-card" id="passage-card">
         <span class="passage-label">Today’s passage</span>
@@ -468,6 +460,26 @@
         </label>
       </div>
 
+      <h2 class="section-heading" id="settings-rules">Rules</h2>
+      <div class="panel">
+        <p class="panel-note">
+          What you have agreed. Two lists, because they are two different conversations —
+          what you keep, and what you have asked of someone else. One rule to a line.
+        </p>
+        <div class="ruleset">
+          <h3 class="ruleset-title">With my sponsor</h3>
+          <ul class="rules-list" id="rules-sponsor-list"></ul>
+          <p class="ruleset-empty" id="rules-sponsor-empty" hidden>Nothing written down yet.</p>
+          <button class="btn btn-quiet btn-small" data-rules="sponsor">Change these</button>
+        </div>
+        <div class="ruleset">
+          <h3 class="ruleset-title">With my sponsee</h3>
+          <ul class="rules-list" id="rules-sponsee-list"></ul>
+          <p class="ruleset-empty" id="rules-sponsee-empty" hidden>Nothing written down yet.</p>
+          <button class="btn btn-quiet btn-small" data-rules="sponsee">Change these</button>
+        </div>
+      </div>
+
       <h2 class="section-heading" id="settings-people">People you can ring</h2>
       <div class="panel">
         <p class="panel-note">
@@ -739,6 +751,19 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Two lists of rules, in Settings</span><span class="ver-tag">2.9</span></summary>
+          <div class="disclosure-body">
+            <p>The rules are two lists now — <strong>with my sponsor</strong> and
+               <strong>with my sponsee</strong> — because they are two different
+               conversations: what you keep, and what you have asked of someone else.</p>
+            <p>They have moved to <strong>Settings → Rules</strong> and off the home screen.
+               A rule you have read for a fortnight does not need reading again every
+               morning. Anything already written stays where it was, on the sponsor
+               list.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>The rules, and adjusting where you are</span><span class="ver-tag">2.8</span></summary>
@@ -1483,11 +1508,11 @@
 
 <div class="sheet sheet-tall" id="rules-sheet" hidden>
   <div class="sheet-handle"></div>
-  <h2 class="sheet-title">The rules</h2>
-  <p class="sheet-quote">The ones you have agreed — with your sponsor, or with a sponsee.</p>
+  <h2 class="sheet-title" id="rules-sheet-title">The rules</h2>
+  <p class="sheet-quote" id="rules-sheet-note"></p>
   <textarea id="rules-sheet-text" class="note-input" rows="7"
             placeholder="One rule to a line."></textarea>
-  <p class="hint">One to a line. Leave it empty and the card goes off the home screen.</p>
+  <p class="hint">One to a line. An empty list is kept empty — nothing comes back on its own.</p>
   <div class="btn-row">
     <button class="btn btn-primary" id="rules-save">Save</button>
     <button class="btn btn-quiet" id="rules-cancel">Cancel</button>
@@ -1618,9 +1643,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=4"></script>
-<script src="js/store.js?v=14"></script>
+<script src="js/store.js?v=15"></script>
 <script src="js/backup.js?v=5"></script>
-<script src="js/ui.js?v=25"></script>
-<script src="js/app.js?v=13"></script>
+<script src="js/ui.js?v=26"></script>
+<script src="js/app.js?v=14"></script>
 </body>
 </html>

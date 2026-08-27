@@ -562,30 +562,24 @@ button { cursor: pointer; }
 .progress-bar { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
 .continue-meta { display: block; margin-top: 7px; font-size: 12px; color: var(--text-dim); }
 
-/* The rules as they stand. Read every day without deciding to, which is the
-   point of having them written down at all. */
-.rules {
-  display: block;
-  width: 100%;
-  text-align: left;
-  border: 1px solid var(--rule);
-  border-radius: 14px;
-  background: var(--bg-raised);
-  color: var(--text);
-  padding: 13px 15px 12px;
-  margin-bottom: 12px;
-}
-.rules[hidden] { display: none; }
-.rules:active { background: var(--bg-sunken); }
-.rules-label {
-  display: block;
+/* Two lists of rules, in Settings. Kept apart because they are two different
+   conversations: what you keep, and what you have asked of someone else. */
+.ruleset { padding: 13px 0; border-bottom: 1px solid var(--rule); }
+.ruleset:last-child { border-bottom: 0; }
+.ruleset-title {
+  margin: 0;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--accent);
 }
+.ruleset-empty { margin: 8px 0 0; font-size: 14px; color: var(--text-dim); }
+.ruleset-empty[hidden] { display: none; }
+.ruleset .btn { margin-top: 11px; }
+
 .rules-list { margin: 8px 0 0; padding: 0; list-style: none; }
+.rules-list:empty { display: none; }
 .rules-list li {
   position: relative;
   padding-left: 15px;
@@ -602,8 +596,6 @@ button { cursor: pointer; }
   border-radius: 50%;
   background: var(--accent);
 }
-.rules-edit { display: block; margin-top: 9px; font-size: 12px; color: var(--text-dim); }
-
 .toc { display: flex; flex-direction: column; }
 .toc-item {
   display: flex;

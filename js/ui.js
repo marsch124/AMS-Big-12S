@@ -183,7 +183,6 @@
     function renderHome() {
         startClock();
         renderDayCount();
-        renderRules();
         renderPassage();
         renderContinueCard('home-continue');
         renderShortcuts();
@@ -233,45 +232,6 @@
 
         line.textContent = 'Nothing read or written for ' + days + ' days.';
         line.classList.add(days >= 7 ? 'is-cold' : 'is-warm');
-    }
-
-    function currentRules() {
-        return (Store.state.settings.rules || []).filter(function (rule) {
-            return String(rule).trim().length > 0;
-        });
-    }
-
-    function renderRules() {
-        var card = $('rules');
-        var rules = currentRules();
-        card.hidden = !rules.length;
-        if (!rules.length) return;
-
-        var list = $('rules-list');
-        list.innerHTML = '';
-        rules.forEach(function (rule) {
-            var item = document.createElement('li');
-            item.textContent = rule;
-            list.appendChild(item);
-        });
-        $('rules-edit').textContent = rules.length === 1
-            ? 'One rule · tap to change it'
-            : rules.length + ' rules · tap to change them';
-    }
-
-    function openRulesSheet() {
-        $('rules-sheet-text').value = currentRules().join('\n');
-        openSheet('rules-sheet');
-    }
-
-    function saveRulesSheet() {
-        var rules = $('rules-sheet-text').value.split('\n')
-            .map(function (line) { return line.trim(); })
-            .filter(function (line) { return line.length > 0; });
-        Store.saveSettings({ rules: rules }).then(function () {
-            closeSheets();
-            renderRules();
-        });
     }
 
     /*
@@ -3265,10 +3225,69 @@
         });
     }
 
+    /* -------------------------------------------------------------- rules */
+
+    /*
+     * Two lists, because they are two different conversations: what you keep,
+     * and what you have asked of a sponsee. Edited as text, one to a line —
+     * four short lines do not need a row editor, and a textarea is quicker on a
+     * phone than any number of little plus buttons.
+     */
+    var RULE_LISTS = {
+        sponsor: { key: 'sponsorRules', title: 'Rules with my sponsor',
+                   note: 'What you have agreed to keep.' },
+        sponsee: { key: 'sponseeRules', title: 'Rules with my sponsee',
+                   note: 'What you have asked of them.' }
+    };
+
+    var rulesEditing = 'sponsor';
+
+    function rulesFor(which) {
+        return (Store.state.settings[RULE_LISTS[which].key] || []).filter(function (rule) {
+            return String(rule).trim().length > 0;
+        });
+    }
+
+    function renderRules() {
+        Object.keys(RULE_LISTS).forEach(function (which) {
+            var rules = rulesFor(which);
+            var list = $('rules-' + which + '-list');
+            list.innerHTML = '';
+            rules.forEach(function (rule) {
+                var item = document.createElement('li');
+                item.textContent = rule;
+                list.appendChild(item);
+            });
+            $('rules-' + which + '-empty').hidden = rules.length > 0;
+        });
+    }
+
+    function openRulesSheet(which) {
+        rulesEditing = which;
+        $('rules-sheet-title').textContent = RULE_LISTS[which].title;
+        $('rules-sheet-note').textContent = RULE_LISTS[which].note;
+        $('rules-sheet-text').value = rulesFor(which).join('\n');
+        openSheet('rules-sheet');
+    }
+
+    function saveRulesSheet() {
+        var rules = $('rules-sheet-text').value.split('\n')
+            .map(function (line) { return line.trim(); })
+            .filter(function (line) { return line.length > 0; });
+
+        var patch = {};
+        patch[RULE_LISTS[rulesEditing].key] = rules;
+        Store.saveSettings(patch).then(function () {
+            closeSheets();
+            renderRules();
+        });
+    }
+
     /* ----------------------------------------------------------- settings */
 
     function renderSettings() {
         var settings = Store.state.settings;
+        renderRules();
         $('set-theme').value = settings.theme;
         $('set-typeface').value = settings.typeface;
         $('set-fontsize').value = settings.fontSize;
@@ -3427,7 +3446,9 @@
         });
 
         // ── the rules, and where you are in the book ───────────────────────
-        $('rules').addEventListener('click', openRulesSheet);
+        Array.prototype.forEach.call(document.querySelectorAll('[data-rules]'), function (btn) {
+            btn.addEventListener('click', function () { openRulesSheet(btn.dataset.rules); });
+        });
         $('rules-save').addEventListener('click', saveRulesSheet);
         $('rules-cancel').addEventListener('click', closeSheets);
 

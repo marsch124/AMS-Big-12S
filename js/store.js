@@ -25,15 +25,17 @@
         // The first day. Empty until it is set, and the counter stays off the
         // home screen until then rather than showing a nought.
         soberSince: '',
-        // The rules as they stand — the ones agreed with a sponsor, or set with
-        // a sponsee. Seeded with Martin's four; an empty list is a choice and
-        // is kept, so clearing them does not bring them back.
-        rules: [
+        // The rules as they stand, kept apart because they are two different
+        // conversations. Seeded with Martin's four on the sponsor side; an
+        // empty list is a choice and is kept, so clearing one does not bring
+        // the defaults back.
+        sponsorRules: [
             'No white flour',
             'No alcohol',
             'No white sugar',
             'No substances that trigger'
-        ]
+        ],
+        sponseeRules: []
     };
 
     var POSITION_MIRROR_KEY = 'ams-big-12s:position';
@@ -785,6 +787,17 @@
     function loadSettings() {
         return DB.get(DB.STORE_META, 'settings').then(function (saved) {
             state.settings = Object.assign({}, DEFAULT_SETTINGS, saved || {});
+
+            // 2.8 kept one list of rules; 2.9 keeps two. Anything written under
+            // the old key belongs to the sponsor list, and is moved there rather
+            // than being quietly replaced by the defaults. It is written back on
+            // the next save of anything.
+            if (Array.isArray(state.settings.rules)) {
+                if (!(saved && Array.isArray(saved.sponsorRules))) {
+                    state.settings.sponsorRules = state.settings.rules;
+                }
+                delete state.settings.rules;
+            }
             return state.settings;
         });
     }
