@@ -631,38 +631,6 @@
      * you fill in five minutes before a phone call should not be losable by
      * putting the phone down.
      */
-    var CHECKINS = {
-        sponsor: {
-            title: 'Talking to my sponsor',
-            heading: 'Before we talk',
-            empty: 'Nothing waiting for your sponsor. Mark a note for them and it turns up here.',
-            fields: [
-                { id: 'abstinent', label: 'Am I abstinent?', type: 'choice',
-                  choices: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }] },
-                { id: 'forMyself', label: 'What have I done for myself today?' },
-                { id: 'forOthers', label: 'What have I done for others today?' },
-                { id: 'hiding', label: 'Do I hide anything?' },
-                { id: 'feeling', label: 'How do I feel?' },
-                { id: 'questions', label: 'Do I have any questions?' }
-            ]
-        },
-        sponsee: {
-            title: 'Talking to my sponsee',
-            heading: 'Before we talk',
-            empty: 'Nothing waiting for your sponsee. Mark a note for them and it turns up here.',
-            fields: [
-                { id: 'abstinent', label: 'Is he abstinent?', type: 'choice',
-                  choices: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' },
-                            { value: 'unknown', label: 'Don\u2019t know' }] },
-                { id: 'forHimself', label: 'What has he done for himself?' },
-                { id: 'forOthers', label: 'What has he done for others?' },
-                { id: 'okay', label: 'Is he okay?' },
-                { id: 'questions', label: 'Any questions?' }
-            ]
-        }
-    };
-
-    var CHECKIN_NOTES = { id: 'notes', label: 'Notes from the meeting', rows: 4 };
 
     function openCheckin(who, on) {
         current.checkinWho = who;
@@ -672,7 +640,7 @@
 
     function renderCheckin() {
         var who = current.checkinWho || 'sponsor';
-        var spec = CHECKINS[who];
+        var spec = Store.checkinSpec(who);
         var day = current.checkinOn || Store.todayISO();
         var today = day === Store.todayISO();
         var record = Store.checkinFor(who, day);
@@ -698,8 +666,8 @@
                 : checkinText(who, day, field, values[field.id]));
         });
 
-        box.appendChild(checkinText(who, day, CHECKIN_NOTES, (record && record.notes) || '',
-            true));
+        box.appendChild(checkinText(who, day, Store.CHECKIN_NOTES,
+            (record && record.notes) || '', true));
     }
 
     function checkinText(who, day, field, value, isNotes) {
@@ -776,7 +744,7 @@
     }
 
     function checkinSummary(who, row) {
-        var spec = CHECKINS[who];
+        var spec = Store.checkinSpec(who);
         var values = row.values || {};
         var parts = [];
 
@@ -793,6 +761,77 @@
         if (String(row.notes || '').trim()) parts.push('notes from the meeting');
 
         return parts.join(' · ');
+    }
+
+    /*
+     * Taking the day to the meeting. The same shape as copying a step out: you
+     * tick what goes, you see the whole text first, and it goes on the clipboard
+     * rather than anywhere else.
+     */
+    var checkinShareOpts = { notes: true };
+
+    function openCheckinShare() {
+        var who = current.checkinWho || 'sponsor';
+        var day = current.checkinOn || Store.todayISO();
+        var record = Store.checkinFor(who, day);
+        var hasNotes = !!(record && String(record.notes || '').trim());
+
+        checkinShareOpts.notes = true;
+        $('checkin-share-title').textContent = Store.checkinSpec(who).title + ' · ' +
+            (day === Store.todayISO() ? 'today' : formatDay(day));
+
+        // Only offered when there is something to leave out.
+        var holder = $('checkin-share-options');
+        holder.innerHTML = '';
+        if (hasNotes) {
+            var row = document.createElement('label');
+            row.className = 'row';
+            var text = document.createElement('span');
+            text.textContent = Store.CHECKIN_NOTES.label;
+            var box = document.createElement('input');
+            box.type = 'checkbox';
+            box.checked = true;
+            box.addEventListener('change', function () {
+                checkinShareOpts.notes = box.checked;
+                refreshCheckinShare(who, day);
+            });
+            row.appendChild(text);
+            row.appendChild(box);
+            holder.appendChild(row);
+        }
+
+        var send = $('checkin-share-send');
+        send.hidden = !navigator.share;
+        send.onclick = function () {
+            navigator.share({ text: $('checkin-share-preview').value })
+                .then(function () { closeSheets(); })
+                .catch(function () {});
+        };
+
+        $('checkin-share-copy').onclick = function () {
+            var text = $('checkin-share-preview').value;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .then(function () { closeSheets(); toast('Copied'); })
+                    .catch(function () { toast('Could not copy'); });
+            } else {
+                // The preview is a real text box, so there is still a way out.
+                toast('Select the text above and copy it');
+            }
+        };
+
+        refreshCheckinShare(who, day);
+        openSheet('checkin-share-sheet');
+    }
+
+    function refreshCheckinShare(who, day) {
+        var text = Store.checkinAsText(who, day, checkinShareOpts);
+        $('checkin-share-preview').value = text;
+
+        var record = Store.checkinFor(who, day);
+        $('checkin-share-size').textContent = Store.checkinIsEmpty(record)
+            ? 'Nothing has been written for this day yet — only the questions would go.'
+            : 'About ' + text.trim().split(/\s+/).length + ' words.';
     }
 
     function renderCheckinHistory(who, day) {
@@ -3782,6 +3821,8 @@
         $('checkin-write').addEventListener('click', function () {
             openNoteSheet(null, null, null, { tag: current.checkinWho });
         });
+        $('checkin-share').addEventListener('click', openCheckinShare);
+        $('checkin-share-cancel').addEventListener('click', closeSheets);
 
         // ── a meeting ──────────────────────────────────────────────────────
         $('meeting-back').addEventListener('click', function () { showScreen('home'); });

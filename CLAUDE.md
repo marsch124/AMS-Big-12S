@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.14 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.15 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -339,6 +339,13 @@ someone else, with a third answer — *Don't know* — on the abstinence questio
 because you often do not. Both close with *Notes from the meeting*. Do not
 "tidy" the two lists into one shared set: the asymmetry is the point.
 
+**The questions live in `store.js` as `CHECKIN_SPECS`** (moved there in 2.15), not
+in `ui.js`, because `Store.checkinAsText()` composes the copy from them and that
+composer must not scrape the page — the same rule as `stepAsText()`, for the same
+reason: the page is arranged for filling in, a copy is arranged for reading. What
+is unanswered is counted and stated at the end rather than left as a silence.
+`ui.js` reads the spec through `Store.checkinSpec(who)`.
+
 **One record per person per day**, found by the day rather than created afresh —
 coming back in the evening adds to the morning's answers instead of starting a
 second copy. `Store.saveCheckin(who, on, patch)` merges: only what is passed
@@ -508,7 +515,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    317 end-to-end browser checks
+tools/smoke-test.js    324 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -520,7 +527,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 317 checks, expect 317/317
+node tools/smoke-test.js                  # 324 checks, expect 324/324
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

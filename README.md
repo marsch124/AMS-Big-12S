@@ -165,6 +165,12 @@ the abstinence question, because sometimes you do not.
 **Notes from the meeting** closes both — what you want tomorrow is what was
 actually said.
 
+**Copy this page out**, at the foot of either page, turns the day into plain text
+for a message before the call or after it. You see the whole thing before
+anything is copied, the notes from the meeting can be left out with a tick, and
+what you have not answered is counted and said at the end rather than left as a
+silence. Nothing is sent by the app — it goes on the clipboard.
+
 Everything saves as you leave a field. There is no Save button to forget when
 the phone rings, and coming back in the evening adds to the morning's answers
 rather than starting a second copy of them. What you have marked to bring up
@@ -460,7 +466,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 317 checks
+node tools/smoke-test.js      # 324 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that

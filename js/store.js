@@ -1257,6 +1257,39 @@
 
     /* ------------------------------------------------------- the check-ins */
 
+    var CHECKIN_SPECS = {
+        sponsor: {
+            title: 'Talking to my sponsor',
+            heading: 'Before we talk',
+            empty: 'Nothing waiting for your sponsor. Mark a note for them and it turns up here.',
+            fields: [
+                { id: 'abstinent', label: 'Am I abstinent?', type: 'choice',
+                  choices: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }] },
+                { id: 'forMyself', label: 'What have I done for myself today?' },
+                { id: 'forOthers', label: 'What have I done for others today?' },
+                { id: 'hiding', label: 'Do I hide anything?' },
+                { id: 'feeling', label: 'How do I feel?' },
+                { id: 'questions', label: 'Do I have any questions?' }
+            ]
+        },
+        sponsee: {
+            title: 'Talking to my sponsee',
+            heading: 'Before we talk',
+            empty: 'Nothing waiting for your sponsee. Mark a note for them and it turns up here.',
+            fields: [
+                { id: 'abstinent', label: 'Is he abstinent?', type: 'choice',
+                  choices: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' },
+                            { value: 'unknown', label: 'Don’t know' }] },
+                { id: 'forHimself', label: 'What has he done for himself?' },
+                { id: 'forOthers', label: 'What has he done for others?' },
+                { id: 'okay', label: 'Is he okay?' },
+                { id: 'questions', label: 'Any questions?' }
+            ]
+        }
+    };
+
+    var CHECKIN_NOTES = { id: 'notes', label: 'Notes from the meeting', rows: 4 };
+
     /*
      * What you worked out before a conversation, and what came of it. One
      * record a day for each of the two people, found by the day rather than
@@ -1309,6 +1342,59 @@
 
     function deleteCheckin(id) {
         return DB.remove(DB.STORE_CHECKINS, id).then(loadCheckins);
+    }
+
+    function checkinSpec(who) {
+        return CHECKIN_SPECS[who] || CHECKIN_SPECS.sponsor;
+    }
+
+    /*
+     * The day's page as plain text, for pasting into a message before a call or
+     * after one.
+     *
+     * Composed here rather than scraped off the screen, for the same reason a
+     * step is: the page is arranged for filling in, and a copy somebody will
+     * rely on has to be arranged for reading. What has not been answered is
+     * counted and said at the end rather than left as a silence.
+     */
+    function checkinAsText(who, on, options) {
+        options = options || {};
+        var spec = checkinSpec(who);
+        var day = on || todayISO();
+        var row = checkinFor(who, day) || { values: {}, notes: '' };
+        var values = row.values || {};
+        var lines = [spec.title + ' \u2014 ' + dayText(day), ''];
+        var missing = 0;
+
+        spec.fields.forEach(function (field) {
+            var value = String(values[field.id] || '').trim();
+            if (!value) { missing++; return; }
+            if (field.type === 'choice') {
+                var chosen = (field.choices || []).filter(function (choice) {
+                    return choice.value === value;
+                })[0];
+                if (chosen) value = chosen.label;
+            }
+            lines.push(field.label);
+            lines.push(value);
+            lines.push('');
+        });
+
+        var notes = String(row.notes || '').trim();
+        if (notes && options.notes !== false) {
+            lines.push(CHECKIN_NOTES.label);
+            lines.push(notes);
+            lines.push('');
+        }
+
+        if (missing) {
+            lines.push(missing + (missing === 1 ? ' question' : ' questions') +
+                ' not answered yet.');
+            lines.push('');
+        }
+
+        lines.push('Copied from AMS Big 12S on ' + dayText(todayISO()) + '.');
+        return lines.join('\n');
     }
 
     // A day with nothing written on it is not a day you prepared. Used to keep
@@ -1755,6 +1841,9 @@
         saveCheckin: saveCheckin,
         deleteCheckin: deleteCheckin,
         checkinIsEmpty: checkinIsEmpty,
+        checkinSpec: checkinSpec,
+        checkinAsText: checkinAsText,
+        CHECKIN_NOTES: CHECKIN_NOTES,
 
         loadMeetings: loadMeetings,
         saveMeeting: saveMeeting,

@@ -719,6 +719,48 @@ async function openContents(page) {
     check('and the way back to today is one tap',
         (await page.textContent('#checkin-sub')) === 'Today');
 
+    // Taking the day to the meeting.
+    await page.click('#checkin-back');
+    await page.waitForSelector('#screen-home.is-active');
+    await page.click('.shortcut[data-shortcut="sponsor"]');
+    await page.waitForSelector('#screen-checkin.is-active');
+    await page.click('#checkin-share');
+    await page.waitForSelector('#checkin-share-sheet:not([hidden])');
+
+    const outgoing = await page.inputValue('#checkin-share-preview');
+    check('the page copies out headed by the conversation and the day',
+        outgoing.indexOf('Talking to my sponsor') === 0, outgoing.split('\n')[0]);
+    check('with the questions answered, in their own words',
+        outgoing.includes('Am I abstinent?\nYes') &&
+        outgoing.includes('What have I done for myself today?\nSwam before work.'),
+        JSON.stringify(outgoing.slice(0, 90)));
+    check('and what is unanswered said plainly rather than left silent',
+        /\d+ questions not answered yet\./.test(outgoing),
+        (outgoing.match(/\d+ questions not answered yet\./) || [''])[0]);
+    check('the size of it is shown before anything is copied',
+        /About \d+ words\./.test(await page.textContent('#checkin-share-size')),
+        await page.textContent('#checkin-share-size'));
+
+    check('the notes from the meeting go by default, and can be left out',
+        outgoing.includes('easy amends') &&
+        (await page.$$eval('#checkin-share-options input', (e) => e.length)) === 1);
+    await page.click('#checkin-share-options input');
+    await page.waitForTimeout(150);
+    check('and leaving them out is a choice you can see you made',
+        !(await page.inputValue('#checkin-share-preview')).includes('easy amends'));
+    await page.click('#checkin-share-cancel');
+    await page.waitForSelector('#checkin-share-sheet', { state: 'hidden' });
+
+    // A day with nothing on it says so rather than pretending.
+    const emptyDay = await page.evaluate(() => {
+        const day = Store.shiftDay(Store.todayISO(), -30);
+        return { text: Store.checkinAsText('sponsee', day), empty: Store.checkinIsEmpty(
+            Store.checkinFor('sponsee', day)) };
+    });
+    check('an untouched day copies out as the questions and nothing else',
+        emptyDay.empty && emptyDay.text.includes('not answered yet'),
+        emptyDay.text.split('\n').slice(-3).join(' / '));
+
     // Clear up: later checks count notes.
     await page.evaluate(async () => {
         for (const note of Store.state.notes.filter((n) => n.tag === 'sponsee')) {
