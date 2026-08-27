@@ -8,6 +8,12 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
 - **Repo:** `marsch124/AMS-Big-12S` (public), default branch `main`
 - **Live:** https://marsch124.github.io/AMS-Big-12S/ — GitHub Pages, deploy from
   `main` / root. It is **on**; pushing to `main` republishes automatically.
+- **Publishing is not a question to put to Martin.** Finish the work, run the
+  smoke test, and if it is green, merge to `main` and tell him it is live and
+  what changed. He gave standing permission on 2026-08-27 and does not want the
+  branch-and-merge step in front of him: he cannot read a diff on a phone, and
+  the suite is the real gate. Only hold a change back if he asked for that piece
+  of work to be held. A bad release is reverted, not prevented by asking.
 - **Current version:** 2.3 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
@@ -257,7 +263,8 @@ chips follow. "Notes written" is `state.notes.length` because that is what the
 Notes tab's All list contains, answers included. "Steps worked on" goes through
 `Store.stepProgress()`, never a hand count.
 
-**Settled already — do not re-ask.** Sponsor (not "spindrift", a transcription
+**Settled already — do not re-ask.** Publishing: green suite, then merge and say
+so. Sponsor (not "spindrift", a transcription
 slip). Chapter-and-passage references, no page numbers: the Dover pagination does
 not match the edition people quote. Explanations in my voice, editable by him.
 Step 4 gets full tables, not free text. Step work rides the normal backup, with a
