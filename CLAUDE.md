@@ -23,17 +23,36 @@ https://claude.ai/code/artifact/b467fb04-03e9-4f26-aa77-7f8f18b8c433
 | Phase 3 | done | Dated notes per step, folded when long |
 | Phase 4 | done | Answerable questions keeping every earlier answer; hide, add your own |
 | Phase 5 | **done** | Writing the twelve. **All twelve are written. 83 references resolve, none ambiguous. No stubs remain.** |
-| Phase 6 | **in progress** | Each step's own work — block 5 below. **Built: `inventory-tables` (4), `amends-list` (8), `amends-progress` (9). Five kinds still declared-only.** |
+| Phase 6 | **in progress** | Each step's own work — block 5 below. **Built: `inventory-tables` (4), `amends-list` (8), `amends-progress` (9), `daily-entries` (10), `daily-practice` (11). Five kinds still declared-only, so seven of twelve steps show no work section.** |
 | Phase 7 | to do | Progress on the list, copy a step out for a sponsor, docs, v2.0 |
 
-**Next: `daily-entries` (10) and `daily-practice` (11), as a pair.** They share a
-rhythm unlike anything built so far — short, dated, repeated daily — and want a
-run or a streak rather than a list. The record already carries `on`, so the work
-is mostly the rendering: an entry per day, this week visible at a glance, and no
-guilt-inducing empty grid for the days you missed. After those: `prayer` (3 and
-7, the smallest, and `on` covers it), `two-lists` (1 and 2),
-`carried-defects` (6, which annotates step 4's rows exactly as step 9 annotates
-step 8's), and `people-worked-with` (12).
+**Audited 2026-08-27 against the running app, not from memory.** Every step page
+was opened in a browser and checked for a work section. Five of twelve show one
+(4, 8, 9, 10, 11); seven do not (1, 2, 3, 5, 6, 7, 12), because their declared
+`work.kind` has no branch in `renderStepWork()`. The dispatcher hides the section
+rather than showing an empty one, so this is invisible unless you go looking.
+
+Remaining kinds, smallest first:
+
+| kind | steps | note |
+|---|---|---|
+| `prayer` | 3, 7 | Smallest. The record already carries `on`; this is a dated list and the prayer text pulled from the book. |
+| `two-lists` | 1, 2 | Two free lists side by side. |
+| `sittings` | 5 | Who, when, and what was held back. **Was missing from this list until the audit** — do not lose it again. |
+| `carried-defects` | 6 | Annotates step 4's rows exactly as step 9 annotates step 8's. |
+| `people-worked-with` | 12 | Ties to the sponsee tag the Notes tab already has. |
+
+Also open, all Phase 7:
+
+- **The Steps list undercounts.** Its per-step number comes from
+  `Store.notesForStep()`, which deliberately excludes answers and work rows.
+  Answer eight questions on step 1 and the row still shows nothing. Progress on
+  the list needs to count notes, answers and work together.
+- **No way to copy a step out** for a sponsor — never started.
+- **README** still describes the Steps tab in Phase 2 terms: no mention of the
+  inventory tables, the amends list, or the daily practice.
+- **The plan artifact** (linked above) predates all of this and still reads as
+  though nothing is built.
 
 Build them by adding a branch in `renderStepWork()` in `ui.js`. Step 4's build is
 the pattern to copy: rows in their own IndexedDB store, carried explicitly by
