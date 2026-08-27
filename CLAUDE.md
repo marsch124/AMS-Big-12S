@@ -16,6 +16,29 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   of work to be held. A bad release is reverted, not prevented by asking.
 - **Current version:** 2.34 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
+## Noticed, not asked for
+
+Two things that came out of looking at all fourteen screens across all three
+themes at the end of the 2.34 colour work. **Neither has been put to Martin and
+neither is agreed.** Do not act on them unasked — raise them if the subject
+comes up, and if he says yes they are a piece of work like any other.
+
+**The Traditions page is the weakest screen in every theme.** It is a wall of
+explanatory prose under a switch, and it does not use its room the way the other
+screens use theirs. Every other screen has something with shape in it — cards,
+chips, a list with marks — and that one has paragraphs. It reads as the last
+screen still built like a document. Any fix has to respect the hard rule that
+the Traditions' own wording is not in this app and is not going into it, so
+whatever gives that page shape has to come from the 1939 references, the
+questions and the log, not from quoting the twelve.
+
+**Dark handles the reader better than the light themes do.** `--paper` there is
+a warm near-black against cool grey rooms, so the book plainly reads as a
+different kind of surface. In Morning and Light the same distinction is much
+subtler — cream against warm or cool white — and it could be pushed. Worth being
+careful: the reader is the one screen the colour work deliberately left alone,
+and making it *more* distinct is a different thing from making it colourful.
+
 ## Where this is up to
 
 The twelve-step section was built in phases, all of them now done. The design
