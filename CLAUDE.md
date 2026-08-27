@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.21 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.22 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,44 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## How this works, rewritten (2.22)
+
+**The section is written for somebody who is not at their best.** Martin's brief:
+"It should be read by a person in distress and therefore needs to be very easy to
+understand. Although the app is rather complex by now." That is the bar for
+anything added to it later.
+
+**Order is part of the feature, and there is a test on it.** The panels are in the
+order they matter, not the order they were built — `Start here`, then the crisis
+pages, then reading and notes, then the twelve steps, then housekeeping, ending on
+`Nothing leaves this phone`. Before this, a bookmark feature was the first thing in
+the section and the craving page was fifth, nine hundred words down. Do not append
+a new panel to the bottom out of habit; put it where it belongs and move the smoke
+check's expectations if the ends change.
+
+**`Start here` answers four things**, and the smoke checks name them: why the app
+exists, that nothing written in it leaves the phone, how the rest of the section is
+arranged, and an ordinary week in six lines. It opens by pointing at the craving
+page and saying nothing below is urgent — the one reader who most needs a way out
+of a settings screen is the one this section is written for.
+
+**No sentence in the section may run past 40 words**, and a smoke check enforces
+it across every panel. The worst offender had been 52 words of nested clauses. The
+check reads `textContent`, not `innerText`: these panels are shut, `innerText` is
+empty on hidden elements, and the first version of this check passed by measuring
+nothing at all. It also asserts it saw over 1,500 words, so it cannot go hollow
+again.
+
+**Two panels were misnamed.** *Taking a step out of the app* sounded like leaving
+the app when it meant copying a step out for a call; it is now *Copying a step out,
+before a call*. *Where your reading lives* is now *Nothing leaves this phone*.
+Titles here are read by somebody scanning, so they say what is inside rather than
+being pleasing.
+
+**Watch the pronouns.** The craving panel had *one* and *ones* standing in for
+*craving* across a whole paragraph. In the middle of one is exactly where a reader
+should not have to work out a referent.
 
 ## The Twelve Traditions (2.21)
 
@@ -824,7 +862,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    442 end-to-end browser checks
+tools/smoke-test.js    453 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -836,7 +874,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 442 checks, expect 442/442
+node tools/smoke-test.js                  # 453 checks, expect 453/453
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

@@ -2787,6 +2787,73 @@ async function openContents(page) {
     });
     check('half past six in the evening reads 18:35', evening === '18:35', evening);
 
+    // ── how this works ────────────────────────────────────────────────────
+    // This section is read by somebody who may not be at their best, so its
+    // shape is part of the feature: the way in comes first, the crisis page
+    // next, and the housekeeping last. Order is asserted, not left to whoever
+    // appends the next panel to the bottom.
+    const howPanels = await page.$$eval(
+        '#screen-settings .panel-flush > .disclosure > summary',
+        (nodes) => nodes.map((n) => n.textContent.trim()));
+    check('How this works opens with the way in', howPanels[0] === 'Start here',
+        howPanels[0]);
+    check('and the craving page is second, not buried',
+        howPanels[1] === 'When a craving comes', howPanels[1]);
+    check('and the housekeeping sits at the bottom',
+        howPanels[howPanels.length - 1] === 'Nothing leaves this phone',
+        howPanels[howPanels.length - 1]);
+    check('every panel folds away shut', !(await page.$$eval(
+        '#screen-settings .panel-flush > .disclosure',
+        (nodes) => nodes.some((n) => n.hasAttribute('open')))));
+
+    // Start here has to answer three questions to be worth its place: why the
+    // app exists, what happens to what you write, and what a normal week is.
+    await page.click('#screen-settings .panel-flush > .disclosure:first-child > summary');
+    await page.waitForTimeout(150);
+    const startHere = await page.$eval(
+        '#screen-settings .panel-flush > .disclosure:first-child .disclosure-body',
+        (e) => e.innerText);
+    check('it points at the craving page before anything else',
+        startHere.indexOf('I have a craving') > -1 &&
+        startHere.indexOf('I have a craving') < startHere.indexOf('Why this exists'));
+    check('it says why the app exists', /Why this exists/.test(startHere));
+    check('it says nothing written leaves the phone',
+        /leaves this phone unless you send it yourself/.test(startHere));
+    check('it says how the rest of the section is arranged',
+        /What is below/.test(startHere));
+    check('and walks through an ordinary week',
+        /An ordinary week/.test(startHere) &&
+        (await page.$$eval(
+            '#screen-settings .panel-flush > .disclosure:first-child li',
+            (e) => e.length)) === 6);
+    await page.click('#screen-settings .panel-flush > .disclosure:first-child > summary');
+
+    // No sentence in the section may run past 40 words. The long ones were
+    // the actual fault here: fifty-two words of subordinate clauses is not
+    // readable by somebody white-knuckling it.
+    // textContent, not innerText: these panels are shut, and innerText reads
+    // as empty on anything hidden — which would pass this check by measuring
+    // nothing at all.
+    const longest = await page.$$eval('#screen-settings .panel-flush .disclosure-body',
+        (bodies) => {
+            let worst = 0;
+            let text = '';
+            let seen = 0;
+            bodies.forEach((b) => {
+                const flat = b.textContent.replace(/\s+/g, ' ').trim();
+                seen += flat.split(' ').length;
+                flat.split(/(?<=[.!?])\s+/).forEach((sentence) => {
+                    const words = sentence.trim().split(/\s+/).length;
+                    if (words > worst) { worst = words; text = sentence; }
+                });
+            });
+            return { worst: worst, text: text, seen: seen };
+        });
+    check('the whole section is actually being read to check it',
+        longest.seen > 1500, longest.seen + ' words');
+    check('no sentence in it runs past 40 words', longest.worst <= 40,
+        longest.worst + 'w: ' + longest.text.slice(0, 70));
+
     // The whole version history is one row until it is asked for, and carries
     // the version actually running rather than a number typed into the markup.
     check('the version history is folded away, in one row',
