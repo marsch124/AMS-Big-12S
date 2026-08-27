@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=17">
+<link rel="stylesheet" href="css/style.css?v=18">
 </head>
 <body>
 
@@ -169,6 +169,11 @@
           <p class="hint" id="step-work-intro"></p>
           <div id="step-work-body"></div>
         </div>
+
+        <h2 class="section-heading">Taking it with you</h2>
+        <button class="btn btn-quiet btn-block" id="step-copy">Copy this step out</button>
+        <p class="hint">For a sponsor, before a call. You choose what goes, and you see it
+           before it leaves.</p>
       </div>
     </div>
   </section>
@@ -985,6 +990,22 @@
   <button class="btn btn-quiet btn-block" id="type-close">Done</button>
 </div>
 
+<div class="sheet sheet-tall" id="share-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title" id="share-title">Copy this step</h2>
+  <p class="hint">Only what you tick goes, and nothing is sent by this app — it is put on the
+     clipboard for you to paste wherever you like.</p>
+  <div id="share-options"></div>
+  <p class="sheet-label">What will be copied</p>
+  <textarea id="share-preview" class="note-input share-preview" rows="9" readonly></textarea>
+  <p class="hint" id="share-size"></p>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="share-copy">Copy</button>
+    <button class="btn btn-quiet" id="share-send" hidden>Share…</button>
+    <button class="btn btn-quiet" id="share-cancel">Close</button>
+  </div>
+</div>
+
 <div class="sheet" id="paste-sheet" hidden>
   <div class="sheet-handle"></div>
   <h2 class="sheet-title" id="paste-title">Paste</h2>
@@ -1000,9 +1021,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=2"></script>
-<script src="js/store.js?v=7"></script>
+<script src="js/store.js?v=8"></script>
 <script src="js/backup.js?v=3"></script>
-<script src="js/ui.js?v=16"></script>
+<script src="js/ui.js?v=17"></script>
 <script src="js/app.js?v=5"></script>
 </body>
 </html>

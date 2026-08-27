@@ -727,9 +727,9 @@ async function shot(page, name) {
     await page.waitForSelector('#screen-steps.is-active');
     check('the steps list counts what you have written',
         (await page.$eval('.step-item >> nth=0', (e) => {
-            const pill = e.querySelector('.step-count');
-            return pill ? pill.textContent : '';
-        })) === '3');
+            const line = e.querySelector('.step-progress');
+            return line ? line.textContent : '';
+        })) === '3 notes');
 
     await page.click('.step-item >> nth=9');
     check('every step takes a journal entry, written or not',
@@ -1181,6 +1181,104 @@ async function shot(page, name) {
     check('the record survives a reload',
         (await page.$$eval('.prayer-record', (e) => e.length)) === 2);
     await page.click('#step-back');
+
+    // ── progress on the list ──────────────────────────────────────────────
+
+    /*
+     * The list counted journal entries and nothing else, so a step with eight
+     * questions answered and an inventory filled in still read as untouched.
+     * All three count now, and each kind of work names its own rows — "2
+     * sittings", not "2 entries", which is true of everything and says nothing.
+     */
+    await page.click('.tab[data-screen="steps"]');
+    await page.waitForSelector('#screen-steps.is-active');
+    const rows = await page.$$eval('.step-item', (items) => items.map((item) => ({
+        line: (item.querySelector('.step-progress') || {}).textContent || '',
+        when: (item.querySelector('.step-when') || {}).textContent || ''
+    })));
+
+    check('the list counts answers, notes and work together',
+        /1 of 9 answered/.test(rows[0].line) && /3 notes/.test(rows[0].line) &&
+        /1 item/.test(rows[0].line), rows[0].line);
+
+    check('each kind of work names its own rows',
+        /2 sittings/.test(rows[4].line) && /2 names/.test(rows[7].line),
+        rows[4].line + '  |  ' + rows[7].line);
+
+    // Step nine owns no rows: it writes onto step eight's. Counting those as its
+    // own would show it finished the moment step eight had names in it.
+    check('a step that annotates another’s rows counts only what it wrote on',
+        /1 amend recorded/.test(rows[8].line), rows[8].line);
+
+    check('a step with nothing written says nothing, rather than three zeros',
+        rows[1].line === '' && rows[1].when === '');
+
+    check('and a worked step carries the day it was last worked',
+        /\w/.test(rows[0].when), rows[0].when);
+    await shot(page, 'shot-steps.png');
+
+    // ── taking a step out of the app ──────────────────────────────────────
+    await page.click('.step-item >> nth=0');
+    await page.waitForSelector('#screen-step.is-active');
+    await page.click('#step-copy');
+    await page.waitForSelector('#share-sheet:not([hidden])');
+
+    const preview = () => page.inputValue('#share-preview');
+    let out = await preview();
+    check('a step comes out headed by its number and its own wording',
+        out.indexOf('Step 1 · Powerless') === 0 && /powerless over alcohol/i.test(out));
+    check('carrying the latest answer, the notes and the work',
+        /Questions and answers/.test(out) && /Second time round/.test(out) &&
+        /First read of step one/.test(out) && /The work of this step/.test(out));
+    check('the earlier answers stay behind unless they are asked for',
+        !/It goes further than I plan/.test(out));
+    check('what is unanswered is said plainly rather than left to be guessed',
+        /8 questions not answered yet/.test(out), (out.match(/\d+ questions? not answered yet/) || [])[0]);
+    check('and the size of it is shown before anything is copied',
+        /^About \d+ words\.$/.test(await page.textContent('#share-size')));
+
+    await page.click('#share-options input[data-key="everyAnswer"]');
+    await page.waitForTimeout(150);
+    out = await preview();
+    check('asking for the history brings every answer back',
+        /It goes further than I plan/.test(out) && /Second time round/.test(out));
+
+    await page.click('#share-options input[data-key="notes"]');
+    await page.waitForTimeout(150);
+    out = await preview();
+    check('a section turned off leaves no empty heading behind',
+        !/Notes on this step/.test(out) && !/First read of step one/.test(out));
+
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.click('#share-copy');
+    await page.waitForSelector('#share-sheet', { state: 'hidden' });
+    const clip = await page.evaluate(() => navigator.clipboard.readText());
+    check('copying puts on the clipboard exactly what was previewed',
+        clip.indexOf('Step 1 · Powerless') === 0 && !/Notes on this step/.test(clip) &&
+        /Copied from AMS Big 12S/.test(clip));
+
+    // Step five holds the most private line in the app, and the page folds it
+    // away. It must not leave the phone because a copy button was pressed.
+    await page.click('#step-back');
+    await page.click('.step-item >> nth=4');
+    await page.waitForSelector('#screen-step.is-active');
+    await page.click('#step-copy');
+    await page.waitForSelector('#share-sheet:not([hidden])');
+    out = await preview();
+    check('a sitting copies out with its date and who it was with',
+        /Nov 2, 2025/.test(out) && /kitchen table/.test(out));
+    check('but what was held back does not go by default',
+        !/money I skated over/.test(out));
+    check('and leaving it out is a choice the reader can see they made',
+        (await page.textContent('#share-options .row:last-child'))
+            .indexOf('What I held back') === 0);
+
+    await page.click('#share-options input[data-key="held"]');
+    await page.waitForTimeout(150);
+    check('ticking it puts it in', /money I skated over/.test(await preview()));
+    await shot(page, 'shot-share.png');
+    await page.click('#share-cancel');
+    await page.waitForSelector('#share-sheet', { state: 'hidden' });
 
     // ── appearance ────────────────────────────────────────────────────────
     await page.click('.tab[data-screen="settings"]');

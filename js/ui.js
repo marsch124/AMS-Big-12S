@@ -448,6 +448,34 @@
 
     /* --------------------------------------------------------------- steps */
 
+    /*
+     * What has been done to a step, in the terms the step itself uses. Only
+     * what is actually there goes in the line: a step with nothing written says
+     * nothing, rather than three zeros.
+     *
+     * This used to be a single badge counting journal entries, which meant
+     * answering eight questions and filling in an inventory left the row
+     * reading as untouched — the app telling the reader they had not done
+     * something they had.
+     */
+    function progressLine(done) {
+        var parts = [];
+        if (done.answered) parts.push(done.answered + ' of ' + done.questions + ' answered');
+        if (done.notes) parts.push(done.notes + (done.notes === 1 ? ' note' : ' notes'));
+        if (done.work) parts.push(done.work + ' ' + done.noun);
+        return parts.join(' · ');
+    }
+
+    // A year only when it is not this one. On a list of twelve, the useful
+    // thing is how long ago — and most of it will be this year.
+    function shortDate(iso) {
+        var date = new Date(iso);
+        if (isNaN(date)) return '';
+        var format = { month: 'short', day: 'numeric' };
+        if (date.getFullYear() !== new Date().getFullYear()) format.year = 'numeric';
+        return date.toLocaleDateString(undefined, format);
+    }
+
     function renderSteps() {
         var data = Store.state.steps || {};
         $('steps-edition').textContent = data.edition || '';
@@ -457,17 +485,19 @@
 
         Store.allSteps().forEach(function (step) {
             var written = Store.stepIsWritten(step);
-            var entries = Store.notesForStep(step.id).length;
+            var done = Store.stepProgress(step.id);
             var item = document.createElement('button');
-            item.className = 'step-item' + (written || entries ? '' : ' is-stub');
+            item.className = 'step-item' + (written || done.total ? '' : ' is-stub');
             item.innerHTML =
                 '<span class="step-num">' + step.number + '</span>' +
                 '<span class="step-body">' +
                   '<span class="step-name">' + escapeHtml(step.shortTitle) + '</span>' +
                   '<span class="step-line">' + escapeHtml(firstWords(Store.stepText(step), 12)) + '</span>' +
+                  (done.total ? '<span class="step-progress">' +
+                      escapeHtml(progressLine(done)) + '</span>' : '') +
                 '</span>' +
-                (entries ? '<span class="step-count" title="entries in your journal">' +
-                    entries + '</span>' : '') +
+                (done.lastAt ? '<span class="step-when">' +
+                    escapeHtml(shortDate(done.lastAt)) + '</span>' : '') +
                 (written ? '<span class="step-go">›</span>' : '<span class="step-soon">soon</span>');
             item.addEventListener('click', function () { openStep(step.id); });
             list.appendChild(item);
@@ -2145,6 +2175,101 @@
         });
     }
 
+    /* ------------------------------------------- taking a step out of the app */
+
+    /*
+     * A step, as text, for the person who is going to hear it.
+     *
+     * What goes is ticked here rather than decided for the reader, because the
+     * right answer differs by step and by who is being sent it. The text is
+     * shown in full before anything is copied — this is the one place in the
+     * app where what is written can leave the phone, and it should never be a
+     * surprise what went.
+     *
+     * The choices persist while the app is open, except the private one, which
+     * starts off every single time.
+     */
+    var shareOpts = { answers: true, notes: true, work: true, everyAnswer: false, held: false };
+
+    function openStepShare(step) {
+        shareOpts.held = false;
+
+        $('share-title').textContent = 'Step ' + step.number + ' · ' + step.shortTitle;
+
+        var options = [
+            { key: 'answers', label: 'Your answers to the questions' },
+            { key: 'notes', label: 'Your notes on this step' },
+            { key: 'work', label: 'The work of this step' },
+            { key: 'everyAnswer', label: 'Earlier answers as well as the latest' }
+        ];
+
+        // A field the page itself keeps folded away — step five's "what I held
+        // back". It is named rather than hidden, so leaving it out is a choice
+        // the reader makes and can see they have made.
+        var priv = Store.privateFields(step);
+        if (priv.length) {
+            options.push({
+                key: 'held',
+                label: priv.map(function (field) { return field.label; }).join(' and ') +
+                    ' — folded away on the page'
+            });
+        }
+
+        var holder = $('share-options');
+        holder.innerHTML = '';
+        options.forEach(function (option) {
+            var row = document.createElement('label');
+            row.className = 'row';
+            var text = document.createElement('span');
+            text.textContent = option.label;
+            var box = document.createElement('input');
+            box.type = 'checkbox';
+            box.checked = !!shareOpts[option.key];
+            box.dataset.key = option.key;
+            box.addEventListener('change', function () {
+                shareOpts[option.key] = box.checked;
+                refreshShare(step);
+            });
+            row.appendChild(text);
+            row.appendChild(box);
+            holder.appendChild(row);
+        });
+
+        var send = $('share-send');
+        send.hidden = !navigator.share;
+        send.onclick = function () {
+            navigator.share({ title: 'Step ' + step.number, text: $('share-preview').value })
+                .then(function () { closeSheets(); })
+                .catch(function () {});
+        };
+
+        $('share-copy').onclick = function () {
+            var text = $('share-preview').value;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .then(function () { closeSheets(); toast('Step ' + step.number + ' copied'); })
+                    .catch(function () { toast('Could not copy'); });
+            } else {
+                // The preview is a real text box, so there is still a way out.
+                toast('Select the text above and copy it');
+            }
+        };
+
+        refreshShare(step);
+        openSheet('share-sheet');
+    }
+
+    function refreshShare(step) {
+        var text = Store.stepAsText(step, shareOpts);
+        $('share-preview').value = text;
+
+        var done = Store.stepProgress(step.id);
+        var words = text.trim().split(/\s+/).length;
+        $('share-size').textContent = done.total
+            ? 'About ' + words + ' words.'
+            : 'Nothing has been written on this step yet — only its wording would go.';
+    }
+
     function renderStepJournal(step) {
         var entries = Store.notesForStep(step.id).slice().sort(function (a, b) {
             return (b.createdAt || '').localeCompare(a.createdAt || '');
@@ -2510,9 +2635,12 @@
         $(id).hidden = false;
     }
 
+    // Every sheet there is, rather than a list of them. The list was a sheet
+    // added later waiting to be forgotten — and a forgotten one does not close
+    // behind the next, it sits open underneath it.
     function closeSheets() {
-        ['para-sheet', 'note-sheet', 'type-sheet', 'paste-sheet', 'inv-sheet'].forEach(function (id) {
-            $(id).hidden = true;
+        Array.prototype.forEach.call(document.querySelectorAll('.sheet'), function (sheet) {
+            sheet.hidden = true;
         });
         $('sheet-backdrop').hidden = true;
     }
@@ -2618,6 +2746,11 @@
             showScreen(from && from !== 'reader' ? from : 'home');
         });
         $('step-back').addEventListener('click', function () { showScreen('steps'); });
+        $('step-copy').addEventListener('click', function () {
+            var step = Store.getStep(current.stepId);
+            if (step) openStepShare(step);
+        });
+        $('share-cancel').addEventListener('click', closeSheets);
         $('reader-type').addEventListener('click', function () {
             var settings = Store.state.settings;
             $('type-fontsize').value = settings.fontSize;

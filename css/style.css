@@ -665,14 +665,22 @@ button { cursor: pointer; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.step-count {
+.step-progress {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.step-when {
   flex: none;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
-  color: var(--accent);
-  background: var(--bg-sunken);
-  border-radius: 20px;
-  padding: 2px 8px;
+  color: var(--text-dim);
+  white-space: nowrap;
 }
 .step-go { flex: none; color: var(--accent); font-size: 20px; }
 .step-soon {
@@ -1345,6 +1353,18 @@ button { cursor: pointer; }
 /* The row editor carries up to four fields, so it needs more room than the
    note sheet and must stay scrollable on a short screen. */
 .sheet-tall { max-height: 88vh; overflow-y: auto; }
+
+/* The copy-out preview. Smaller and tighter than a note box: it is there to be
+   checked over before sending, not written in. It stays a real text box so
+   that selecting and copying by hand works where the clipboard API does not. */
+.share-preview {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-dim);
+  background: var(--bg-sunken);
+}
+#share-options { margin: .2rem 0 1rem; }
+#share-options .row { font-size: 14px; padding: 10px 0; }
 
 /* An empty table sits inside a page, not on one of its own, so it does not get
    the full-screen empty state's height. */

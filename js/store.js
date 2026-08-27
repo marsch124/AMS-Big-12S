@@ -380,6 +380,255 @@
         return out.join('\n').trim();
     }
 
+    /* ------------------------------------ taking a step out of the app */
+
+    /*
+     * A whole step as plain text, to send to a sponsor before a call.
+     *
+     * Composed here rather than scraped off the page, because the page folds
+     * things away, shows the last five of a log and hides what was held back —
+     * all right for reading and wrong for a copy someone is going to rely on.
+     * What goes in is the reader's choosing, and what they have not written
+     * simply does not appear: an empty heading would suggest a gap where there
+     * is none.
+     */
+
+    // Matches formatDay() in ui.js. The two must agree, or a step copied out
+    // would date itself differently from the page it was copied from.
+    function dayText(iso) {
+        if (!iso) return '';
+        var date = new Date(String(iso).slice(0, 10) + 'T00:00:00');
+        if (isNaN(date)) return String(iso);
+        return date.toLocaleDateString(undefined,
+            { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function todayISO() {
+        var now = new Date();
+        return now.getFullYear() + '-' +
+            String(now.getMonth() + 1).padStart(2, '0') + '-' +
+            String(now.getDate()).padStart(2, '0');
+    }
+
+    // Every place a work block can declare an input, in the order it declares
+    // them, so a copied row reads in the order the page shows it.
+    function fieldSpecs(work) {
+        var out = [];
+        var seen = {};
+        function add(list) {
+            (list || []).forEach(function (field) {
+                if (!field || !field.id || seen[field.id]) return;
+                seen[field.id] = true;
+                out.push(field);
+            });
+        }
+        add(work.columns);
+        add(work.fields);
+        add(work.parts);
+        (work.tables || []).forEach(function (table) { add(table.columns); });
+        if ((work.lists || []).length) add([{ id: 'text', label: '' }]);
+        return out;
+    }
+
+    // Values a page writes without declaring a field for them: a two-list item,
+    // a note against a date, the defect step six carried through. `key` is step
+    // six's grouping key and is machinery, never shown.
+    var LOOSE_LABELS = { text: '', note: 'Note', defect: 'Defect', answer: 'What I wrote' };
+
+    function groupTitles(work) {
+        var titles = {};
+        (work.tables || []).forEach(function (table) { titles[table.id] = table.title; });
+        (work.lists || []).forEach(function (list) { titles[list.id] = list.title; });
+        return titles;
+    }
+
+    function stateLabel(work, id) {
+        if (!id) return '';
+        var found = (work.states || work.statuses || []).filter(function (option) {
+            return option.id === id;
+        })[0];
+        return found ? found.label : '';
+    }
+
+    // A field a step deliberately keeps folded away — step five's "what I held
+    // back". It is never copied out unless the reader asks for it by name.
+    function privateFields(step) {
+        var work = workFor(step);
+        if (!work) return [];
+        return fieldSpecs(work).filter(function (field) { return field.private; });
+    }
+
+    // Dictated text arrives with line breaks in it. Keep them, and keep the
+    // indent, so a long answer does not fall out of the column it belongs to.
+    function pushValue(lines, indent, label, value) {
+        var parts = String(value).split(/\n/);
+        lines.push(indent + (label ? label + ': ' : '') + parts[0]);
+        parts.slice(1).forEach(function (part) { lines.push(indent + part); });
+    }
+
+    function rowAsText(step, work, specs, row, position, opts) {
+        var lines = [];
+        var values = row.values || {};
+        var chosen = stateLabel(work, rowState(row, step.id));
+
+        // A dated row is headed by its date; an undated one by its place in the
+        // list, so a row is always addressable when talking it through.
+        lines.push((row.on ? dayText(row.on) : String(position) + '.') +
+            (chosen ? ' — ' + chosen : ''));
+
+        // Step ten's watchwords: several can be true at once, so they read as
+        // one line rather than as fields.
+        var flags = (work.watch || []).filter(function (watch) { return values[watch.id]; });
+        if (flags.length) {
+            lines.push('   ' + flags.map(function (watch) { return watch.label; }).join(', '));
+        }
+
+        var printed = { key: true };
+        (work.watch || []).forEach(function (watch) { printed[watch.id] = true; });
+
+        specs.forEach(function (field) {
+            printed[field.id] = true;
+            if (field.private && !opts.held) return;
+            var value = String(values[field.id] || '').trim();
+            if (value) pushValue(lines, '   ', field.label, value);
+        });
+
+        Object.keys(values).forEach(function (id) {
+            if (printed[id]) return;
+            var value = String(values[id] || '').trim();
+            if (value) pushValue(lines, '   ', LOOSE_LABELS[id] || '', value);
+        });
+
+        lines.push('');
+        return lines;
+    }
+
+    function workAsText(step, opts) {
+        var work = workFor(step);
+        if (!work) return [];
+
+        var specs = fieldSpecs(work);
+        var titles = groupTitles(work);
+        var rows;
+
+        if (work.from && work.from.work) {
+            // Step nine's rows are step eight's, and reading one back needs
+            // both steps' labels: the name from eight, the outcome from nine.
+            var source = workFor(getStep(work.from.stepId));
+            if (source) {
+                specs = fieldSpecs(source).concat(specs).filter(function (field, i, all) {
+                    return all.findIndex(function (other) { return other.id === field.id; }) === i;
+                });
+                titles = Object.assign(groupTitles(source), titles);
+            }
+            rows = rowsForWork(step).filter(function (row) {
+                if (rowState(row, step.id)) return true;
+                return (work.fields || []).some(function (field) {
+                    return String((row.values || {})[field.id] || '').trim().length > 0;
+                });
+            });
+        } else {
+            rows = state.inventory.filter(function (row) { return row.stepId === step.id; });
+        }
+        if (!rows.length) return [];
+
+        var order = [];
+        var groups = {};
+        rows.forEach(function (row) {
+            var key = row.tableId || '';
+            if (!groups[key]) { groups[key] = []; order.push(key); }
+            groups[key].push(row);
+        });
+
+        var lines = [];
+        order.forEach(function (key) {
+            var title = titles[key] || '';
+            // One group needs no name — the heading above it already said what
+            // this is. Three tables of an inventory need theirs.
+            if (order.length > 1 && title) { lines.push(title); lines.push(''); }
+            groups[key].forEach(function (row, index) {
+                lines = lines.concat(rowAsText(step, work, specs, row, index + 1, opts));
+            });
+        });
+        return lines;
+    }
+
+    function stepAsText(step, options) {
+        var opts = options || {};
+        var lines = [];
+
+        // A rule of fixed length rather than one matched to the heading: this
+        // is read in a message app, in whatever font that app uses, and a rule
+        // measured in characters comes out ragged in all of them.
+        function heading(text) {
+            lines.push('');
+            lines.push(text);
+            lines.push('\u2014\u2014\u2014');
+        }
+
+        lines.push('Step ' + step.number + ' \u00b7 ' + step.shortTitle);
+        var wording = stepText(step);
+        if (wording) lines.push('\u201c' + wording + '\u201d');
+
+        if (opts.answers) {
+            var questions = questionsFor(step);
+            var answered = [];
+            questions.forEach(function (question) {
+                var all = answersFor(step.id, question.id);
+                if (!all.length) return;
+                answered.push({
+                    question: question,
+                    // The latest answer is the current one; the rest are the
+                    // history, and only go if they are asked for.
+                    answers: opts.everyAnswer ? all : all.slice(0, 1)
+                });
+            });
+            if (answered.length) {
+                heading('Questions and answers');
+                answered.forEach(function (item, index) {
+                    lines.push(String(index + 1) + '. ' + item.question.text);
+                    item.answers.forEach(function (answer) {
+                        lines.push('   ' + dayText(answer.createdAt));
+                        pushValue(lines, '   ', '', answer.body);
+                    });
+                    lines.push('');
+                });
+                var left = questions.length - answered.length;
+                if (left) {
+                    lines.push(left + (left === 1 ? ' question' : ' questions') +
+                        ' not answered yet.');
+                }
+            }
+        }
+
+        if (opts.notes) {
+            var notes = notesForStep(step.id).slice().sort(function (a, b) {
+                return (b.createdAt || '').localeCompare(a.createdAt || '');
+            });
+            if (notes.length) {
+                heading('Notes on this step');
+                notes.forEach(function (note) {
+                    lines.push(dayText(note.createdAt));
+                    pushValue(lines, '', '', note.body);
+                    lines.push('');
+                });
+            }
+        }
+
+        if (opts.work) {
+            var work = workAsText(step, opts);
+            if (work.length) {
+                heading('The work of this step');
+                lines = lines.concat(work);
+            }
+        }
+
+        lines.push('');
+        lines.push('Copied from AMS Big 12S on ' + dayText(todayISO()) + '.');
+
+        return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+    }
+
     /*
      * The build resolved every reference against the bundled text, but the
      * reader may have imported their own copy since. Trust the anchor over the
@@ -615,13 +864,96 @@
         }).length;
     }
 
+    /*
+     * How much of a step has actually been done.
+     *
+     * Three separate things count and the list used to show only the first:
+     * notes on the step, questions answered, and the rows of the step's own
+     * work. Answering eight questions and filling in an inventory left the row
+     * reading as untouched, which is the app telling the reader they have not
+     * done something they have.
+     */
+    function workCount(step) {
+        var work = workFor(step);
+        if (!work) return 0;
+
+        // A step that writes onto another step's rows owns none of its own, so
+        // what counts is the rows it has written on. Otherwise step nine would
+        // look finished the moment step eight had names in it.
+        if (work.from && work.from.work) {
+            var mine = (work.fields || []).map(function (field) { return field.id; });
+            return rowsForWork(step).filter(function (row) {
+                if (rowState(row, step.id)) return true;
+                return mine.some(function (id) {
+                    return String((row.values || {})[id] || '').trim().length > 0;
+                });
+            }).length;
+        }
+
+        // Every other kind owns its rows, whatever it calls its tables — two
+        // lists, three inventories or one log all belong to the step itself.
+        return state.inventory.filter(function (row) {
+            return row.stepId === step.id;
+        }).length;
+    }
+
+    // "3 sittings", "1 person" — each kind names its own rows, because "3
+    // entries" is true of all of them and tells the reader nothing. The build
+    // refuses a work block that has not declared one.
+    function workNoun(step, count) {
+        var work = workFor(step);
+        var names = (work && work.count) || { one: 'entry', many: 'entries' };
+        return count === 1 ? names.one : names.many;
+    }
+
+    function stepProgress(stepId) {
+        var step = getStep(stepId);
+        if (!step) return { notes: 0, answered: 0, questions: 0, work: 0, total: 0, noun: '' };
+
+        var questions = questionsFor(step);
+        var answered = questions.filter(function (question) {
+            return answersFor(stepId, question.id).length > 0;
+        }).length;
+        var notes = notesForStep(stepId).length;
+        var rows = workCount(step);
+
+        return {
+            notes: notes,
+            answered: answered,
+            questions: questions.length,
+            work: rows,
+            noun: workNoun(step, rows),
+            total: notes + answered + rows,
+            lastAt: lastWorkedOn(stepId)
+        };
+    }
+
+    /*
+     * The last time anything was written for this step — a note, an answer, or
+     * a row of its work. Counting only notes would date step four from the last
+     * time it was written *about* rather than the last time it was worked.
+     */
     function lastWorkedOn(stepId) {
-        var entries = notesForStep(stepId);
-        if (!entries.length) return null;
-        return entries.reduce(function (latest, note) {
-            var at = note.createdAt || note.updatedAt || '';
-            return at > latest ? at : latest;
-        }, '');
+        var latest = '';
+        function consider(at) { if (at && at > latest) latest = at; }
+
+        state.notes.forEach(function (note) {
+            if (note.stepId === stepId) consider(note.createdAt || note.updatedAt);
+        });
+        state.inventory.forEach(function (row) {
+            if (row.stepId === stepId) consider(row.updatedAt || row.createdAt);
+        });
+
+        // A step that annotates another's rows is worked when it writes on one.
+        var step = getStep(stepId);
+        var work = workFor(step);
+        if (work && work.from && work.from.work) {
+            rowsForWork(step).forEach(function (row) {
+                if (rowState(row, stepId)) consider(row.updatedAt || row.createdAt);
+            });
+        }
+
+        return latest || null;
     }
 
     // Paragraph numbering can shift if the reader re-imports a differently
@@ -830,6 +1162,8 @@
         saveInventoryRow: saveInventoryRow,
         deleteInventoryRow: deleteInventoryRow,
         inventoryAsText: inventoryAsText,
+        stepAsText: stepAsText,
+        privateFields: privateFields,
         questionsFor: questionsFor,
         questionText: questionText,
         hiddenQuestionsFor: hiddenQuestionsFor,
@@ -838,6 +1172,8 @@
         deleteQuestion: deleteQuestion,
         isLooseNote: isLooseNote,
         notesForStep: notesForStep,
+        workCount: workCount,
+        stepProgress: stepProgress,
         lastWorkedOn: lastWorkedOn,
         resolveNote: resolveNote,
         saveNote: saveNote,

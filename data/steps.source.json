@@ -99,6 +99,10 @@
       ],
       "work": {
         "kind": "two-lists",
+        "count": {
+          "one": "item",
+          "many": "items"
+        },
         "intro": "Evidence, not conclusions. Add to these over time rather than filling them in once — the second half in particular tends to keep producing examples.",
         "lists": [
           {
@@ -202,6 +206,10 @@
       ],
       "work": {
         "kind": "two-lists",
+        "count": {
+          "one": "item",
+          "many": "items"
+        },
         "intro": "Step two is a record of changing your mind, so it is worth dating. What sits on the left today may move across later, and the point is to be able to see that it did.",
         "lists": [
           {
@@ -299,6 +307,10 @@
       ],
       "work": {
         "kind": "prayer",
+        "count": {
+          "one": "time taken",
+          "many": "times taken"
+        },
         "intro": "A decision taken more than once. Each time is kept with its date rather than replacing the last.",
         "prayerRef": {
           "sectionId": "ch05",
@@ -401,6 +413,10 @@
       ],
       "work": {
         "kind": "inventory-tables",
+        "count": {
+          "one": "entry",
+          "many": "entries"
+        },
         "intro": "Three passes, in the order the book takes them. Do them one at a time. None of them is finished on the day you start, and the first is much the longest.",
         "tables": [
           {
@@ -563,6 +579,10 @@
       ],
       "work": {
         "kind": "sittings",
+        "count": {
+          "one": "sitting",
+          "many": "sittings"
+        },
         "intro": "A record of the telling, kept with its date. If you go back later and say the thing you left out, that is a second entry rather than a correction of the first.",
         "promptLabel": "Sat down on",
         "fields": [
@@ -579,7 +599,8 @@
           {
             "id": "heldBack",
             "label": "What I held back",
-            "prompt": "Left empty is an answer too. So is coming back to fill it in."
+            "prompt": "Left empty is an answer too. So is coming back to fill it in.",
+            "private": true
           }
         ]
       }
@@ -659,6 +680,10 @@
       ],
       "work": {
         "kind": "carried-defects",
+        "count": {
+          "one": "defect answered",
+          "many": "defects answered"
+        },
         "intro": "The defects you named in step four, carried through so you are answering about the real ones rather than about defects in general. Each gets an honest answer, not a tick.",
         "from": {
           "stepId": "step04",
@@ -761,6 +786,10 @@
       ],
       "work": {
         "kind": "prayer",
+        "count": {
+          "one": "time asked",
+          "many": "times asked"
+        },
         "intro": "Asked more than once by most people. Each time is kept with its date rather than replacing the last, so you can see the years it took rather than only the latest.",
         "prayerRef": {
           "sectionId": "ch06",
@@ -857,6 +886,10 @@
       ],
       "work": {
         "kind": "amends-list",
+        "count": {
+          "one": "name",
+          "many": "names"
+        },
         "intro": "The names, and what the harm was. This is the list step nine then works through, so it is written once and lived with rather than made again.",
         "from": {
           "stepId": "step04",
@@ -984,6 +1017,10 @@
       ],
       "work": {
         "kind": "amends-progress",
+        "count": {
+          "one": "amend recorded",
+          "many": "amends recorded"
+        },
         "intro": "Step eight's list again, this time with what happened. This one is not finished and put away — it is kept for years, and an entry can change status more than once.",
         "from": {
           "stepId": "step08",
@@ -1110,6 +1147,10 @@
       ],
       "work": {
         "kind": "daily-entries",
+        "count": {
+          "one": "day",
+          "many": "days"
+        },
         "intro": "Short entries, one a day, kept as a run rather than as a journal. A line is enough. The point is the streak of noticing, not the writing.",
         "watch": [
           {
@@ -1237,6 +1278,10 @@
       ],
       "work": {
         "kind": "daily-practice",
+        "count": {
+          "one": "day",
+          "many": "days"
+        },
         "intro": "The book's three parts, kept as a practice rather than a diary. Answer what you did, leave the rest — a thin week is information too.",
         "parts": [
           {
@@ -1364,6 +1409,10 @@
       ],
       "work": {
         "kind": "people-worked-with",
+        "count": {
+          "one": "person",
+          "many": "people"
+        },
         "intro": "Who you have sat with, and what came of it. Kept because it is easy to forget how many there have been, and easy to remember only the ones that went badly.",
         "columns": [
           {

@@ -124,6 +124,15 @@ function main(argv) {
             });
         }
 
+        // Each kind of work names its own rows on the steps list — "3 sittings",
+        // not "3 entries". The fallback is "entries", which is true of every
+        // kind and so tells the reader nothing, and a name that only exists in
+        // one place is a name that gets forgotten. Missing is a build error.
+        if (work && (!work.count || !work.count.one || !work.count.many)) {
+            problems.push(label + ': work "' + (work.kind || '?') +
+                '" has no count.one / count.many to name its rows on the list');
+        }
+
         return Object.assign({}, step, { text: text, references: references, work: work });
     });
 
