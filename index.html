@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=29">
+<link rel="stylesheet" href="css/style.css?v=30">
 </head>
 <body>
 
@@ -133,6 +133,20 @@
           <span class="shortcut-note">A note of your own</span>
         </button>
       </div>
+
+      <!-- Quiet, and full width under the tiles rather than one of them. It has
+           to be findable at the worst moment; it does not have to be shouted
+           every morning. -->
+      <button class="do-row do-row-alone" id="broken">
+        <span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M13.4 3.6 7.9 12.4h4.9L10.6 20.4 17 11.2h-4.9z"/>
+        </svg></span>
+        <span class="do-text">
+          <span class="do-label">I have broken my abstinence</span>
+          <span class="do-note" id="broken-note">Three days, and what to do with them</span>
+        </span>
+        <span class="do-go">›</span>
+      </button>
 
       <h2 class="section-heading">Where you have got to</h2>
       <div class="stats" id="stats"></div>
@@ -380,6 +394,59 @@
       <h2 class="section-heading">The ones before this</h2>
       <p class="hint" id="craving-summary"></p>
       <div id="craving-list" class="card-list"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ Starting again ── -->
+  <!-- The three days after abstinence breaks. Nothing on this page scolds:
+       somebody opening it has already had the worst of it, and a page that
+       tutted at them would be shut and not opened again. -->
+  <section class="screen" id="screen-bounce">
+    <header class="topbar">
+      <button class="icon-btn" id="bounce-back" aria-label="Back">‹</button>
+      <div class="topbar-titles">
+        <h1 class="topbar-title">Starting again</h1>
+        <p class="topbar-sub" id="bounce-sub"></p>
+      </div>
+    </header>
+
+    <div class="screen-body">
+      <div id="bounce-none">
+        <p class="panel-note">
+          If it has happened, it has happened. What is left is the next three days, and there
+          is a way through them that is better than working it out on your own at four in the
+          morning.
+        </p>
+        <button class="btn btn-primary btn-block" id="bounce-start">It happened</button>
+        <p class="hint">
+          Nothing is announced and nothing is sent. It starts three days of plain instructions
+          with somewhere to write, and asks whether to count your days again from today.
+        </p>
+      </div>
+
+      <div id="bounce-open" hidden>
+        <label class="checkin-field">
+          <span class="checkin-label">What happened?</span>
+          <textarea id="bounce-what" class="note-input" rows="3"
+                    placeholder="Plainly. Not why you are a failure — what happened."></textarea>
+        </label>
+
+        <div id="bounce-days"></div>
+
+        <h2 class="section-heading">From the book</h2>
+        <div class="panel panel-flush" id="bounce-reading"></div>
+
+        <div class="btn-row">
+          <button class="btn btn-quiet" id="bounce-copy">Copy this out</button>
+          <button class="btn btn-quiet" id="bounce-close">The three days are done</button>
+        </div>
+      </div>
+
+      <h2 class="section-heading">Before this</h2>
+      <p class="hint" id="bounce-history-empty" hidden>
+        Nothing written down. Long may it stay that way.
+      </p>
+      <div id="bounce-history" class="card-list"></div>
     </div>
   </section>
 
@@ -805,6 +872,30 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Starting again</span><span class="ver-tag">2.17</span></summary>
+          <div class="disclosure-body">
+            <p>If abstinence breaks, there is now a page for the three days after it, reached
+               from a quiet row under the shortcuts. Nothing on it scolds — somebody opening it
+               has already had the worst of it.</p>
+            <ul>
+              <li><strong>Three days, written out</strong>, each with things to do that you tick
+                  off and somewhere to write. Day one leads with the doctor: coming off drink
+                  can be dangerous, and this app is not the thing that helps with that.</li>
+              <li><strong>The book on the same page</strong> — The Doctor's Opinion, More About
+                  Alcoholism, How It Works, one tap each.</li>
+              <li><strong>It asks, rather than assumes.</strong> The date, because by the time
+                  anyone opens this it may be yesterday; and whether to count your days again
+                  from then, because it is your count and not the app's.</li>
+              <li><strong>Copy it out</strong> for your sponsor, showing what is done and what
+                  is not — the point of showing somebody is that they can see the gaps.</li>
+              <li>When the three days are done you close it, and what you wrote is kept.</li>
+            </ul>
+            <p>The instructions are mine to suggest and yours to rewrite. They are not A.A.
+               material and do not pretend to be.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Copying the meetings out</span><span class="ver-tag">2.16</span></summary>
@@ -1783,6 +1874,28 @@
 
 <!-- Copying something out. One sheet for everything but a step, which has its
      own richer one: tick what goes, read the whole text, then the clipboard. -->
+<div class="sheet" id="bounce-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title">It happened</h2>
+  <p class="sheet-quote">Nothing here is announced or sent. It is written down so that the next
+     three days have a shape.</p>
+  <label class="inv-input">
+    <span class="sheet-label">When</span>
+    <input type="date" id="bounce-sheet-on" class="field">
+  </label>
+  <div class="chip-row">
+    <button class="chip is-active" id="bounce-sheet-reset" data-reset="yes">
+      Count my days again from then
+    </button>
+  </div>
+  <p class="hint">Leave that off and the day count stays as it is — it is your count, not the
+     app's.</p>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="bounce-sheet-save">Start the three days</button>
+    <button class="btn btn-quiet" id="bounce-sheet-cancel">Cancel</button>
+  </div>
+</div>
+
 <div class="sheet sheet-tall" id="copy-sheet" hidden>
   <div class="sheet-handle"></div>
   <h2 class="sheet-title" id="copy-title">Copy this out</h2>
@@ -1829,10 +1942,10 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="js/parser.js?v=1"></script>
-<script src="js/db.js?v=5"></script>
-<script src="js/store.js?v=19"></script>
-<script src="js/backup.js?v=7"></script>
-<script src="js/ui.js?v=33"></script>
-<script src="js/app.js?v=21"></script>
+<script src="js/db.js?v=6"></script>
+<script src="js/store.js?v=20"></script>
+<script src="js/backup.js?v=8"></script>
+<script src="js/ui.js?v=34"></script>
+<script src="js/app.js?v=22"></script>
 </body>
 </html>

@@ -8,7 +8,7 @@
     'use strict';
 
     var DB_NAME = 'ams-big-12s';
-    var DB_VERSION = 5;
+    var DB_VERSION = 6;
 
     var STORE_META = 'meta';
     var STORE_BOOK = 'book';
@@ -25,6 +25,8 @@
     // What you worked out before a conversation, and what came of it. One a day
     // for each of the two people.
     var STORE_CHECKINS = 'checkins';
+    // The times abstinence broke, and the three days after each of them.
+    var STORE_BREAKS = 'breaks';
 
     var dbPromise = null;
 
@@ -71,6 +73,11 @@
                 if (!db.objectStoreNames.contains(STORE_CHECKINS)) {
                     var checkins = db.createObjectStore(STORE_CHECKINS, { keyPath: 'id' });
                     checkins.createIndex('on', 'on', { unique: false });
+                }
+                // Added in DB_VERSION 6. Same guard, same reason.
+                if (!db.objectStoreNames.contains(STORE_BREAKS)) {
+                    var breaks = db.createObjectStore(STORE_BREAKS, { keyPath: 'id' });
+                    breaks.createIndex('on', 'on', { unique: false });
                 }
             };
 
@@ -164,6 +171,7 @@
         STORE_CRAVINGS: STORE_CRAVINGS,
         STORE_MEETINGS: STORE_MEETINGS,
         STORE_CHECKINS: STORE_CHECKINS,
+        STORE_BREAKS: STORE_BREAKS,
         open: open,
         get: get,
         getAll: getAll,

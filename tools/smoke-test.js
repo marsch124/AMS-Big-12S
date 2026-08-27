@@ -639,17 +639,17 @@ async function openContents(page) {
     check('the Home tab stays lit inside it',
         await page.$eval('.tab[data-screen="home"]', (e) => e.classList.contains('is-active')));
 
-    const asked = await page.$$eval('.checkin-label', (e) => e.map((x) => x.textContent));
+    const asked = await page.$$eval('#checkin-fields .checkin-label', (e) => e.map((x) => x.textContent));
     check('with the questions about me, and the meeting notes last',
         asked.length === 7 && asked[0] === 'Am I abstinent?' &&
         asked[6] === 'Notes from the meeting', asked.join(' · '));
     check('abstinence is yes or no, not a box to type in',
-        (await page.$$eval('.checkin-field .chip', (e) => e.map((x) => x.textContent)))
+        (await page.$$eval('#checkin-fields .chip', (e) => e.map((x) => x.textContent)))
             .join('/') === 'Yes/No');
 
-    await page.click('.checkin-field .chip >> nth=0');
+    await page.click('#checkin-fields .chip >> nth=0');
     await page.waitForTimeout(200);
-    const areas = await page.$$('.checkin-field textarea');
+    const areas = await page.$$('#checkin-fields textarea');
     await areas[0].fill('Swam before work.');
     await areas[0].dispatchEvent('change');
     await areas[5].fill('He said: the easy amends teach you the hard ones.');
@@ -664,11 +664,11 @@ async function openContents(page) {
         (await page.evaluate(() => Store.checkinsFor('sponsor').length)) === 1);
 
     // Tapping the lit answer takes it back, without a third button for it.
-    await page.click('.checkin-field .chip >> nth=0');
+    await page.click('#checkin-fields .chip >> nth=0');
     await page.waitForTimeout(250);
     check('tapping the lit answer clears it',
         !(await page.evaluate(() => Store.checkinFor('sponsor').values.abstinent)));
-    await page.click('.checkin-field .chip >> nth=0');
+    await page.click('#checkin-fields .chip >> nth=0');
     await page.waitForTimeout(250);
 
     // The sponsee's page asks about him, and allows not knowing.
@@ -676,12 +676,12 @@ async function openContents(page) {
     await page.waitForSelector('#screen-home.is-active');
     await page.click('.shortcut[data-shortcut="sponsee"]');
     await page.waitForSelector('#screen-checkin.is-active');
-    const askedOfHim = await page.$$eval('.checkin-label', (e) => e.map((x) => x.textContent));
+    const askedOfHim = await page.$$eval('#checkin-fields .checkin-label', (e) => e.map((x) => x.textContent));
     check('the sponsee page asks about him instead',
         askedOfHim[0] === 'Is he abstinent?' && askedOfHim[1] === 'What has he done for himself?',
         askedOfHim.join(' · '));
     check('and lets you say you do not know',
-        (await page.$$eval('.checkin-field .chip', (e) => e.map((x) => x.textContent)))
+        (await page.$$eval('#checkin-fields .chip', (e) => e.map((x) => x.textContent)))
             .join('/') === 'Yes/No/Don\u2019t know');
     check('the two pages keep their own records',
         (await page.evaluate(() => Store.checkinsFor('sponsee').length)) === 0);
@@ -877,6 +877,88 @@ async function openContents(page) {
     check('the point comes off the list when it is deleted',
         (await page.$$eval('#meeting-raise .card', (e) => e.length)) === 0);
 
+    // ── starting again ────────────────────────────────────────────────────
+    await page.click('.tab[data-screen="home"]');
+    await page.waitForSelector('#screen-home.is-active');
+    check('there is a way in from the home screen, and it is not shouted',
+        (await page.textContent('#broken .do-label')) === 'I have broken my abstinence');
+    await page.click('#broken');
+    await page.waitForSelector('#screen-bounce.is-active');
+    check('with nothing open it offers to start, and nothing else',
+        await page.isVisible('#bounce-start') && !(await page.isVisible('#bounce-open')));
+
+    const soberBefore = await page.evaluate(() => Store.state.settings.soberSince);
+    await page.click('#bounce-start');
+    await page.waitForSelector('#bounce-sheet:not([hidden])');
+    check('the date is asked for rather than assumed',
+        (await page.inputValue('#bounce-sheet-on')) ===
+            (await page.evaluate(() => Store.todayISO())));
+    check('and so is whether to count the days again',
+        (await page.$eval('#bounce-sheet-reset', (e) => e.dataset.reset)) === 'yes');
+
+    // Left off: it is his count, not the app's.
+    await page.click('#bounce-sheet-reset');
+    await page.click('#bounce-sheet-save');
+    await page.waitForTimeout(400);
+    check('leaving that off leaves the day count alone',
+        (await page.evaluate(() => Store.state.settings.soberSince)) === soberBefore,
+        soberBefore + ' -> ' + (await page.evaluate(() => Store.state.settings.soberSince)));
+    check('the three days are open, and it is day one',
+        (await page.textContent('#bounce-sub')) === 'Day 1 of three' &&
+        (await page.$$eval('.bounce-day', (e) => e.length)) === 3);
+    check('day one leads with the doctor, the one line that is not advice',
+        (await page.textContent('.bounce-day >> nth=0 >> .bounce-task'))
+            .includes('ring a doctor first'));
+
+    await page.click('.bounce-day >> nth=0 >> .bounce-task >> nth=1');
+    await page.waitForTimeout(250);
+    check('a task ticks off and stays ticked',
+        await page.evaluate(() => !!Store.openBreak().days['1'].done.tell));
+    await page.fill('#bounce-what', 'Wine at a work dinner.');
+    await page.dispatchEvent('#bounce-what', 'change');
+    await page.waitForTimeout(250);
+    check('and what happened is written down without a Save button',
+        (await page.evaluate(() => Store.openBreak().what)) === 'Wine at a work dinner.');
+
+    // The book's own titles, straight apostrophe and all.
+    check('the book is on the page, the Doctor\'s Opinion first',
+        (await page.$$eval('#bounce-reading .do-label', (e) => e.map((x) => x.textContent)))
+            .join('|') === "The Doctor's Opinion|More About Alcoholism|How It Works",
+        (await page.$$eval('#bounce-reading .do-label', (e) => e.map((x) => x.textContent))).join(' | '));
+
+    await page.click('#bounce-copy');
+    await page.waitForSelector('#copy-sheet:not([hidden])');
+    const bounceOut = await page.inputValue('#copy-preview');
+    check('it copies out showing what is done and what is not',
+        bounceOut.includes('[x] Tell your sponsor') &&
+        bounceOut.includes('[ ] Get to a meeting') &&
+        bounceOut.includes('Wine at a work dinner.'),
+        (bounceOut.match(/\[x\][^\n]*/) || [''])[0]);
+    await page.click('#copy-cancel');
+    await page.waitForSelector('#copy-sheet', { state: 'hidden' });
+
+    // Day one is the day it happened, counted inclusively like everything else.
+    check('a break two days back reads as day three',
+        (await page.evaluate(() =>
+            Store.breakDay({ on: Store.shiftDay(Store.todayISO(), -2) }))) === 3);
+
+    await page.click('.tab[data-screen="home"]');
+    check('while it is open the home row says which day it is',
+        (await page.textContent('#broken-note')).indexOf('Day 1') === 0,
+        await page.textContent('#broken-note'));
+
+    page.once('dialog', (d) => d.accept());
+    await page.click('#broken');
+    await page.waitForSelector('#screen-bounce.is-active');
+    await page.click('#bounce-close');
+    await page.waitForTimeout(400);
+    check('closing it puts it behind you, and keeps what you wrote',
+        !(await page.evaluate(() => Store.openBreak())) &&
+        (await page.$$eval('#bounce-history .card', (e) => e.length)) === 1);
+    await page.click('.tab[data-screen="home"]');
+    check('and the home row goes back to how it was',
+        (await page.textContent('#broken-note')) === 'Three days, and what to do with them');
+
     // ── backup round trip ─────────────────────────────────────────────────
     const slim = JSON.parse(await page.evaluate(() => Backup.serialize({ includeBookText: false })));
     check('backup carries notes, bookmarks, position, settings',
@@ -889,6 +971,8 @@ async function openContents(page) {
         (slim.meetings || []).length + ' meetings');
     check('and what was worked out before a conversation',
         slim.checkins.length === 2, (slim.checkins || []).length + ' check-ins');
+    check('and the times abstinence broke', slim.breaks.length === 1,
+        (slim.breaks || []).length + ' breaks');
 
     // A backup written before the craving screen existed has no such key, and
     // must restore without emptying a list that is only worth anything whole.
@@ -896,13 +980,15 @@ async function openContents(page) {
     delete older.cravings;
     delete older.meetings;
     delete older.checkins;
+    delete older.breaks;
     const keptThrough = await page.evaluate(async (json) => {
         await Backup.restoreBackup(Backup.parseBackup(json), 'merge');
         return { cravings: Store.state.cravings.length, meetings: Store.state.meetings.length,
-                 checkins: Store.state.checkins.length };
+                 checkins: Store.state.checkins.length, breaks: Store.state.breaks.length };
     }, JSON.stringify(older));
     check('an older backup restores without wiping any of them',
-        keptThrough.cravings === 2 && keptThrough.meetings === 1 && keptThrough.checkins === 2,
+        keptThrough.cravings === 2 && keptThrough.meetings === 1 &&
+        keptThrough.checkins === 2 && keptThrough.breaks === 1,
         JSON.stringify(keptThrough));
     check('backup stays small when the text is not included',
         !slim.includesBookText && JSON.stringify(slim).length < 4000,
@@ -2150,8 +2236,12 @@ async function openContents(page) {
     await context.setOffline(true);
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#screen-home.is-active', { timeout: 10000 });
-    check('today\u2019s passage is there with the network off',
-        (await page.textContent('#passage-text')).trim().length > 40);
+    // Wait for it rather than reading it the instant the screen appears: the
+    // first load after a cache name changes can still be settling.
+    await page.waitForFunction(
+        () => (document.getElementById('passage-text').textContent || '').trim().length > 40,
+        null, { timeout: 5000 });
+    check('today\u2019s passage is there with the network off', true);
     await openContents(page);
     const offlineReadable = await page.$$eval('.toc-item:not([disabled])', (e) => e.length);
     check('whole book readable with the network off', offlineReadable === 42,

@@ -53,6 +53,7 @@
         cravings: [],            // { id, startedAt, endedAt, outcome, what }
         meetings: [],            // { id, on, where, shared, what }
         checkins: [],            // { id, who, on, values, notes }
+        breaks: [],              // { id, on, what, days, closedAt }
         visits: null             // the days the app has been opened, ascending
     };
 
@@ -1255,6 +1256,160 @@
         return run;
     }
 
+    /* ------------------------------------------------------- starting again */
+
+    /*
+     * The three days after abstinence breaks.
+     *
+     * Written in Martin's register and meant to be argued with rather than
+     * obeyed: it is not A.A. material and does not pretend to be. The one line
+     * that is not advice but a fact is the doctor on day one — coming off drink
+     * can be dangerous, and an app is not the thing that helps with that.
+     *
+     * Nothing here scolds. Somebody opening this screen has already had the
+     * worst of it, and a page that tutted at them would be shut and not opened
+     * again.
+     */
+    var BOUNCE_PLAN = [
+        {
+            day: 1,
+            title: 'Today',
+            tasks: [
+                { id: 'doctor', text: 'If you are physically unwell, ring a doctor first. ' +
+                    'Coming off drink can be dangerous, and this app is not the thing that helps with that.' },
+                { id: 'tell', text: 'Tell your sponsor. Today, not tomorrow.' },
+                { id: 'eat', text: 'Eat something. Drink water. Sleep if you can.' },
+                { id: 'meeting', text: 'Get to a meeting, or ring somebody from one.' },
+                { id: 'write', text: 'Write down what happened. Not why you are a failure — what happened.' }
+            ]
+        },
+        {
+            day: 2,
+            title: 'Tomorrow',
+            tasks: [
+                { id: 'tell', text: 'Ring your sponsor again. Once is not the same as twice.' },
+                { id: 'read', text: 'Read The Doctor\u2019s Opinion. It is about the body, ' +
+                    'and the body is what yesterday was about.' },
+                { id: 'before', text: 'Write down what came before the drink — the hour, the day, the week.' },
+                { id: 'meeting', text: 'Get to a meeting.' }
+            ]
+        },
+        {
+            day: 3,
+            title: 'The day after that',
+            tasks: [
+                { id: 'tell', text: 'Ring your sponsor.' },
+                { id: 'read', text: 'Read How It Works, from the beginning.' },
+                { id: 'learn', text: 'Write down one thing you will do differently, ' +
+                    'and one thing you will ask for help with.' },
+                { id: 'rhythm', text: 'Back to the daily rhythm: the tenth step tonight.' }
+            ]
+        }
+    ];
+
+    var BOUNCE_READING = [
+        { sectionId: 'doctors-op', why: 'What drink does to a body like yours' },
+        { sectionId: 'ch03', why: 'The mind on the way to the first one' },
+        { sectionId: 'ch05', why: 'The whole of it, from the beginning' }
+    ];
+
+    function loadBreaks() {
+        return DB.getAll(DB.STORE_BREAKS).then(function (rows) {
+            state.breaks = (rows || []).sort(function (a, b) {
+                return String(b.on || '').localeCompare(String(a.on || ''));
+            });
+            return state.breaks;
+        }).catch(function () {
+            state.breaks = [];
+            return state.breaks;
+        });
+    }
+
+    // The one being lived through, if there is one. Three days is when it is
+    // over, but it stays open until it is closed by hand — a fourth day that
+    // needs the page still has it.
+    function openBreak() {
+        return state.breaks.filter(function (row) { return !row.closedAt; })[0] || null;
+    }
+
+    function saveBreak(row) {
+        var now = new Date().toISOString();
+        var record = {
+            id: row.id || uid('brk'),
+            on: row.on || todayISO(),
+            what: String(row.what || '').trim(),
+            // { '1': { note: '', done: { taskId: true } }, ... }
+            days: Object.assign({}, row.days),
+            closedAt: row.closedAt || null,
+            createdAt: row.createdAt || now,
+            updatedAt: now
+        };
+        return DB.put(DB.STORE_BREAKS, record).then(loadBreaks).then(function () {
+            return record;
+        });
+    }
+
+    function startBreak(on) {
+        var already = openBreak();
+        if (already) return Promise.resolve(already);
+        return saveBreak({ on: on || todayISO() });
+    }
+
+    function closeBreak(id) {
+        var existing = state.breaks.filter(function (row) { return row.id === id; })[0];
+        if (!existing) return Promise.resolve(null);
+        return saveBreak(Object.assign({}, existing, { closedAt: new Date().toISOString() }));
+    }
+
+    function deleteBreak(id) {
+        return DB.remove(DB.STORE_BREAKS, id).then(loadBreaks);
+    }
+
+    // Which of the three days it is. Day one is the day it happened, counted
+    // inclusively like everything else here. Past three it keeps counting, and
+    // the page says so rather than pretending the plan is still running.
+    function breakDay(row, date) {
+        if (!row) return 0;
+        return Math.max(1, dayNumber(date) - dayNumber(new Date(row.on + 'T00:00:00')) + 1);
+    }
+
+    function bouncePlan() { return BOUNCE_PLAN; }
+    function bounceReading() { return BOUNCE_READING; }
+
+    /*
+     * The three days as plain text, for a sponsor. Composed here like every
+     * other copy, and it says what is not done as well as what is — the point
+     * of showing somebody this is that they can see the gaps.
+     */
+    function breakAsText(row, options) {
+        options = options || {};
+        if (!row) return '';
+        var lines = ['Starting again \u2014 ' + dayText(row.on), ''];
+
+        if (row.what && options.what !== false) {
+            lines.push('What happened');
+            lines.push(row.what);
+            lines.push('');
+        }
+
+        BOUNCE_PLAN.forEach(function (day) {
+            var kept = (row.days && row.days[day.day]) || {};
+            var done = kept.done || {};
+            lines.push('Day ' + day.day);
+            day.tasks.forEach(function (task) {
+                lines.push((done[task.id] ? '[x] ' : '[ ] ') + task.text);
+            });
+            if (kept.note && options.notes !== false) {
+                lines.push('');
+                lines.push(kept.note);
+            }
+            lines.push('');
+        });
+
+        lines.push('Copied from AMS Big 12S on ' + dayText(todayISO()) + '.');
+        return lines.join('\n');
+    }
+
     /* ------------------------------------------------------- the check-ins */
 
     var CHECKIN_SPECS = {
@@ -1793,6 +1948,7 @@
             .then(loadCravings)
             .then(loadMeetings)
             .then(loadCheckins)
+            .then(loadBreaks)
             .then(loadVisits)
             .then(loadNotes)
             .then(loadBookmarks)
@@ -1900,6 +2056,17 @@
         daysAbstinent: daysAbstinent,
         lastActivity: lastActivity,
         daysSinceActivity: daysSinceActivity,
+
+        loadBreaks: loadBreaks,
+        openBreak: openBreak,
+        saveBreak: saveBreak,
+        startBreak: startBreak,
+        closeBreak: closeBreak,
+        deleteBreak: deleteBreak,
+        breakDay: breakDay,
+        bouncePlan: bouncePlan,
+        bounceReading: bounceReading,
+        breakAsText: breakAsText,
 
         loadCheckins: loadCheckins,
         checkinFor: checkinFor,

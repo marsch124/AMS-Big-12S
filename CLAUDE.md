@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.16 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.17 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -331,6 +331,33 @@ HTML, which is why it is shaped this way — do not collapse it back.
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
 
+## Starting again (2.17)
+
+**Nothing on that page scolds.** Somebody opening it has already had the worst
+of it, and a page that tutted at them would be shut and not opened again. No
+"you were doing so well", no lost-streak language, no red. The home row is quiet
+and full width rather than one of the tiles: findable at the worst moment,
+not shouted every morning.
+
+**`BOUNCE_PLAN` is Martin's to rewrite.** It is written in his register, it is
+explicitly not A.A. material, and the one line in it that is not a suggestion is
+the doctor on day one — coming off drink can be dangerous and an app is not the
+thing that helps with that. Keep that line first, and keep it a fact rather than
+a warning. If he asks for the plan to be editable in the app, that is the rules
+pattern (`settings`, a textarea, one to a line).
+
+**It asks rather than assumes.** The date (by the time anybody opens this it may
+be yesterday) and whether to reset `soberSince` (his count, not the app's). Never
+reset the day counter silently — a smoke check holds that.
+
+**Day one is the day it happened**, counted inclusively like `daysAbstinent()`.
+Past three days it keeps counting and the page says so rather than pretending the
+plan is still running. A break stays open until closed by hand, because a fourth
+day that needs the page still has it.
+
+**The bounce screen borrows `.checkin-field` and `.checkin-label`**, so any test
+querying those must scope to `#checkin-fields`. That caught the suite out once.
+
 ## Copying things out (2.16)
 
 **`openCopySheet(config)` is the one sheet** for everything but a step: a title,
@@ -517,7 +544,7 @@ sw.js               Service worker: offline shell + book cache
 css/style.css       Themes (sepia/light/dark/auto), reader typography
 js/parser.js        Plain text → sections. Shared with tools/build-book.js
 js/db.js            IndexedDB wrapper (meta, book, notes, bookmarks, inventory,
-                    cravings, meetings, checkins)
+                    cravings, meetings, checkins, breaks)
 js/store.js         Book, settings, position, notes, bookmarks, search
 js/backup.js        Export / restore
 js/ui.js            Screens, rendering, all event wiring
@@ -532,7 +559,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    330 end-to-end browser checks
+tools/smoke-test.js    346 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -544,7 +571,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 330 checks, expect 330/330
+node tools/smoke-test.js                  # 346 checks, expect 346/346
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

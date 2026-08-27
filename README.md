@@ -13,6 +13,8 @@ without a signal.
 - 🏠 **A home screen** — the day count, the time and the date, a passage from the book for
   today, where you stopped, the reasons you might have opened the app, and an honest count of
   what you have done
+- 🧭 **Starting again** — if abstinence breaks, the three days after it: what to do, somewhere
+  to write, and the book to hand
 - 🌊 **A craving screen** — start a clock on one, close it when it goes, and keep the list of
   the ones that passed; your sponsor a tap away
 - 👥 **Meetings** — what you meant to bring up, and the record of the ones you got to
@@ -176,6 +178,26 @@ the phone rings, and coming back in the evening adds to the morning's answers
 rather than starting a second copy of them. What you have marked to bring up
 sits on the same page, ready to copy out, and the days already written are
 underneath.
+
+## If abstinence breaks
+
+A quiet row under the shortcuts opens **Starting again**: the three days after
+it. Nothing on that page scolds — somebody opening it has already had the worst
+of it.
+
+Each of the three days has a handful of things to do, ticked off as you do them,
+and somewhere to write. Day one leads with the doctor, which is the one line
+there that is not advice but a fact: coming off drink can be dangerous, and an
+app is not the thing that helps with that. The book is on the same page — *The
+Doctor's Opinion*, *More About Alcoholism*, *How It Works*.
+
+It asks rather than assumes: the date, because by the time anyone opens this it
+may be yesterday, and whether to count your days again from then, because it is
+your count and not the app's. You can copy the three days out for your sponsor,
+showing what is done and what is not.
+
+The instructions themselves are a suggestion, not A.A. material, and are meant
+to be rewritten.
 
 ## Meetings
 
@@ -471,7 +493,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 330 checks
+node tools/smoke-test.js      # 346 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that

@@ -116,7 +116,7 @@
         // by hand, is not.
         if (name !== 'reader' && looking) { looking = false; showBrowsingStrip(); }
         ['home', 'library', 'reader', 'steps', 'step', 'notes', 'search', 'settings',
-         'craving', 'meeting', 'checkin']
+         'craving', 'meeting', 'checkin', 'bounce']
             .forEach(function (screen) {
                 $('screen-' + screen).classList.toggle('is-active', screen === name);
             });
@@ -124,7 +124,8 @@
         // screens from the home screen, so those tabs stay lit while you are
         // inside one.
         var litTab = name === 'step' ? 'steps'
-            : (name === 'craving' || name === 'meeting' || name === 'checkin') ? 'home' : name;
+            : (name === 'craving' || name === 'meeting' || name === 'checkin' ||
+               name === 'bounce') ? 'home' : name;
         Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
             tab.classList.toggle('is-active', tab.dataset.screen === litTab);
         });
@@ -142,6 +143,7 @@
             stopClock();
             if (name === 'meeting') renderMeeting();
             if (name === 'checkin') renderCheckin();
+            if (name === 'bounce') renderBounce();
         }
         if (name === 'library') renderLibrary();
         if (name === 'notes') renderNotes();
@@ -297,6 +299,12 @@
 
         $('shortcut-craving-note').textContent = cravingStateLine();
         $('shortcut-meeting-note').textContent = meetingStateLine();
+
+        var broken = Store.openBreak();
+        $('broken-note').textContent = broken
+            ? 'Day ' + Store.breakDay(broken) + ' \u2014 the three days are open'
+            : 'Three days, and what to do with them';
+        $('broken').classList.toggle('is-now', !!broken);
 
         [['sponsor', 'shortcut-sponsor-note'], ['sponsee', 'shortcut-sponsee-note']].forEach(function (pair) {
             var waiting = Store.waitingFor(pair[0]);
@@ -616,6 +624,177 @@
             cravingEditing = null;
             closeSheets();
             renderCraving();
+        });
+    }
+
+    /* ------------------------------------------------------- starting again */
+
+    function renderBounce() {
+        var row = Store.openBreak();
+        $('bounce-none').hidden = !!row;
+        $('bounce-open').hidden = !row;
+
+        if (row) {
+            var day = Store.breakDay(row);
+            $('bounce-sub').textContent = day <= 3
+                ? 'Day ' + day + ' of three'
+                : day + ' days on \u00b7 ' + formatDay(row.on);
+            $('bounce-what').value = row.what || '';
+            $('bounce-what').onchange = function () {
+                Store.saveBreak(Object.assign({}, Store.openBreak(),
+                    { what: $('bounce-what').value }));
+            };
+            renderBounceDays(row, day);
+            renderBounceReading();
+        } else {
+            $('bounce-sub').textContent = '';
+        }
+
+        renderBounceHistory();
+    }
+
+    function renderBounceDays(row, currentDay) {
+        var box = $('bounce-days');
+        box.innerHTML = '';
+
+        Store.bouncePlan().forEach(function (plan) {
+            var kept = (row.days && row.days[plan.day]) || {};
+            var done = kept.done || {};
+
+            var panel = document.createElement('div');
+            panel.className = 'bounce-day' +
+                (plan.day === currentDay ? ' is-now' : '') +
+                (plan.day < currentDay ? ' is-past' : '');
+
+            var head = document.createElement('h2');
+            head.className = 'bounce-day-title';
+            head.innerHTML = '<span>Day ' + plan.day + '</span>' +
+                '<span class="bounce-day-when">' + escapeHtml(plan.title) + '</span>';
+            panel.appendChild(head);
+
+            plan.tasks.forEach(function (task) {
+                var line = document.createElement('button');
+                line.className = 'bounce-task' + (done[task.id] ? ' is-done' : '');
+                line.innerHTML = '<span class="bounce-tick" aria-hidden="true"></span>' +
+                    '<span>' + escapeHtml(task.text) + '</span>';
+                line.addEventListener('click', function () {
+                    var open = Store.openBreak();
+                    var days = Object.assign({}, open.days);
+                    var thisDay = Object.assign({}, days[plan.day]);
+                    thisDay.done = Object.assign({}, thisDay.done);
+                    if (thisDay.done[task.id]) delete thisDay.done[task.id];
+                    else thisDay.done[task.id] = true;
+                    days[plan.day] = thisDay;
+                    Store.saveBreak(Object.assign({}, open, { days: days }))
+                        .then(function () { renderBounce(); });
+                });
+                panel.appendChild(line);
+            });
+
+            var wrap = document.createElement('label');
+            wrap.className = 'checkin-field';
+            var label = document.createElement('span');
+            label.className = 'checkin-label';
+            label.textContent = 'Day ' + plan.day + ' \u2014 anything worth writing down';
+            wrap.appendChild(label);
+            var note = document.createElement('textarea');
+            note.className = 'note-input';
+            note.rows = 2;
+            note.value = kept.note || '';
+            note.addEventListener('change', function () {
+                var open = Store.openBreak();
+                var days = Object.assign({}, open.days);
+                days[plan.day] = Object.assign({}, days[plan.day], { note: note.value.trim() });
+                Store.saveBreak(Object.assign({}, open, { days: days }));
+            });
+            wrap.appendChild(note);
+            panel.appendChild(wrap);
+
+            box.appendChild(panel);
+        });
+    }
+
+    function renderBounceReading() {
+        var box = $('bounce-reading');
+        box.innerHTML = '';
+
+        Store.bounceReading().forEach(function (entry) {
+            var section = Store.getSection(entry.sectionId);
+            if (!section || !section.paragraphs.length) return;
+
+            var row = document.createElement('button');
+            row.className = 'do-row';
+            row.innerHTML =
+                '<span class="do-icon"><svg viewBox="0 0 24 24" aria-hidden="true">' +
+                '<path d="M2.9 5.6c3.1-.5 6.1 0 9.1 1.9 3-1.9 6-2.4 9.1-1.9v11.9c-3.1-.5-6.1 0-9.1 ' +
+                '1.9-3-1.9-6-2.4-9.1-1.9z"/><path d="M12 7.5v11.9"/></svg></span>' +
+                '<span class="do-text">' +
+                    '<span class="do-label">' + escapeHtml(section.title) + '</span>' +
+                    '<span class="do-note">' + escapeHtml(entry.why) + '</span>' +
+                '</span>' +
+                '<span class="do-go">\u203a</span>';
+            row.addEventListener('click', function () {
+                openReader(entry.sectionId, { paraIndex: 0 });
+            });
+            box.appendChild(row);
+        });
+    }
+
+    function renderBounceHistory() {
+        var box = $('bounce-history');
+        box.innerHTML = '';
+
+        var past = Store.state.breaks.filter(function (row) { return !!row.closedAt; });
+        past.slice(0, 10).forEach(function (row) {
+            var card = document.createElement('button');
+            card.className = 'card checkin-card';
+            card.innerHTML =
+                '<span class="checkin-when">' + escapeHtml(formatDay(row.on)) + '</span>' +
+                '<span class="checkin-gist">' +
+                    escapeHtml(daysSince(row.on + 'T00:00:00') + ' days ago') + '</span>' +
+                (row.what ? '<p class="checkin-notes">' + escapeHtml(row.what) + '</p>' : '');
+            card.addEventListener('click', function () { openBounceCopy(row); });
+            box.appendChild(card);
+        });
+
+        $('bounce-history-empty').hidden = past.length > 0;
+    }
+
+    function openBounceCopy(row) {
+        openCopySheet({
+            title: 'Starting again \u00b7 ' + formatDay(row.on),
+            options: [
+                { key: 'what', label: 'What happened', on: true },
+                { key: 'notes', label: 'What you wrote on each day', on: true }
+            ],
+            compose: function (opts) { return Store.breakAsText(row, opts); }
+        });
+    }
+
+    /*
+     * Starting one. The date is asked for rather than assumed — it may be
+     * yesterday by the time anybody opens this — and so is whether to count the
+     * days again, because it is his count and not the app's.
+     */
+    function openBounceSheet() {
+        $('bounce-sheet-on').value = Store.todayISO();
+        $('bounce-sheet-on').max = Store.todayISO();
+        var reset = $('bounce-sheet-reset');
+        reset.dataset.reset = 'yes';
+        reset.classList.add('is-active');
+        openSheet('bounce-sheet');
+    }
+
+    function saveBounceSheet() {
+        var on = $('bounce-sheet-on').value || Store.todayISO();
+        var reset = $('bounce-sheet-reset').dataset.reset === 'yes';
+
+        Store.startBreak(on).then(function () {
+            if (!reset) return null;
+            return Store.saveSettings({ soberSince: on });
+        }).then(function () {
+            closeSheets();
+            renderBounce();
         });
     }
 
@@ -3835,6 +4014,31 @@
                 closeSheets();
                 refreshContinueCards();
                 toast('Forgotten. The book starts from the beginning again.');
+            });
+        });
+
+        // ── starting again ─────────────────────────────────────────────────
+        $('broken').addEventListener('click', function () { showScreen('bounce'); });
+        $('bounce-back').addEventListener('click', function () { showScreen('home'); });
+        $('bounce-start').addEventListener('click', openBounceSheet);
+        $('bounce-sheet-cancel').addEventListener('click', closeSheets);
+        $('bounce-sheet-save').addEventListener('click', saveBounceSheet);
+        $('bounce-sheet-reset').addEventListener('click', function () {
+            var on = this.dataset.reset !== 'yes';
+            this.dataset.reset = on ? 'yes' : 'no';
+            this.classList.toggle('is-active', on);
+        });
+        $('bounce-copy').addEventListener('click', function () {
+            var open = Store.openBreak();
+            if (open) openBounceCopy(open);
+        });
+        $('bounce-close').addEventListener('click', function () {
+            var open = Store.openBreak();
+            if (!open) return;
+            if (!confirm('Close these three days? What you wrote is kept.')) return;
+            Store.closeBreak(open.id).then(function () {
+                renderBounce();
+                toast('Closed. What you wrote is kept.');
             });
         });
 

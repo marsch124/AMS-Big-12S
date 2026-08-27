@@ -48,6 +48,9 @@
             meetings: state.meetings,
             // What was worked out before a conversation, and what came of it.
             checkins: state.checkins,
+            // The times abstinence broke, and the three days after. Losing these
+            // on a new phone would lose the only record of what came before one.
+            breaks: state.breaks,
             // The days the app has been opened. A run of them is worth nothing
             // if it starts again on a new phone.
             visits: state.visits || []
@@ -163,7 +166,7 @@
     function restoreBackup(payload, mode) {
         mode = mode || 'merge';
         var summary = { notes: 0, bookmarks: 0, inventory: 0, cravings: 0, meetings: 0,
-                        checkins: 0, bookText: false, mode: mode };
+                        checkins: 0, breaks: 0, bookText: false, mode: mode };
 
         var prepare = mode === 'replace'
             ? Promise.all([
@@ -172,7 +175,8 @@
                 DB.clear(DB.STORE_INVENTORY),
                 DB.clear(DB.STORE_CRAVINGS),
                 DB.clear(DB.STORE_MEETINGS),
-                DB.clear(DB.STORE_CHECKINS)
+                DB.clear(DB.STORE_CHECKINS),
+                DB.clear(DB.STORE_BREAKS)
             ])
             : Promise.resolve();
 
@@ -236,13 +240,24 @@
             });
             summary.checkins = checkins.length;
 
+            // Absent from anything written before 2.17, same rule as the rest.
+            var existingBreaks = {};
+            if (mode === 'merge') {
+                Store.state.breaks.forEach(function (row) { existingBreaks[row.id] = row; });
+            }
+            var breaks = (payload.breaks || []).map(function (row) {
+                return newerOf(row, existingBreaks[row.id]);
+            });
+            summary.breaks = breaks.length;
+
             return Promise.all([
                 DB.putMany(DB.STORE_NOTES, notes),
                 DB.putMany(DB.STORE_BOOKMARKS, bookmarks),
                 DB.putMany(DB.STORE_INVENTORY, inventory),
                 DB.putMany(DB.STORE_CRAVINGS, cravings),
                 DB.putMany(DB.STORE_MEETINGS, meetings),
-                DB.putMany(DB.STORE_CHECKINS, checkins)
+                DB.putMany(DB.STORE_CHECKINS, checkins),
+                DB.putMany(DB.STORE_BREAKS, breaks)
             ]);
         }).then(function () {
             if (payload.book && payload.book.sections && payload.book.sections.length) {
