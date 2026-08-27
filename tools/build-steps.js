@@ -113,7 +113,18 @@ function main(argv) {
         const references = (step.references || []).map((ref, i) =>
             Object.assign({}, ref, { paraIndex: resolve(ref, label + ' reference ' + (i + 1)) }));
 
-        return Object.assign({}, step, { text: text, references: references });
+        // A work module can point into the book too — step three and step seven
+        // each show a passage. Left unresolved, a typo there would fail silently
+        // at run time instead of here.
+        let work = step.work;
+        if (work && work.prayerRef) {
+            work = Object.assign({}, work, {
+                prayerRef: Object.assign({}, work.prayerRef,
+                    { paraIndex: resolve(work.prayerRef, label + ' work passage') })
+            });
+        }
+
+        return Object.assign({}, step, { text: text, references: references, work: work });
     });
 
     /* Two steps can write into one row — step nine records its progress onto the

@@ -850,6 +850,82 @@ async function shot(page, name) {
         carried.every((n) => !n.sectionId),
         carried.length + ' notes, ' + carriedAnswers.length + ' answers');
 
+    // ── steps three and seven: a dated decision ───────────────────────────
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=2');           // step 3
+    await page.waitForSelector('#screen-step.is-active');
+    check('step three now has its work section', await page.isVisible('#step-work'));
+    check('the passage is shown from the book, not stored twice',
+        (await page.textContent('.prayer-text')).indexOf('We were now at step three') === 0);
+    check('the button says what this step does',
+        (await page.textContent('.prayer-take .btn')) === 'Taken today');
+
+    await page.click('.prayer-passage .chip');
+    await page.waitForSelector('#screen-reader.is-active');
+    check('and it opens at that passage in the right chapter',
+        (await page.textContent('#reader-title')) === 'How It Works' &&
+        (await page.$eval('.para.is-target', (e) => e.textContent).catch(() => ''))
+            .indexOf('We were now at step three') === 0);
+    await page.click('#reader-back');
+    await page.waitForSelector('#screen-step.is-active');
+
+    await page.click('.prayer-take .btn');
+    await page.waitForTimeout(250);
+    check('a taking is recorded', (await page.$$eval('.prayer-record', (e) => e.length)) === 1);
+    await page.click('.prayer-take .btn');
+    await page.waitForTimeout(250);
+    check('the same day twice is refused, not duplicated',
+        (await page.$$eval('.prayer-record', (e) => e.length)) === 1);
+
+    // an earlier taking can be recorded, and sorts under the recent one
+    await page.fill('.prayer-date', '2024-03-05');
+    await page.click('.prayer-take .btn');
+    await page.waitForTimeout(250);
+    const takings = await page.$$eval('.prayer-when', (e) => e.map((x) => x.textContent.trim()));
+    check('an earlier date can be added and sorts newest first',
+        takings.length === 2 && takings[0].indexOf('most recent') > 0 &&
+        takings[1].indexOf('Mar 5, 2024') === 0,
+        JSON.stringify(takings));
+
+    await page.click('.prayer-record >> nth=1 >> .chip:has-text("Add a note")');
+    await page.waitForSelector('#paste-sheet:not([hidden])');
+    await page.fill('#paste-body', 'Said it out loud with J.');
+    await page.click('#paste-confirm');
+    await page.waitForTimeout(250);
+    check('a note can be kept against a taking',
+        (await page.textContent('.prayer-record >> nth=1 >> .prayer-note')) === 'Said it out loud with J.');
+
+    await page.click('.prayer-record >> nth=1 >> .chip:has-text("Edit note")');
+    await page.waitForSelector('#paste-sheet:not([hidden])');
+    check('editing a note opens with the note in it, not blank',
+        (await page.inputValue('#paste-body')) === 'Said it out loud with J.');
+    await page.click('#paste-cancel');
+
+    // step seven is the same module with its own wording and its own dates
+    await page.click('#step-back');
+    await page.click('.step-item >> nth=6');
+    await page.waitForSelector('#screen-step.is-active');
+    check('step seven has its own passage and wording',
+        (await page.textContent('.prayer-take .btn')) === 'Asked today' &&
+        (await page.textContent('.prayer-text')).indexOf('When ready, we say') === 0);
+    check('and keeps its own dates, separate from step three',
+        (await page.$$eval('.prayer-record', (e) => e.length)) === 0);
+
+    const prayerBackup = JSON.parse(await page.evaluate(
+        () => Backup.serialize({ includeBookText: false })));
+    const takenRows = (prayerBackup.inventory || []).filter((r) => r.tableId === 'prayer');
+    check('a backup carries the dates',
+        takenRows.length === 2 && takenRows.every((r) => !!r.on),
+        takenRows.length + ' rows');
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.click('.tab[data-screen="steps"]');
+    await page.click('.step-item >> nth=2');
+    await page.waitForSelector('#screen-step.is-active');
+    check('the record survives a reload',
+        (await page.$$eval('.prayer-record', (e) => e.length)) === 2);
+    await page.click('#step-back');
+
     // ── appearance ────────────────────────────────────────────────────────
     await page.click('.tab[data-screen="settings"]');
     await page.selectOption('#set-theme', 'dark');

@@ -4,7 +4,7 @@
  "edition": "First Edition (1939)",
  "wordingNote": "The steps are quoted from the 1939 first edition. The wording differs in places from later editions — step twelve here reads 'spiritual experience' where later editions read 'spiritual awakening'.",
  "authorNote": "Explanations and questions are written for this app. They are not official A.A. material, not from the 1952 book Twelve Steps and Twelve Traditions, and are meant to be edited. Only the quoted step text and the linked passages come from the book.",
- "builtAt": "2026-08-27T04:49:18.720Z",
+ "builtAt": "2026-08-27T04:59:26.169Z",
  "steps": [
   {
    "id": "step01",
@@ -324,7 +324,8 @@
     "intro": "A decision taken more than once. Each time is kept with its date rather than replacing the last.",
     "prayerRef": {
      "sectionId": "ch05",
-     "anchor": "We were now at step three"
+     "anchor": "We were now at step three",
+     "paraIndex": 31
     },
     "promptLabel": "Taken today"
    }
@@ -812,7 +813,8 @@
     "intro": "Asked more than once by most people. Each time is kept with its date rather than replacing the last, so you can see the years it took rather than only the latest.",
     "prayerRef": {
      "sectionId": "ch06",
-     "anchor": "When ready, we say something like this"
+     "anchor": "When ready, we say something like this",
+     "paraIndex": 12
     },
     "promptLabel": "Asked today"
    }

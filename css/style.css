@@ -351,6 +351,59 @@ button { cursor: pointer; }
 
 /* ════════════════════════════════════════════════════════════════ steps ══ */
 
+/* ── Steps three and seven: a dated record of a decision ─────────────────── */
+
+.prayer-passage {
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 10px 10px 0;
+  background: var(--bg-raised);
+  padding: 14px 15px;
+  margin-bottom: 14px;
+}
+.prayer-text {
+  margin: 0 0 11px;
+  font-family: var(--reader-family);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.prayer-take { display: flex; gap: 9px; align-items: center; margin-bottom: 14px; }
+.prayer-date { flex: 1 1 auto; min-width: 0; padding: 10px 11px; font-size: 15px; }
+.prayer-take .btn { flex: 0 0 auto; }
+
+.prayer-list { display: flex; flex-direction: column; gap: 9px; }
+
+.prayer-record {
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--bg-raised);
+  padding: 12px 13px 4px;
+}
+.prayer-record.is-latest { border-left: 3px solid var(--accent); }
+.prayer-when {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.prayer-latest {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-left: 6px;
+}
+.prayer-note {
+  margin: 7px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+}
+.prayer-record .card-actions { padding: 10px 0 8px; }
+
+
 .journal-head {
   display: flex;
   align-items: baseline;

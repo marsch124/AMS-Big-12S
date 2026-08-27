@@ -547,11 +547,11 @@
         var holder = $('step-work');
         var body = $('step-work-body');
 
-        // Only step four's tables are built. The other kinds are declared in the
-        // data and still have no renderer, so their steps show no work section
-        // rather than an empty one.
+        // Kinds still declared in the data with no renderer show no work section
+        // rather than an empty one. Remaining: two-lists, sittings,
+        // carried-defects, people-worked-with.
         var kinds = ['inventory-tables', 'amends-list', 'amends-progress',
-            'daily-entries', 'daily-practice'];
+            'daily-entries', 'daily-practice', 'prayer'];
         if (!work || kinds.indexOf(work.kind) === -1) {
             holder.hidden = true;
             body.innerHTML = '';
@@ -570,9 +570,134 @@
             body.appendChild(renderAmendsList(step, work));
         } else if (work.kind === 'amends-progress') {
             body.appendChild(renderAmendsProgress(step, work));
+        } else if (work.kind === 'prayer') {
+            body.appendChild(renderPrayer(step, work));
         } else {
             body.appendChild(renderDaily(step, work));
         }
+    }
+
+    /* ------------------------------------------------ steps three and seven */
+
+    /*
+     * A decision taken more than once. Every taking is kept with its date, so
+     * the page shows the years rather than only the latest.
+     *
+     * The passage itself is not stored here — it is pulled from the bundled
+     * text through the same anchor the book references use, so it stays right
+     * if a different copy of the book is ever imported.
+     */
+    function renderPrayer(step, work) {
+        var wrap = document.createElement('div');
+        var tableId = work.tableId || work.kind;
+
+        var index = Store.resolveStepRef(work.prayerRef);
+        var section = index === null ? null : Store.getSection(work.prayerRef.sectionId);
+
+        if (section) {
+            var passage = document.createElement('div');
+            passage.className = 'prayer-passage';
+            passage.innerHTML = '<p class="prayer-text">' +
+                escapeHtml(section.paragraphs[index]) + '</p>';
+            var read = document.createElement('button');
+            read.className = 'chip';
+            read.textContent = 'Read it in ' + section.title;
+            read.addEventListener('click', function () {
+                UI.openReader(work.prayerRef.sectionId, { paraIndex: index, highlight: true });
+            });
+            passage.appendChild(read);
+            wrap.appendChild(passage);
+        }
+
+        var records = Store.inventoryFor(step.id, tableId).slice().sort(function (a, b) {
+            return (b.on || '').localeCompare(a.on || '');
+        });
+
+        var take = document.createElement('div');
+        take.className = 'prayer-take';
+        var when = document.createElement('input');
+        when.type = 'date';
+        when.className = 'field prayer-date';
+        when.value = dayISO();
+        when.max = dayISO();
+        var mark = document.createElement('button');
+        mark.className = 'btn btn-primary';
+        mark.textContent = work.promptLabel || 'Today';
+        mark.addEventListener('click', function () {
+            var on = when.value || dayISO();
+            if (records.some(function (r) { return r.on === on; })) {
+                toast('Already recorded for that day');
+                return;
+            }
+            Store.saveInventoryRow({ stepId: step.id, tableId: tableId, on: on, values: {} })
+                .then(function () {
+                    toast('Recorded');
+                    renderStep(Store.getStep(step.id));
+                });
+        });
+        take.appendChild(when);
+        take.appendChild(mark);
+        wrap.appendChild(take);
+
+        var list = document.createElement('div');
+        list.className = 'prayer-list';
+
+        if (!records.length) {
+            var none = document.createElement('p');
+            none.className = 'hint';
+            none.textContent = 'No dates yet.';
+            list.appendChild(none);
+        }
+
+        records.forEach(function (row, i) {
+            var note = (row.values && row.values.note) || '';
+            var card = document.createElement('div');
+            card.className = 'prayer-record' + (i === 0 ? ' is-latest' : '');
+            card.innerHTML =
+                '<div class="prayer-when">' + escapeHtml(formatDay(row.on)) +
+                    (i === 0 && records.length > 1 ? ' <span class="prayer-latest">most recent</span>' : '') +
+                '</div>' +
+                (note ? '<p class="prayer-note">' + escapeHtml(note) + '</p>' : '');
+
+            var actions = document.createElement('div');
+            actions.className = 'card-actions';
+
+            var noteBtn = document.createElement('button');
+            noteBtn.className = 'chip';
+            noteBtn.textContent = note ? 'Edit note' : 'Add a note';
+            noteBtn.addEventListener('click', function () {
+                openPaste({
+                    title: formatDay(row.on),
+                    hint: 'What it was like, what you were deciding, who was there. Optional.',
+                    placeholder: 'Said it out loud with J. on the phone.',
+                    value: note,
+                    onConfirm: function (value) {
+                        Store.saveInventoryRow(Object.assign({}, row,
+                            { values: { note: String(value || '').trim() } }))
+                            .then(function () { renderStep(Store.getStep(step.id)); });
+                    }
+                });
+            });
+            actions.appendChild(noteBtn);
+
+            var del = document.createElement('button');
+            del.className = 'chip';
+            del.textContent = 'Remove';
+            del.addEventListener('click', function () {
+                if (!confirm('Remove ' + formatDay(row.on) + ' from this list?')) return;
+                Store.deleteInventoryRow(row.id).then(function () {
+                    toast('Removed');
+                    renderStep(Store.getStep(step.id));
+                });
+            });
+            actions.appendChild(del);
+
+            card.appendChild(actions);
+            list.appendChild(card);
+        });
+
+        wrap.appendChild(list);
+        return wrap;
     }
 
     /* --------------------------------------------------- steps ten and eleven */
@@ -1915,7 +2040,9 @@
     function openPaste(config) {
         $('paste-title').textContent = config.title;
         $('paste-hint').textContent = config.hint || '';
-        $('paste-body').value = '';
+        // Editing something already written has to arrive with it in the box;
+        // without this an "edit" would quietly start from blank.
+        $('paste-body').value = config.value || '';
         $('paste-body').placeholder = config.placeholder || 'Paste here…';
         pasteHandler = config.onConfirm;
         openSheet('paste-sheet');
