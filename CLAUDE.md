@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.7 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.8 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -271,6 +271,25 @@ Step 4 gets full tables, not free text. Step work rides the normal backup, with 
 plain warning at the moment of export. **No lock and no encryption** — asked and
 declined explicitly.
 
+## The rules, and adjusting your place (2.8)
+
+**The rules live in settings** as `settings.rules`, an array of strings, seeded
+with Martin's four. Edited as text, one to a line, because four short lines do
+not need a row editor and a textarea is faster on a phone. Blank lines are
+dropped on save; an empty list is a choice and is kept, so clearing them does
+not bring the defaults back. They are one list, not one per person — if rules
+with a sponsee ever need keeping apart from rules with a sponsor, ask him
+rather than guessing at an attribution.
+
+**The continue card is a card with a button in it.** `.continue-card` is a div
+holding `.continue-main` (the whole face, which resumes) and `.continue-adjust`
+(the corner control, which opens the sheet). A button inside a button is invalid
+HTML, which is why it is shaped this way — do not collapse it back.
+
+**`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
+IndexedDB record would let `loadPosition()` find the mirror at the next boot and
+put the card straight back.
+
 ## Whether you have been here (2.7)
 
 **Only reading and writing count as activity.** `Store.lastActivity()` takes the
@@ -402,7 +421,7 @@ tools/epub-to-text.py  EPUB → plain text, skipping publisher matter
 tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    262 end-to-end browser checks
+tools/smoke-test.js    272 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -414,7 +433,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 262 checks, expect 262/262
+node tools/smoke-test.js                  # 272 checks, expect 272/272
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

@@ -157,6 +157,38 @@ async function openContents(page) {
     check('tapping it goes to the day it counts from',
         (await page.inputValue('#set-sober-since')) === '2023-03-03');
 
+    // ── the rules ─────────────────────────────────────────────────────────
+    // The block above ends on the Settings screen.
+    await page.click('.tab[data-screen="home"]');
+    await page.waitForSelector('#screen-home.is-active');
+
+    const rules = await page.$$eval('#rules-list li', (e) => e.map((x) => x.textContent));
+    check('the rules are there from the first run', rules.length === 4 &&
+        rules.indexOf('No alcohol') !== -1, rules.join(' · '));
+
+    await page.click('#rules');
+    await page.waitForSelector('#rules-sheet:not([hidden])');
+    check('and the sheet opens on them, one to a line',
+        (await page.inputValue('#rules-sheet-text')).split('\n').length === 4);
+    await page.fill('#rules-sheet-text', 'No alcohol\n\nNo white sugar\nBed by eleven');
+    await page.click('#rules-save');
+    await page.waitForSelector('#rules-sheet', { state: 'hidden' });
+    const edited = await page.$$eval('#rules-list li', (e) => e.map((x) => x.textContent));
+    check('editing keeps the order and drops the blank lines',
+        edited.join('|') === 'No alcohol|No white sugar|Bed by eleven', edited.join(' · '));
+
+    await page.click('#rules');
+    await page.fill('#rules-sheet-text', '');
+    await page.click('#rules-save');
+    await page.waitForTimeout(150);
+    check('emptying them takes the card off the home screen',
+        await page.$eval('#rules', (e) => e.hasAttribute('hidden')));
+
+    // Put them back, since the rest of the run is looked at as a whole.
+    await page.evaluate(() => Store.saveSettings({ rules: [
+        'No white flour', 'No alcohol', 'No white sugar', 'No substances that trigger'] }));
+    await page.evaluate(() => UI.showScreen('home'));
+
     // ── whether you have been here ────────────────────────────────────────
     check('with nothing written, the line says exactly that',
         (await page.textContent('#lastuse')) === 'Nothing read or written yet.');
@@ -1674,6 +1706,35 @@ async function openContents(page) {
     await page.selectOption('#set-theme', 'sepia');
     check('settings shows what text is loaded',
         (await page.textContent('#book-status')).includes('First Edition (1939)'));
+
+    // ── adjusting where you are in the book ───────────────────────────────
+    await page.click('.tab[data-screen="home"]');
+    await page.waitForSelector('#home-continue:not([hidden])');
+    await page.click('#home-continue [data-adjust]');
+    await page.waitForSelector('#continue-sheet:not([hidden])');
+    check('the card can be adjusted, and says where it thinks you are',
+        /through the book/.test(await page.textContent('#continue-sheet-where')),
+        await page.textContent('#continue-sheet-where'));
+
+    await page.click('#continue-restart');
+    await page.waitForSelector('#continue-sheet', { state: 'hidden' });
+    check('starting the chapter again puts it at the top',
+        (await page.evaluate(() => Store.state.position.paraIndex)) === 0);
+
+    await page.click('#home-continue [data-adjust]');
+    await page.waitForSelector('#continue-sheet:not([hidden])');
+    await page.click('#continue-forget');
+    await page.waitForTimeout(250);
+    check('forgetting it clears the position', await page.evaluate(() => !Store.state.position));
+    check('and takes the card away', await page.$eval('#home-continue', (e) => e.hasAttribute('hidden')));
+    check('so the read shortcut offers the beginning again',
+        (await page.textContent('#shortcut-read-note')) === 'From the beginning');
+    check('and the notes are untouched by it',
+        (await page.evaluate(() => Store.state.notes.length)) > 0);
+
+    // Put a place back, so what follows sees the app as it normally is.
+    await page.evaluate(() => Store.savePosition({ sectionId: 'ch05', paraIndex: 12, ratio: 0.2 }));
+    await page.click('.tab[data-screen="settings"]');
 
     // A morning time reads the same either way, so prove it on an evening one.
     const evening = await page.evaluate(async () => {

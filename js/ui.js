@@ -183,6 +183,7 @@
     function renderHome() {
         startClock();
         renderDayCount();
+        renderRules();
         renderPassage();
         renderContinueCard('home-continue');
         renderShortcuts();
@@ -232,6 +233,45 @@
 
         line.textContent = 'Nothing read or written for ' + days + ' days.';
         line.classList.add(days >= 7 ? 'is-cold' : 'is-warm');
+    }
+
+    function currentRules() {
+        return (Store.state.settings.rules || []).filter(function (rule) {
+            return String(rule).trim().length > 0;
+        });
+    }
+
+    function renderRules() {
+        var card = $('rules');
+        var rules = currentRules();
+        card.hidden = !rules.length;
+        if (!rules.length) return;
+
+        var list = $('rules-list');
+        list.innerHTML = '';
+        rules.forEach(function (rule) {
+            var item = document.createElement('li');
+            item.textContent = rule;
+            list.appendChild(item);
+        });
+        $('rules-edit').textContent = rules.length === 1
+            ? 'One rule · tap to change it'
+            : rules.length + ' rules · tap to change them';
+    }
+
+    function openRulesSheet() {
+        $('rules-sheet-text').value = currentRules().join('\n');
+        openSheet('rules-sheet');
+    }
+
+    function saveRulesSheet() {
+        var rules = $('rules-sheet-text').value.split('\n')
+            .map(function (line) { return line.trim(); })
+            .filter(function (line) { return line.length > 0; });
+        Store.saveSettings({ rules: rules }).then(function () {
+            closeSheets();
+            renderRules();
+        });
     }
 
     /*
@@ -757,6 +797,7 @@
      */
     function renderContinueCard(prefix) {
         var card = $(prefix === 'continue' ? 'continue-card' : prefix);
+        var main = $(prefix + '-main');
         var position = Store.state.position;
         if (!position || !Store.state.book.textIncluded) { card.hidden = true; return; }
 
@@ -770,9 +811,30 @@
         $(prefix + '-progress').style.width = Store.progressPercent() + '%';
         $(prefix + '-meta').textContent = Store.progressPercent() + '% through the book · ' +
             formatDate(position.updatedAt);
-        card.onclick = function () {
+        main.onclick = function () {
             openReader(position.sectionId, { paraIndex: index, ratio: position.ratio });
         };
+    }
+
+    /*
+     * Adjusting what the card points at. Two things are wanted and neither was
+     * possible before: taking a chapter from the top again, and saying that you
+     * are not anywhere in the book just now. Moving it somewhere else entirely
+     * is already a matter of opening that chapter from the contents.
+     */
+    function openContinueSheet() {
+        var position = Store.state.position;
+        var section = position && Store.getSection(position.sectionId);
+        $('continue-sheet-where').textContent = section
+            ? section.title + ' · ' + Store.progressPercent() + '% through the book'
+            : '';
+        openSheet('continue-sheet');
+    }
+
+    function refreshContinueCards() {
+        renderContinueCard('home-continue');
+        renderContinueCard('continue');
+        if (current.screen === 'home') renderHome();
     }
 
     /* ------------------------------------------------------------- reader */
@@ -3362,6 +3424,33 @@
         });
         Array.prototype.forEach.call(document.querySelectorAll('[data-goto="settings-import"]'), function (btn) {
             btn.addEventListener('click', function () { showSettingsAt('settings-import'); });
+        });
+
+        // ── the rules, and where you are in the book ───────────────────────
+        $('rules').addEventListener('click', openRulesSheet);
+        $('rules-save').addEventListener('click', saveRulesSheet);
+        $('rules-cancel').addEventListener('click', closeSheets);
+
+        Array.prototype.forEach.call(document.querySelectorAll('[data-adjust]'), function (btn) {
+            btn.addEventListener('click', openContinueSheet);
+        });
+        $('continue-sheet-cancel').addEventListener('click', closeSheets);
+        $('continue-restart').addEventListener('click', function () {
+            var position = Store.state.position;
+            if (!position) { closeSheets(); return; }
+            Store.savePosition({ sectionId: position.sectionId, paraIndex: 0, ratio: 0 })
+                .then(function () {
+                    closeSheets();
+                    refreshContinueCards();
+                    toast('Back to the top of the chapter');
+                });
+        });
+        $('continue-forget').addEventListener('click', function () {
+            Store.clearPosition().then(function () {
+                closeSheets();
+                refreshContinueCards();
+                toast('Forgotten. The book starts from the beginning again.');
+            });
         });
 
         // ── a meeting ──────────────────────────────────────────────────────

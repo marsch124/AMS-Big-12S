@@ -24,7 +24,16 @@
         spousePhone: '',
         // The first day. Empty until it is set, and the counter stays off the
         // home screen until then rather than showing a nought.
-        soberSince: ''
+        soberSince: '',
+        // The rules as they stand — the ones agreed with a sponsor, or set with
+        // a sponsee. Seeded with Martin's four; an empty list is a choice and
+        // is kept, so clearing them does not bring them back.
+        rules: [
+            'No white flour',
+            'No alcohol',
+            'No white sugar',
+            'No substances that trigger'
+        ]
     };
 
     var POSITION_MIRROR_KEY = 'ams-big-12s:position';
@@ -809,6 +818,19 @@
         });
     }
 
+    /*
+     * Forget where you were. The card goes, and the app offers the book from the
+     * beginning again — which is what somebody starting a fresh read wants, and
+     * there was no way to say it before.
+     */
+    function clearPosition() {
+        state.position = null;
+        try {
+            localStorage.removeItem(POSITION_MIRROR_KEY);
+        } catch (error) { /* nothing we can do; IndexedDB is the real store */ }
+        return DB.remove(DB.STORE_META, 'position');
+    }
+
     function savePosition(position) {
         position.updatedAt = new Date().toISOString();
         state.position = position;
@@ -1504,6 +1526,7 @@
 
         loadPosition: loadPosition,
         savePosition: savePosition,
+        clearPosition: clearPosition,
         progressPercent: progressPercent,
 
         loadNotes: loadNotes,

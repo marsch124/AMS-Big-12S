@@ -17,7 +17,9 @@ without a signal.
   the ones that passed; your sponsor a tap away
 - 👥 **Meetings** — what you meant to bring up, and the record of the ones you got to
 - 📖 **Distraction-free reader** — serif or sans, four themes, adjustable size and spacing
-- 🔖 **Remembers where you stopped** — down to the paragraph, restored on every launch
+- 🔖 **Remembers where you stopped** — down to the paragraph, restored on every launch, and
+  adjustable: start the chapter again, or forget where you are altogether
+- 📋 **The rules as they stand** — what you have agreed, on the home screen where you see it
 - ✎ **Notes on any passage** — tap a paragraph, write a note; it stays attached to those words
 - 🗣 **Things to bring up** — mark anything for your sponsor, a sponsee or a meeting, keep a
   running count of what is still waiting, tick it off afterwards, and copy the list out first
@@ -42,6 +44,11 @@ without a signal.
 
 The app opens here rather than in the contents, because reading is not the only
 reason anyone picks it up.
+
+**The rules** — the ones you have agreed, with a sponsor or with a sponsee — sit
+under that. Short enough to read every day without deciding to, which is the
+point of having them written down at all. Tap them to change them: one to a
+line, and an empty list takes the card away.
 
 **Whether you have been here** sits just under the day count: how long since you
 actually read or wrote something. Opening the app does not count — standing in
@@ -399,7 +406,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 262 checks
+node tools/smoke-test.js      # 272 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that

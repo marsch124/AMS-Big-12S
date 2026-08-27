@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=25">
+<link rel="stylesheet" href="css/style.css?v=26">
 </head>
 <body>
 
@@ -45,19 +45,32 @@
            direction: quiet while it is recent, warmer as it stretches out. -->
       <p class="lastuse" id="lastuse"></p>
 
+      <!-- The rules as they stand. Short enough to read every day without
+           deciding to, which is the whole point of having them written down. -->
+      <button class="rules" id="rules" hidden>
+        <span class="rules-label">The rules</span>
+        <ul class="rules-list" id="rules-list"></ul>
+        <span class="rules-edit" id="rules-edit"></span>
+      </button>
+
       <button class="passage-card" id="passage-card">
         <span class="passage-label">Today’s passage</span>
         <span class="passage-text" id="passage-text"></span>
         <span class="passage-where" id="passage-where"></span>
       </button>
 
-      <button class="continue-card" id="home-continue" hidden>
-        <span class="continue-label">Continue reading</span>
-        <span class="continue-title" id="home-continue-title"></span>
-        <span class="continue-excerpt" id="home-continue-excerpt"></span>
-        <span class="progress"><span class="progress-bar" id="home-continue-progress"></span></span>
-        <span class="continue-meta" id="home-continue-meta"></span>
-      </button>
+      <div class="continue-card" id="home-continue" hidden>
+        <button class="continue-main" id="home-continue-main">
+          <span class="continue-label">Continue reading</span>
+          <span class="continue-title" id="home-continue-title"></span>
+          <span class="continue-excerpt" id="home-continue-excerpt"></span>
+          <span class="progress"><span class="progress-bar" id="home-continue-progress"></span></span>
+          <span class="continue-meta" id="home-continue-meta"></span>
+        </button>
+        <button class="continue-adjust" data-adjust aria-label="Adjust where you are">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/></svg>
+        </button>
+      </div>
 
       <h2 class="section-heading">What brings you here</h2>
       <!-- Written in the first person, because that is how the reason arrives:
@@ -151,13 +164,18 @@
         <button class="btn btn-primary" data-goto="settings-import">Import book text</button>
       </div>
 
-      <button class="continue-card" id="continue-card" hidden>
-        <span class="continue-label">Continue reading</span>
-        <span class="continue-title" id="continue-title"></span>
-        <span class="continue-excerpt" id="continue-excerpt"></span>
-        <span class="progress"><span class="progress-bar" id="continue-progress"></span></span>
-        <span class="continue-meta" id="continue-meta"></span>
-      </button>
+      <div class="continue-card" id="continue-card" hidden>
+        <button class="continue-main" id="continue-main">
+          <span class="continue-label">Continue reading</span>
+          <span class="continue-title" id="continue-title"></span>
+          <span class="continue-excerpt" id="continue-excerpt"></span>
+          <span class="progress"><span class="progress-bar" id="continue-progress"></span></span>
+          <span class="continue-meta" id="continue-meta"></span>
+        </button>
+        <button class="continue-adjust" data-adjust aria-label="Adjust where you are">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/></svg>
+        </button>
+      </div>
 
       <h2 class="section-heading">Contents</h2>
       <nav class="toc" id="toc"></nav>
@@ -721,6 +739,23 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>The rules, and adjusting where you are</span><span class="ver-tag">2.8</span></summary>
+          <div class="disclosure-body">
+            <p><strong>The rules</strong> — the ones you have agreed, with a sponsor or with a
+               sponsee — now sit on the home screen under the day count. Short enough to read
+               every day without deciding to, which is the point of having them written down
+               at all. Tap them to change them: one to a line. Empty the list and the card
+               goes.</p>
+            <p><strong>Continue reading</strong> can be adjusted. The three dots in the corner
+               of the card offer to <strong>start that chapter again</strong>, or to
+               <strong>forget where you are</strong> altogether — which takes the card away and
+               offers the book from the beginning. Neither touches your notes or your
+               bookmarks. Moving it somewhere else entirely is still a matter of opening that
+               chapter from the contents, which is what sets it.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Whether you have been here, and who to ring</span><span class="ver-tag">2.7</span></summary>
@@ -1429,6 +1464,36 @@
   </div>
 </div>
 
+<div class="sheet" id="continue-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title">Where you are</h2>
+  <p class="sheet-quote" id="continue-sheet-where"></p>
+  <div class="btn-row">
+    <button class="btn" id="continue-restart">Start this chapter again</button>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-danger" id="continue-forget">Forget where I am</button>
+    <button class="btn btn-quiet" id="continue-sheet-cancel">Cancel</button>
+  </div>
+  <p class="hint">
+    Forgetting it takes the card away and offers the book from the beginning again. It does
+    not touch your notes or your bookmarks.
+  </p>
+</div>
+
+<div class="sheet sheet-tall" id="rules-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <h2 class="sheet-title">The rules</h2>
+  <p class="sheet-quote">The ones you have agreed — with your sponsor, or with a sponsee.</p>
+  <textarea id="rules-sheet-text" class="note-input" rows="7"
+            placeholder="One rule to a line."></textarea>
+  <p class="hint">One to a line. Leave it empty and the card goes off the home screen.</p>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="rules-save">Save</button>
+    <button class="btn btn-quiet" id="rules-cancel">Cancel</button>
+  </div>
+</div>
+
 <div class="sheet" id="craving-sheet" hidden>
   <div class="sheet-handle"></div>
   <h2 class="sheet-title" id="craving-sheet-title">How did it end?</h2>
@@ -1553,9 +1618,9 @@
 
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=4"></script>
-<script src="js/store.js?v=13"></script>
+<script src="js/store.js?v=14"></script>
 <script src="js/backup.js?v=5"></script>
-<script src="js/ui.js?v=24"></script>
-<script src="js/app.js?v=12"></script>
+<script src="js/ui.js?v=25"></script>
+<script src="js/app.js?v=13"></script>
 </body>
 </html>
