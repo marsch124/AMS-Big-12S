@@ -4693,6 +4693,9 @@
 
         var card = document.createElement('div');
         card.className = 'card note-card' + (note.discussedAt ? ' is-done' : '');
+        // Who it is for, so the card can wear their colour. Absent on a note
+        // that is for nobody but you.
+        if (note.tag) card.dataset.tag = note.tag;
 
         var main = document.createElement('button');
         main.className = 'card-main';

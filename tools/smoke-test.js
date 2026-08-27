@@ -2135,6 +2135,65 @@ async function openContents(page) {
     check('the filters count what is still waiting',
         chips.includes('Sponsor 1') && chips.includes('Sponsee 1'), chips.join(' / '));
 
+    // ── who a note is for, in colour ──────────────────────────────────────
+    const noteEdges = await page.$$eval('#notes-list .note-card', (cards) =>
+        cards.map((c) => ({
+            tag: c.dataset.tag || '',
+            edge: getComputedStyle(c).borderLeftColor,
+            width: getComputedStyle(c).borderLeftWidth,
+            pill: (() => {
+                const p = c.querySelector('.tag-pill');
+                return p ? getComputedStyle(p).color : '';
+            })(),
+        })));
+    const forSponsor = noteEdges.filter((n) => n.tag === 'sponsor')[0];
+    const forSponsee = noteEdges.filter((n) => n.tag === 'sponsee')[0];
+    const forNobody = noteEdges.filter((n) => n.tag === '')[0];
+    check('a note for your sponsor and one for your sponsee are different colours',
+        !!forSponsor && !!forSponsee && forSponsor.edge !== forSponsee.edge,
+        (forSponsor || {}).edge + ' vs ' + (forSponsee || {}).edge);
+    check('and the pill on each agrees with its edge',
+        forSponsor.pill === forSponsor.edge && forSponsee.pill === forSponsee.edge);
+    check('a note for nobody but you takes no edge at all',
+        !!forNobody && forNobody.width === '1px',
+        forNobody ? forNobody.width + ' ' + forNobody.edge : 'no untagged note');
+
+    // The invariant worth having: a note for your sponsor is the colour of the
+    // tile you would tap to go and meet them. One colour per person, app-wide.
+    const tileColours = await page.evaluate(() => {
+        const probe = document.createElement('span');
+        document.body.appendChild(probe);
+        const read = (v) => {
+            probe.style.color = 'var(' + v + ')';
+            return getComputedStyle(probe).color;
+        };
+        const out = { sponsor: read('--tile-sponsor'), sponsee: read('--tile-sponsee') };
+        probe.remove();
+        return out;
+    });
+    check('a sponsor note is the colour of the sponsor tile on the home screen',
+        forSponsor.edge === tileColours.sponsor,
+        forSponsor.edge + ' vs tile ' + tileColours.sponsor);
+    check('and the same holds for the sponsee',
+        forSponsee.edge === tileColours.sponsee,
+        forSponsee.edge + ' vs tile ' + tileColours.sponsee);
+
+    // Settings tells the two conversations apart the same way.
+    await page.click('.tab[data-screen="settings"]');
+    await page.waitForSelector('#screen-settings.is-active');
+    const ruleTitles = await page.$$eval('.ruleset[data-who]', (sets) =>
+        sets.map((n) => ({
+            who: n.dataset.who,
+            title: getComputedStyle(n.querySelector('.ruleset-title')).color,
+        })));
+    check('the two rule lists in Settings wear the same two colours',
+        ruleTitles.length === 2 &&
+        ruleTitles.filter((r) => r.who === 'sponsor')[0].title === tileColours.sponsor &&
+        ruleTitles.filter((r) => r.who === 'sponsee')[0].title === tileColours.sponsee,
+        ruleTitles.map((r) => r.who + '=' + r.title).join(' '));
+    await page.click('.tab[data-screen="notes"]');
+    await page.waitForSelector('#screen-notes.is-active');
+
     await page.click('#notes-filters .chip[data-filter="sponsor"]');
     await page.waitForTimeout(150);
     check('the sponsor list holds only the sponsor point',

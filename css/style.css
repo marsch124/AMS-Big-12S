@@ -49,6 +49,8 @@
   --tile-sponsee: #22bb66;  --tile-sponsee-on: #0a542f;
   --tile-message: #f0559b;  --tile-message-on: #730039;
   --tile-write:   #f7d117;  --tile-write-on:   #7d690a;
+  --who-sponsor:  var(--tile-sponsor);
+  --who-sponsee:  var(--tile-sponsee);
 
   /* The craving screen. Five rows that look identical are five things to read
      at the worst possible moment; a colour each is a thing to reach for, and
@@ -62,7 +64,7 @@
   --move-reach:   #f0559b;  --move-reach-on:   #730235;
   --move-prayer:  #94a3b8;  --move-prayer-on:  #263141;
 
-  --hue-settings: #5c6470;
+  --hue-settings: #b03a7a;
 
   --reader-size: 19px;
   --reader-leading: 1.65;
@@ -104,6 +106,8 @@
   --tile-sponsee: #8c6d46;  --tile-sponsee-on: #fbf6ea;
   --tile-message: #8c6d46;  --tile-message-on: #fbf6ea;
   --tile-write:   #8c6d46;  --tile-write-on:   #fbf6ea;
+  --who-sponsor:  #8c6d46;
+  --who-sponsee:  #8c6d46;
 
   --move-breathe: #8c6d46;  --move-breathe-on: #fbf6ea;
   --move-headon:  #8c6d46;  --move-headon-on:  #fbf6ea;
@@ -132,7 +136,7 @@
   --hue-steps:    #6d28d9;
   --hue-notes:    #00872d;
   --hue-search:   #008282;
-  --hue-settings: #5c6470;
+  --hue-settings: #b03a7a;
   --wash: #e6f1fb;
 }
 
@@ -159,7 +163,7 @@
   --hue-steps:    #b294e8;
   --hue-notes:    #6fc985;
   --hue-search:   #3fbdb2;
-  --hue-settings: #9aa4b2;
+  --hue-settings: #e885bd;
   --wash: #24282f;
 
   --tile-read:    #2e9bf0;  --tile-read-on:    #00294a;
@@ -1125,6 +1129,14 @@ button { cursor: pointer; }
   letter-spacing: 0.015em;
   color: var(--accent);
 }
+/* The same two colours as the notes and the home tiles: what you have agreed
+   with your sponsor and what you have asked of your sponsee are two different
+   conversations, and they are told apart the same way everywhere. The bullets
+   go with the title — a violet heading over rose bullets is half a thought. */
+.ruleset[data-who="sponsor"] { --who: var(--who-sponsor); }
+.ruleset[data-who="sponsee"] { --who: var(--who-sponsee); }
+.ruleset[data-who] .ruleset-title { color: var(--who); }
+.ruleset[data-who] .rules-list li::before { background: var(--who); }
 .ruleset-empty { margin: 8px 0 0; font-size: 14px; color: var(--text-dim); }
 .ruleset-empty[hidden] { display: none; }
 .ruleset .btn { margin-top: 11px; }
@@ -1860,6 +1872,30 @@ button { cursor: pointer; }
   color: var(--accent);
 }
 .tag-pill.is-done { border-color: var(--rule); color: var(--text-dim); }
+
+/* A note's colour says who it is for, and it is the colour of the tile you
+   would tap to go and meet them. A note for nobody but you takes no edge at
+   all — Reflections are not waiting on a conversation. */
+.note-card[data-tag="sponsor"] { --who: var(--who-sponsor); }
+.note-card[data-tag="sponsee"] { --who: var(--who-sponsee); }
+.note-card[data-tag] {
+  border-left: 4px solid var(--who);
+}
+.note-card[data-tag] .tag-pill { border-color: var(--who); color: var(--who); }
+.note-card[data-tag].is-done { border-left-color: var(--rule); }
+
+/* The two filters that name a person are lit in that person's colour, so the
+   list and the filter above it agree. */
+#notes-filters .chip[data-filter="sponsor"].is-active {
+  background: var(--who-sponsor);
+  border-color: var(--who-sponsor);
+  color: var(--tile-sponsor-on);
+}
+#notes-filters .chip[data-filter="sponsee"].is-active {
+  background: var(--who-sponsee);
+  border-color: var(--who-sponsee);
+  color: var(--tile-sponsee-on);
+}
 
 .card-actions {
   display: flex;

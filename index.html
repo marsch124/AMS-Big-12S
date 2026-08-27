@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=36">
+<link rel="stylesheet" href="css/style.css?v=37">
 </head>
 <body>
 
@@ -790,13 +790,13 @@
           what you keep, and what you have asked of someone else. One rule to a line, with
           <strong>**bold**</strong> and <em>*italics*</em> if a word needs the weight.
         </p>
-        <div class="ruleset">
+        <div class="ruleset" data-who="sponsor">
           <h3 class="ruleset-title">With my sponsor</h3>
           <ul class="rules-list" id="rules-sponsor-list"></ul>
           <p class="ruleset-empty" id="rules-sponsor-empty" hidden>Nothing written down yet.</p>
           <button class="btn btn-quiet btn-small" data-rules="sponsor">Change these</button>
         </div>
-        <div class="ruleset">
+        <div class="ruleset" data-who="sponsee">
           <h3 class="ruleset-title">With my sponsee</h3>
           <ul class="rules-list" id="rules-sponsee-list"></ul>
           <p class="ruleset-empty" id="rules-sponsee-empty" hidden>Nothing written down yet.</p>
@@ -1219,6 +1219,28 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>One colour per person</span><span class="ver-tag">2.25</span></summary>
+          <div class="disclosure-body">
+            <p><strong>A note's colour says who it is for.</strong> Violet down the edge for
+               your sponsor, green for your sponsee — and they are the colours of the tiles
+               you would tap to go and meet them, so it is one colour per person right
+               across the app. The filter above the list lights in the same colour as the
+               notes underneath it.</p>
+            <p><strong>A note for nobody but you takes no edge at all.</strong> Reflections
+               are not waiting on a conversation, and they should not look as though they
+               are.</p>
+            <p><strong>Settings tells the two rule lists apart the same way</strong> —
+               <em>With my sponsor</em> in violet, <em>With my sponsee</em> in green,
+               bullets included. They are two different conversations and the app now says
+               so without you having to read the heading.</p>
+            <p><strong>Settings has a colour of its own at last.</strong> It was slate,
+               which made its sliders and switches look like nothing had been done to them.
+               It is rose now — still the quiet tab, but on purpose rather than by
+               default.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Colour where it earns its place</span><span class="ver-tag">2.24</span></summary>
@@ -2616,7 +2638,7 @@
 <script src="js/db.js?v=8"></script>
 <script src="js/store.js?v=25"></script>
 <script src="js/backup.js?v=10"></script>
-<script src="js/ui.js?v=40"></script>
+<script src="js/ui.js?v=41"></script>
 <script src="js/app.js?v=26"></script>
 </body>
 </html>

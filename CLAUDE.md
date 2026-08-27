@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.24 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.25 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,31 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## One colour per person (2.25)
+
+**`--who-sponsor` and `--who-sponsee` are aliases of `--tile-sponsor` and
+`--tile-sponsee`**, not copies of their values. A note for your sponsor is
+violet because the tile you tap to go and meet him is violet; retint the tile
+and the notes, the filters and the Settings rule lists all follow. Two smoke
+checks compare the rendered note edge against the rendered tile colour, so the
+two can never drift apart silently.
+
+**A note carries `data-tag` and wears an edge; an untagged note gets none.**
+Reflections are not waiting on a conversation and must not look as though they
+are — there is a check that the untagged card's left border is still the plain
+1px rule.
+
+**Settings is rose (`#b03a7a`), not slate.** It is still the quiet tab, but
+`accent-color` on the sliders and checkboxes was already wired to `--accent`,
+so a slate accent made a styled control look like an unstyled one. Rose sits at
+ΔE 64 from its nearest neighbour, and all six tab hues are ≥ΔE 51 apart.
+
+**Bullets follow their heading, not the screen.** `.ruleset[data-who]` sets
+`--who` on the whole block so `.ruleset-title` and `.rules-list li::before`
+agree — a violet heading over rose bullets is half a thought. The *What else
+helps* list keeps the screen's accent, correctly: that one belongs to nobody in
+particular.
 
 ## Where colour goes, and where it does not (2.24)
 
@@ -957,7 +982,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    466 end-to-end browser checks
+tools/smoke-test.js    472 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -969,7 +994,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 466 checks, expect 466/466
+node tools/smoke-test.js                  # 472 checks, expect 472/472
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.
