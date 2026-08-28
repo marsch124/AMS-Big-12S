@@ -348,6 +348,13 @@ heuristics, Safari grants to a Home Screen app and usually refuses a tab. Do
 not claim in the UI that this guarantees anything: the panel says what the
 browser actually answered, including "did not say".
 
+**Confirmed on the target device, 2026-08-28.** Martin's iPhone, running from
+the Home Screen, answered yes — so the sentence above is an observation rather
+than an expectation. That is the strong outcome: it exempts the app from the
+routine eviction that was the likeliest way to lose the work. It still does not
+survive deleting the app, clearing website data, or losing the phone, which is
+what the exported file is for.
+
 **The on-device copy is a second chance, not a backup.** It lives in
 localStorage in the same origin as the thing it protects, so a whole-origin
 eviction takes both. What it does cover is the commoner failure — a database
