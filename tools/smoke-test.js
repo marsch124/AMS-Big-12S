@@ -279,9 +279,13 @@ async function openContents(page) {
                 document.documentElement.setAttribute('data-hue', hue);
                 const bg = read('--bg');
                 const raised = read('--bg-raised');
+                // The reader carries its own ground, and it is the surface this
+                // app is read on longest. Deepening it in 2.36 is exactly the
+                // kind of change that quietly takes type below the bar.
+                const paper = read('--paper');
                 asText.forEach((token) => {
                     const c = read(token);
-                    const worst = Math.min(ratio(c, bg), ratio(c, raised));
+                    const worst = Math.min(ratio(c, bg), ratio(c, raised), ratio(c, paper));
                     if (worst < 4.5) {
                         bad.push(theme + '/' + hue + ' ' + token + ' ' + worst.toFixed(2));
                     }
@@ -359,6 +363,60 @@ async function openContents(page) {
         twoDays.morningWash > 5 && twoDays.lightWash < 1,
         'wash ΔE ' + twoDays.morningWash.toFixed(1) + ' vs ' + twoDays.lightWash.toFixed(1));
 
+    /*
+     * The reader is the one screen that is still a page (2.36). In Dark it
+     * always read as a different surface — warm near-black against cool grey
+     * rooms — and in the light themes it did not: Light's --paper was literally
+     * #ffffff, the same value as --bg-raised, so the book was printed on the
+     * card stock. Measured now, in both directions: far enough from the cards
+     * to be another object, and far enough from the other day's page that
+     * Morning and Light do not converge here having been held apart everywhere
+     * else.
+     */
+    const pages = await page.evaluate(() => {
+        const probe = document.createElement('span');
+        document.body.appendChild(probe);
+        const read = (v) => {
+            probe.style.color = 'var(' + v + ')';
+            return getComputedStyle(probe).color.match(/\d+/g).slice(0, 3).map(Number);
+        };
+        const lab = ([r, g, b]) => {
+            const f = (c) => {
+                const x = c / 255;
+                return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+            };
+            const [R, G, B] = [f(r), f(g), f(b)];
+            const X = (0.4124 * R + 0.3576 * G + 0.1805 * B) / 0.95047;
+            const Y = 0.2126 * R + 0.7152 * G + 0.0722 * B;
+            const Z = (0.0193 * R + 0.1192 * G + 0.9505 * B) / 1.08883;
+            const g2 = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+            return [116 * g2(Y) - 16, 500 * (g2(X) - g2(Y)), 200 * (g2(Y) - g2(Z))];
+        };
+        const dE = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+        const was = document.documentElement.getAttribute('data-theme');
+        const out = {};
+        ['morning', 'light', 'dark'].forEach((t) => {
+            document.documentElement.setAttribute('data-theme', t);
+            out[t] = { paper: lab(read('--paper')), raised: lab(read('--bg-raised')) };
+        });
+        document.documentElement.setAttribute('data-theme', was);
+        probe.remove();
+        return {
+            fromCards: ['morning', 'light', 'dark'].map((t) =>
+                [t, dE(out[t].paper, out[t].raised)]),
+            twoPages: dE(out.morning.paper, out.light.paper),
+            morningWarmth: out.morning.paper[2],
+            lightWarmth: out.light.paper[2]
+        };
+    });
+    check('the book is a different surface from the cards, in every theme',
+        pages.fromCards.every(([, d]) => d >= 6),
+        pages.fromCards.map(([t, d]) => t + ' ΔE ' + d.toFixed(1)).join(', '));
+    check('and Morning\u2019s page is not Light\u2019s page either',
+        pages.twoPages >= 3 && pages.morningWarmth > pages.lightWarmth,
+        'ΔE ' + pages.twoPages.toFixed(1) + ', b* ' +
+        pages.morningWarmth.toFixed(1) + ' vs ' + pages.lightWarmth.toFixed(1));
+
     // The browser draws the checkbox, the date field, the selects and the
     // scrollbars, and it draws them light unless the page says otherwise.
     const schemes = await page.evaluate(() => {
@@ -375,7 +433,7 @@ async function openContents(page) {
         schemes.dark === 'dark' && schemes.morning === 'light' && schemes.light === 'light',
         JSON.stringify(schemes));
 
-    check('every type colour clears 4.5:1 on every screen of every theme',
+    check('every type colour clears 4.5:1 on every screen, and on the page, of every theme',
         paletteTrouble.length === 0, paletteTrouble.join(' | ') || 'all clear');
 
     // Headings are ink, not the accent. They were the accent colour for one

@@ -21,7 +21,10 @@
   --bg:        #fcfaf6;
   --bg-raised: #ffffff;
   --bg-sunken: #f1ede4;
-  --paper:     #faf5e9;
+  /* Deeper than any room in this theme, and deeper than the white cards that
+     sit in them: in Morning the rooms are warm already, so the page cannot
+     separate itself by warmth alone and separates by weight of stock. */
+  --paper:     #f4ecd8;
   --text:      #2b2925;
   --text-dim:  #68625c;
   --rule:      #ebe6db;
@@ -106,7 +109,12 @@
   --bg:        #f4f6fa;
   --bg-raised: #ffffff;
   --bg-sunken: #e9edf3;
-  --paper:     #ffffff;
+  /* This was #ffffff — the same value as --bg-raised, so the book was printed
+     on the card stock and the reader was not a different surface at all. It is
+     a pale cream now: in Light the rooms are cool and near-white, so warmth is
+     what separates, exactly as it does in Dark. Paler than Morning's, and less
+     warm, so the two days stay two days in the reader as well. */
+  --paper:     #f9f5ea;
   --text:      #16191f;
   --text-dim:  #666d78;
   /* A drawn edge rather than a hinted one: Light does its separating with
@@ -260,7 +268,16 @@ button { cursor: pointer; }
 
 /* The one surface that is still a page. Reading should feel like reading
    whatever the app around it is doing, so the reader carries its own ground
-   in every theme rather than following --bg. */
+   in every theme rather than following --bg.
+
+   In all three themes --paper is the warm one and the rooms are not: warm
+   near-black against cool grey in Dark, cream against cool white in Light,
+   and in Morning — where the rooms are warm already — a deeper stock than
+   anything else in the theme. It is measured in both directions, because the
+   page has to be plainly a different surface from the cards without becoming
+   a different theme: far enough from --bg-raised to read as another object,
+   and far enough from the other day's page that Morning and Light do not
+   converge here having been held apart everywhere else. */
 #screen-reader { background: var(--paper); }
 
 /* First light, behind the home screen only. Sepia sets --wash to its own

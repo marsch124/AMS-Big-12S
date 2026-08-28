@@ -14,24 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.35 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
-
-## Noticed, not asked for
-
-What is left of two things that came out of looking at all fourteen screens
-across all three themes at the end of the 2.34 colour work. **This has not been
-put to Martin and is not agreed.** Do not act on it unasked — raise it if the
-subject comes up, and if he says yes it is a piece of work like any other.
-
-*(The other one, the Traditions page being the weakest screen in every theme,
-was put to him on 2026-08-28 and he chose it. It is 2.35, below.)*
-
-**Dark handles the reader better than the light themes do.** `--paper` there is
-a warm near-black against cool grey rooms, so the book plainly reads as a
-different kind of surface. In Morning and Light the same distinction is much
-subtler — cream against warm or cool white — and it could be pushed. Worth being
-careful: the reader is the one screen the colour work deliberately left alone,
-and making it *more* distinct is a different thing from making it colourful.
+- **Current version:** 2.36 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -350,6 +333,31 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## The book's own paper (2.36)
+
+**`--paper` in Light was `#ffffff` — the same value as `--bg-raised`.** The book
+was printed on the card stock, so the one screen that is meant to be a page was
+not a different surface at all. Dark had always got this right by accident of
+having been designed last: warm near-black against cool grey rooms.
+
+All three now say the same thing. **The page is the warm one and the rooms are
+not** — and where the rooms are warm already, as in Morning, the page separates
+by weight of stock instead. Morning `#f4ecd8`, Light `#f9f5ea`, Dark unchanged.
+
+**Two measurements hold it, because there are two ways to get this wrong.**
+ΔE from `--bg-raised` ≥ 6 in every theme (Morning 12.5, Light 6.7, Dark 9.7):
+the page has to be plainly another object from the cards. And ΔE ≥ 3 between
+Morning's page and Light's, with Morning the warmer of the two (5.8; b* 10.6 vs
+5.8): the two days were held apart in every room by 2.34 and it would be absurd
+to let them converge on the one surface the app is read on longest.
+
+**`--paper` is now a third ground in the palette audit.** Deepening the surface
+somebody reads a whole chapter on is exactly the change that quietly takes type
+under 4.5:1, and the audit was only ever looking at `--bg` and `--bg-raised`.
+Nothing failed, but Light's `--text-dim` sits at 4.79 on the new page — that is
+the tightest pair in the app, so **do not deepen Light's paper further without
+moving `--text-dim` with it**.
 
 ## Where a Tradition starts (2.35)
 
@@ -1279,7 +1287,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    501 end-to-end browser checks
+tools/smoke-test.js    503 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -1291,7 +1299,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 501 checks, expect 501/501
+node tools/smoke-test.js                  # 503 checks, expect 503/503
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.
