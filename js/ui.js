@@ -2583,12 +2583,15 @@
         $('tradition-sub').textContent = tradition.topic;
 
         // Said on every page rather than once in a note somewhere, because a
-        // reader arriving at Tradition 7 will wonder where the words are.
+        // reader arriving at Tradition 7 will wonder where the words are. It is
+        // the caption under the seed now rather than the first thing on the
+        // page, which is a change of place and not a change of promise.
         $('tradition-wording').textContent =
             'The wording is not printed here. The Traditions were written in 1946 and are ' +
             'not in the 1939 edition this app carries. What follows is ours, and the ' +
             'passages are the book’s.';
 
+        renderTraditionSeed(tradition);
         renderTraditionJournal(tradition);
 
         $('tradition-explanation').innerHTML = tradition.explanation.map(function (para) {
@@ -2600,12 +2603,62 @@
         renderTraditionLog(tradition);
     }
 
+    /* The passage a Tradition grew out of, shown where a step page shows the
+     * step's own words. build-traditions.js has already found it in the book
+     * and cut it out of book.json, so nothing here is quoted from memory or
+     * from the source file; it is resolved again at runtime for the position,
+     * so a reader who imported their own copy keeps the link.
+     *
+     * It is quoted here and NOT repeated in the list below. On a phone, the
+     * headline passage appearing again as row one reads as a bug. */
+    function seedRefFor(tradition) {
+        var found = null;
+        (tradition.references || []).forEach(function (ref) {
+            if (!found && ref.seedText) found = ref;
+        });
+        return found;
+    }
+
+    function renderTraditionSeed(tradition) {
+        var seed = seedRefFor(tradition);
+        var open = $('tradition-seed-open');
+        var index = seed ? Store.resolveStepRef(seed) : null;
+        var section = seed ? Store.getSection(seed.sectionId) : null;
+
+        // No seed at all is a real state — a Tradition this book does not reach
+        // — and the card says so rather than standing empty.
+        $('tradition-seed').classList.toggle('is-groundless', !seed);
+        $('tradition-seed-quote').textContent = seed
+            ? seed.seedText
+            : 'The 1939 book does not speak to this one. It was written before there were ' +
+              'groups for it to be about.';
+        $('tradition-seed-why').textContent = seed ? (seed.why || '') : '';
+        $('tradition-seed-why').hidden = !(seed && seed.why);
+
+        open.onclick = null;
+        if (seed && section && index !== null) {
+            open.hidden = false;
+            open.textContent = section.title + ' ›';
+            open.onclick = function () {
+                UI.openReader(seed.sectionId,
+                    { paraIndex: index, highlight: true, justLooking: true });
+            };
+        } else {
+            // The passage is not in the copy of the text now loaded. The words
+            // still stand; only the way through to them is gone.
+            open.hidden = true;
+        }
+    }
+
     function renderTraditionRefs(tradition) {
         var refs = $('tradition-references');
         refs.innerHTML = '';
 
+        // The seed is already the headline of the page.
+        var seed = seedRefFor(tradition);
         var live = 0;
         tradition.references.forEach(function (ref) {
+            if (ref === seed) return;
             // Resolved again at runtime, trusting the anchor over the stored
             // index, so a reader who imported their own copy keeps the link.
             var index = Store.resolveStepRef(ref);
@@ -2635,14 +2688,31 @@
             refs.appendChild(row);
         });
 
-        // Three of the twelve have almost no 1939 ground, and saying so is
-        // better than letting the reader think the list is thin by accident.
-        $('tradition-ground').textContent = live
-            ? (live === 1 ? 'One passage' : live + ' passages') +
-              ' the 1939 book gives this one. It was written before the Traditions existed, ' +
-              'so what is here is the ground rather than the rule.'
-            : 'The 1939 book does not speak to this one. It was written before there were ' +
-              'groups for it to be about.';
+        // Two of the twelve have almost no 1939 ground, and saying so is better
+        // than letting the reader think the list is thin by accident. The count
+        // is of what is in the list below — the seed is above it, and is named
+        // rather than counted twice.
+        var since = ' The book was written before the Traditions existed, so what is here ' +
+            'is the ground rather than the rule.';
+        var ground;
+        if (live && seed) {
+            ground = (live === 1 ? 'One more passage' : live + ' more passages') +
+                ' behind this one, besides the one above.' + since;
+        } else if (live) {
+            // No seed to be "above": say the plain count, not a count of extras.
+            ground = (live === 1 ? 'One passage' : live + ' passages') +
+                ' the 1939 book gives this one.' + since;
+        } else if (seed) {
+            ground = 'That passage is all the 1939 book gives this one.' + since;
+        } else {
+            ground = 'The 1939 book does not speak to this one. It was written before ' +
+                'there were groups for it to be about.';
+        }
+        $('tradition-ground').textContent = ground;
+
+        // A heading over an empty list is worse than no heading.
+        $('tradition-refs-heading').hidden = !live;
+        refs.hidden = !live;
     }
 
     function renderTraditionJournal(tradition) {

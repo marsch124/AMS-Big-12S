@@ -19,6 +19,13 @@
  * "Anonymity" — and everything else on the page is either ours or quoted from
  * the 1939 text. A `text` field on a tradition is refused outright, so that
  * decision cannot be undone by accident later.
+ *
+ * Exactly one reference per Tradition carries a `seed`: the sentence in that
+ * passage the Tradition was later built on, which the page shows at the top in
+ * the slot where a step shows its own wording. It is held to the same bar
+ * build-daily.js holds its quotes to — found in its own paragraph, once, whole
+ * sentences — and the words that ship are cut out of book.json rather than out
+ * of the source file, so a typo in the typing cannot reach the screen.
  */
 
 const fs = require('fs');
@@ -30,17 +37,42 @@ const BOOK = path.join(ROOT, 'data', 'book.json');
 const OUT = path.join(ROOT, 'data', 'traditions.json');
 
 /* Curly quotes, dashes and stray whitespace differ between what you type and
- * what the typesetter set. Compare on a flattened form of both. This must stay
- * identical to flatten() in build-steps.js and store.js, or the runtime pass
- * will disagree with the build. */
+ * what the typesetter set. Compare on a flattened form of both. The flat string
+ * must stay identical to flatten() in build-steps.js and store.js, or the
+ * runtime pass will disagree with the build.
+ *
+ * The map alongside it is build-daily.js's trick: it remembers where every
+ * flattened character came from, so once a seed matches, the book's own
+ * punctuation and capitals can be cut straight out of the paragraph. */
+function flattenWithMap(text) {
+    const source = String(text);
+    let flat = '';
+    const map = [];
+    let lastWasSpace = false;
+
+    for (let i = 0; i < source.length; i++) {
+        let ch = source[i];
+        if (/\s/.test(ch)) {
+            if (lastWasSpace || flat === '') continue;
+            lastWasSpace = true;
+            flat += ' ';
+            map.push(i);
+            continue;
+        }
+        lastWasSpace = false;
+        if ('‘’ʼ'.indexOf(ch) !== -1) ch = "'";
+        else if ('“”'.indexOf(ch) !== -1) ch = '"';
+        else if ('–—'.indexOf(ch) !== -1) ch = '-';
+        flat += ch.toLowerCase();
+        map.push(i);
+    }
+
+    while (flat.endsWith(' ')) { flat = flat.slice(0, -1); map.pop(); }
+    return { flat: flat, map: map };
+}
+
 function flatten(text) {
-    return String(text)
-        .replace(/[‘’ʼ]/g, "'")
-        .replace(/[“”]/g, '"')
-        .replace(/[–—]/g, '-')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toLowerCase();
+    return flattenWithMap(text).flat;
 }
 
 function loadJson(file, label) {
@@ -65,11 +97,15 @@ function main(argv) {
 
     const sections = {};
     book.sections.forEach((section) => {
-        sections[section.id] = section.paragraphs.map(flatten);
+        sections[section.id] = section.paragraphs.map((paragraph) => {
+            const flat = flattenWithMap(paragraph);
+            return { text: paragraph, flat: flat.flat, map: flat.map };
+        });
     });
 
     const problems = [];
     let resolvedCount = 0;
+    let seedCount = 0;
 
     function resolve(ref, where) {
         const paragraphs = sections[ref.sectionId];
@@ -84,22 +120,69 @@ function main(argv) {
         }
         const hits = [];
         paragraphs.forEach((paragraph, index) => {
-            if (paragraph.indexOf(needle) === 0) hits.push(index);
+            if (paragraph.flat.indexOf(needle) === 0) hits.push(index);
         });
 
         if (hits.length === 1) { resolvedCount++; return hits[0]; }
         if (hits.length === 0) {
-            const near = paragraphs.findIndex((p) => p.indexOf(needle.slice(0, 25)) === 0);
+            const near = paragraphs.findIndex((p) => p.flat.indexOf(needle.slice(0, 25)) === 0);
             problems.push(where + ': no paragraph in ' + ref.sectionId + ' starts with "' +
                 ref.anchor.slice(0, 55) + '"' +
                 (near >= 0 ? '\n      did you mean ¶' + near + '? it starts "' +
-                    paragraphs[near].slice(0, 55) + '"' : ''));
+                    paragraphs[near].flat.slice(0, 55) + '"' : ''));
         } else {
             problems.push(where + ': anchor "' + ref.anchor.slice(0, 45) +
                 '" matches ' + hits.length + ' paragraphs in ' + ref.sectionId +
                 ' (¶' + hits.join(', ¶') + ') — lengthen it');
         }
         return null;
+    }
+
+    /* The seed is quoted at the top of a Tradition's page, at the weight a step
+     * page gives the step's own wording, so it is held to build-daily.js's bar
+     * rather than a reference's: found inside its own paragraph, found once,
+     * and whole sentences at both ends. A half-sentence would put words in the
+     * book's mouth, which is the one thing this section cannot afford. What
+     * ships is cut out of book.json, so a typo in the typing never reaches the
+     * screen. */
+    function verifySeed(ref, where) {
+        const quote = String(ref.seed || '').trim();
+        if (!quote) { problems.push(where + ': empty'); return; }
+        // The anchor already failed and has already been complained about.
+        if (ref.paraIndex === null) return;
+        if (quote.length < 30) {
+            problems.push(where + ': too short to be sure of — "' + quote + '"');
+            return;
+        }
+
+        const para = sections[ref.sectionId][ref.paraIndex];
+        const needle = flatten(quote);
+        const at = para.flat.indexOf(needle);
+
+        if (at === -1) {
+            problems.push(where + ': not in ' + ref.sectionId + ' ¶' + ref.paraIndex +
+                ' — "' + quote.slice(0, 60) + '"' +
+                '\n      that paragraph reads "' + para.text.slice(0, 90) + '"');
+            return;
+        }
+        if (para.flat.indexOf(needle, at + 1) !== -1) {
+            problems.push(where + ': appears twice in its own paragraph — lengthen it');
+            return;
+        }
+        if (!/[.!?\u201d\u2019"']$/.test(quote)) {
+            problems.push(where + ': ends mid-sentence — "…' + quote.slice(-45) + '"');
+            return;
+        }
+        if (!/^[\u201c"'(]?[A-Z]/.test(quote)) {
+            problems.push(where + ': starts mid-sentence — "' + quote.slice(0, 45) + '…"');
+            return;
+        }
+
+        const from = para.map[at];
+        const to = para.map[at + needle.length - 1];
+        ref.seedText = para.text.slice(from, to + 1);
+        delete ref.seed;
+        seedCount++;
     }
 
     const seenQuestionIds = {};
@@ -137,6 +220,23 @@ function main(argv) {
             problems.push(label + ': no references and no "noGround" note — say which it is');
         }
 
+        // One of those passages is the sentence the Tradition was later built
+        // on, and the page opens with it where a step opens with its own
+        // wording. Exactly one: none leaves that slot empty again, and two
+        // means nobody decided which is the headline.
+        const seeded = references.filter((ref) => ref.seed !== undefined);
+        if (!tradition.noGround) {
+            if (!seeded.length) {
+                problems.push(label + ': no reference carries a "seed" — mark the sentence ' +
+                    'this one grew out of, or set "noGround" to say there is none');
+            } else if (seeded.length > 1) {
+                problems.push(label + ': ' + seeded.length + ' references carry a "seed" — ' +
+                    'the page shows one, so pick one');
+            }
+        }
+        seeded.forEach((ref, i) => verifySeed(ref,
+            label + ' seed' + (seeded.length > 1 ? ' ' + (i + 1) : '')));
+
         return Object.assign({}, tradition, { references: references });
     });
 
@@ -163,6 +263,7 @@ function main(argv) {
     const questions = traditions.reduce((n, t) => n + (t.questions || []).length, 0);
     console.log('Traditions: ' + traditions.length);
     console.log('References resolved: ' + resolvedCount + ' (none ambiguous)');
+    console.log('Seed passages verified: ' + seedCount + ' (cut from the book, not the source)');
     console.log('Questions: ' + questions);
     console.log('No tradition carries the wording — topics only.');
 

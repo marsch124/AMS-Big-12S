@@ -14,23 +14,17 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.34 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.35 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Noticed, not asked for
 
-Two things that came out of looking at all fourteen screens across all three
-themes at the end of the 2.34 colour work. **Neither has been put to Martin and
-neither is agreed.** Do not act on them unasked — raise them if the subject
-comes up, and if he says yes they are a piece of work like any other.
+What is left of two things that came out of looking at all fourteen screens
+across all three themes at the end of the 2.34 colour work. **This has not been
+put to Martin and is not agreed.** Do not act on it unasked — raise it if the
+subject comes up, and if he says yes it is a piece of work like any other.
 
-**The Traditions page is the weakest screen in every theme.** It is a wall of
-explanatory prose under a switch, and it does not use its room the way the other
-screens use theirs. Every other screen has something with shape in it — cards,
-chips, a list with marks — and that one has paragraphs. It reads as the last
-screen still built like a document. Any fix has to respect the hard rule that
-the Traditions' own wording is not in this app and is not going into it, so
-whatever gives that page shape has to come from the 1939 references, the
-questions and the log, not from quoting the twelve.
+*(The other one, the Traditions page being the weakest screen in every theme,
+was put to him on 2026-08-28 and he chose it. It is 2.35, below.)*
 
 **Dark handles the reader better than the light themes do.** `--paper` there is
 a warm near-black against cool grey rooms, so the book plainly reads as a
@@ -356,6 +350,54 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## Where a Tradition starts (2.35)
+
+**A step page opens with the step's own wording; a Tradition page opened with a
+dashed box explaining what it did not have.** Same slot, opposite move. That is
+what made it the weakest screen: not the prose further down, but the fact that
+the page's first act was an apology, repeated on all twelve. It now opens with
+`#tradition-seed` — the 1939 sentence the Tradition was later built on, in
+`--reader-family` on `--bg-raised` behind the same accent rule `.step-quote`
+uses, with the chapter one tap away. **The wording note is still on every one of
+the twelve**, unchanged word for word, as the card's footnote under a dashed
+rule. That was a change of place, not of promise, and the check on it still
+passes.
+
+**One reference per Tradition carries a `seed`, and `build-traditions.js`
+refuses anything else** — none leaves that slot empty again, two means nobody
+decided which is the headline. The seed is held to `build-daily.js`'s bar rather
+than a reference's, because it is quoted at the weight of a headline: found
+inside its own resolved paragraph, found once, whole sentences at both ends, at
+least 30 characters. **What ships is cut out of `book.json`, not out of the
+source file** — `flattenWithMap()` came over from `build-daily.js` for exactly
+that. A typo in the typing cannot reach the screen.
+
+**Four Traditions seed off the same paragraph.** Foreword ¶4 is the ground under
+3, 6, 7 and 9, which is why the seed had to be a quoted sentence rather than
+"the first N words of the passage": that opening would have been identical on
+four pages and wrong on at least two of them. The `label` on a reference names
+the sentence; the `seed` now carries it.
+
+**The seed is promoted out of the list below it.** On a phone the headline
+passage appearing again as row one reads as a bug, so `renderTraditionRefs()`
+skips it and `#tradition-ground` counts what is actually listed — "2 more
+passages … besides the one above". **All four states of that line have their own
+branch**, and the fourth is why: a `noGround` Tradition with references but no
+seed was reading "3 more passages … besides the one above" with nothing above
+it. Found by deleting `seedText` from the built file and re-running the suite,
+which is the cheapest way to see what a screen says when its data is missing.
+
+**Two `why` lines were rewritten because promotion changed what they claim.**
+Tradition 3's repeated the quote it now sits directly under. Tradition 9's said
+"the Tradition's own words" of a 1939 sentence — true enough as a row in a list,
+but under a large quote it reads as though the quote *is* Tradition 9, which is
+the one thing this whole section exists to avoid.
+
+**On the list screen the wording note moved below the twelve**, where
+`#steps-note` has always sat on the Steps side. It was the first thing under the
+switch: seven lines about copyright before the first Tradition. A check holds
+the DOM order now.
 
 ## Two kinds of day (2.34)
 
@@ -769,7 +811,8 @@ oppose anyone" — grounds 3, 6, 7, 9 and 10. ¶1's "our alcoholic work is an
 show intolerance or hatred of drinking as an institution") is the best 10 in the
 book. **Traditions 2 and 4 are genuinely thin** and `renderTraditionRefs()` says
 how many passages there are rather than letting the reader think the list is
-short by accident.
+short by accident. (Since 2.35 that count is of the list below the seed, not of
+every reference — see *Where a Tradition starts*.)
 
 **They share the Steps tab; there is no seventh tab.** Six labels had already
 been shrunk once to fit six tabs. `#twelves-switch` flips between `#twelves-steps`
@@ -1236,7 +1279,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    495 end-to-end browser checks
+tools/smoke-test.js    501 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -1248,7 +1291,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 495 checks, expect 495/495
+node tools/smoke-test.js                  # 501 checks, expect 501/501
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

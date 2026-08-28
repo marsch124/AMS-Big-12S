@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=46">
+<link rel="stylesheet" href="css/style.css?v=47">
 </head>
 <body>
 
@@ -297,8 +297,11 @@
       </div>
 
       <div id="twelves-traditions" hidden>
-        <p class="hint" id="traditions-note"></p>
         <nav class="steplist" id="tradlist"></nav>
+        <!-- Below the twelve, not above them: the Steps side keeps its note
+             here too, and the switch should land on the list rather than on a
+             paragraph about copyright. -->
+        <p class="hint" id="traditions-note"></p>
 
         <h2 class="section-heading">Where you have seen them</h2>
         <p class="hint" id="tradlog-summary"></p>
@@ -383,7 +386,18 @@
       </div>
     </header>
     <div class="screen-body" id="tradition-body">
-      <p class="notice notice-quiet" id="tradition-wording"></p>
+      <!-- The slot a step page gives the step's own wording. A Tradition has no
+           wording to put here, so it gets the 1939 sentence it was later built
+           on, at the same weight: the page's first move is the book rather than
+           an apology for what is missing. The note about the missing wording
+           stays on every page, as the caption underneath. -->
+      <section class="seed" id="tradition-seed">
+        <p class="seed-eyebrow">Where it starts, in 1939</p>
+        <blockquote class="seed-quote" id="tradition-seed-quote"></blockquote>
+        <button class="seed-where" id="tradition-seed-open" hidden></button>
+        <p class="seed-why" id="tradition-seed-why"></p>
+        <p class="seed-note" id="tradition-wording"></p>
+      </section>
 
       <section class="step-journal">
         <div class="journal-head">
@@ -397,7 +411,7 @@
       <h2 class="section-heading">What it asks of a group</h2>
       <div class="step-prose" id="tradition-explanation"></div>
 
-      <h2 class="section-heading">In the 1939 book</h2>
+      <h2 class="section-heading" id="tradition-refs-heading">More from the 1939 book</h2>
       <p class="hint" id="tradition-ground"></p>
       <div class="reflist" id="tradition-references"></div>
 
@@ -1233,6 +1247,31 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Where a Tradition starts</span><span class="ver-tag">2.35</span></summary>
+          <div class="disclosure-body">
+            <p><strong>A Tradition's page used to open by telling you what it did not
+               have.</strong> A step page opens with the step's own words; this one opened
+               with a dashed box explaining that the Traditions were written in 1946 and are
+               not in this edition. True, and the wrong first thing to say.</p>
+            <p>Each of the twelve now opens with <strong>the 1939 sentence it was later
+               built on</strong> — the Foreword's "no fees nor dues whatsoever" over
+               Tradition 7, "the only requirement for membership" over Tradition 3 — set in
+               the book's own type, with the chapter it comes from one tap away. The note
+               about the missing wording is still on every one of the twelve. It is the
+               caption underneath now rather than the headline.</p>
+            <p>That passage is no longer repeated in the list below it, and the list says
+               how many are left rather than counting the headline twice.</p>
+            <p>On the Traditions list itself, the paragraph about copyright has moved
+               <strong>below the twelve</strong>, where the Steps side has always kept its
+               own note. Switching to the Traditions now lands you on the Traditions.</p>
+            <p>Nothing here is typed from memory: the build finds each sentence inside its
+               own paragraph of the book, refuses anything it cannot find or that starts or
+               ends mid-sentence, and ships the book's words rather than the ones in the
+               source file.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Two kinds of day</span><span class="ver-tag">2.34</span></summary>
@@ -2852,7 +2891,7 @@
 <script src="js/db.js?v=8"></script>
 <script src="js/store.js?v=26"></script>
 <script src="js/backup.js?v=10"></script>
-<script src="js/ui.js?v=45"></script>
-<script src="js/app.js?v=26"></script>
+<script src="js/ui.js?v=46"></script>
+<script src="js/app.js?v=27"></script>
 </body>
 </html>

@@ -1776,6 +1776,74 @@ button { cursor: pointer; }
   line-height: 1.5;
 }
 
+/* ── The seed passage (2.35) ──────────────────────────────────────────────
+   A step page opens with the step's own wording, in .step-quote. A Tradition
+   has no wording to print, so its page opens with the 1939 sentence it was
+   later built on, in the same slot, on the same raised ground and behind the
+   same accent rule. It is set in the reader's face because it is the book
+   talking; everything else in the card is the app's own voice, at the app's
+   own size, so the two are never mistaken for each other. */
+.seed {
+  margin: 4px 0 18px;
+  padding: 15px 16px 13px;
+  background: var(--bg-raised);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.seed-eyebrow {
+  margin: 0 0 9px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.seed-quote {
+  margin: 0;
+  font-family: var(--reader-family);
+  font-size: 17px;
+  line-height: 1.5;
+}
+.seed-where {
+  display: inline-block;
+  margin: 12px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.seed-where[hidden] { display: none; }
+.seed-why {
+  margin: 9px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+.seed-why[hidden] { display: none; }
+/* The line that used to be the first thing on a Tradition page. Still on every
+   one of the twelve, still saying exactly what it said, now as this card's
+   footnote rather than as the page's headline. */
+.seed-note {
+  margin: 13px 0 0;
+  padding-top: 11px;
+  border-top: 1px dashed var(--rule);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+/* A Tradition this book does not reach has no passage to set in the book's
+   face, so the card says so in the app's own voice instead of standing empty. */
+.seed.is-groundless .seed-eyebrow { display: none; }
+.seed.is-groundless .seed-quote {
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
 .step-prose {
   font-family: var(--reader-family);
   font-size: 16px;

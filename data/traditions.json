@@ -20,7 +20,8 @@
           "anchor": "We are average Americans",
           "label": "“People who normally would not mix”",
           "why": "The fellowship described before it had a name for itself — and the reason it holds.",
-          "paraIndex": 1
+          "paraIndex": 1,
+          "seedText": "We are people who normally would not mix. But there exists among us a fellowship, a friendliness, and an understanding which is indescribably wonderful."
         },
         {
           "sectionId": "ch01",
@@ -79,7 +80,8 @@
           "anchor": "If he thinks he can do the job in some other way",
           "label": "“Encourage him to follow his own conscience”",
           "why": "The nearest 1939 comes: authority declined, but over one man rather than a group.",
-          "paraIndex": 20
+          "paraIndex": 20,
+          "seedText": "If he thinks he can do the job in some other way, or prefers some other spiritual approach, encourage him to follow his own conscience."
         },
         {
           "sectionId": "ch11",
@@ -130,8 +132,9 @@
           "sectionId": "foreword",
           "anchor": "We are not an organization in the conventional sense of the word",
           "label": "The Foreword's own sentence",
-          "why": "“The only requirement for membership is an honest desire to stop drinking.” In the 1939 text.",
-          "paraIndex": 4
+          "why": "The sentence the Tradition later took almost unchanged, printed here seven years before there were Traditions.",
+          "paraIndex": 4,
+          "seedText": "The only requirement for membership is an honest desire to stop drinking."
         },
         {
           "sectionId": "ch07",
@@ -190,7 +193,8 @@
           "anchor": "Our book is meant to be suggestive only",
           "label": "“We realize we know only a little”",
           "why": "The book declining to be the final authority on its own method.",
-          "paraIndex": 53
+          "paraIndex": 53,
+          "seedText": "Our book is meant to be suggestive only. We realize we know only a little."
         },
         {
           "sectionId": "ch07",
@@ -242,7 +246,8 @@
           "anchor": "Practical experience shows that nothing will so much insure immunity",
           "label": "“Carry this message to other alcoholics”",
           "why": "The twelfth suggestion, and the reason given for it is your own survival.",
-          "paraIndex": 0
+          "paraIndex": 0,
+          "seedText": "This is our twelfth suggestion: Carry this message to other alcoholics!"
         },
         {
           "sectionId": "ch05",
@@ -308,7 +313,8 @@
           "anchor": "We are not an organization in the conventional sense of the word",
           "label": "“Not allied … nor do we oppose anyone”",
           "why": "The refusal to be attached to anything else, written in 1939.",
-          "paraIndex": 4
+          "paraIndex": 4,
+          "seedText": "We are not allied with any particular faith, sect or denomination, nor do we oppose anyone."
         },
         {
           "sectionId": "ch07",
@@ -360,7 +366,8 @@
           "anchor": "We are not an organization in the conventional sense of the word",
           "label": "“No fees nor dues whatsoever”",
           "why": "In the same sentence as who may belong, which is the whole of the argument.",
-          "paraIndex": 4
+          "paraIndex": 4,
+          "seedText": "There are no fees nor dues whatsoever."
         },
         {
           "sectionId": "ch07",
@@ -419,7 +426,8 @@
           "anchor": "It is important that we remain anonymous because we are too few",
           "label": "“Our alcoholic work is an avocation”",
           "why": "One word, doing all the work — a thing done beside your living, not for it.",
-          "paraIndex": 1
+          "paraIndex": 1,
+          "seedText": "We would like it understood that our alcoholic work is an avocation."
         },
         {
           "sectionId": "ch07",
@@ -470,8 +478,9 @@
           "sectionId": "foreword",
           "anchor": "We are not an organization in the conventional sense of the word",
           "label": "“Not an organization in the conventional sense”",
-          "why": "The Tradition's own words, in the Foreword, eleven years early.",
-          "paraIndex": 4
+          "why": "The idea, and much of the phrasing, eleven years before anyone set it down as a Tradition.",
+          "paraIndex": 4,
+          "seedText": "We are not an organization in the conventional sense of the word."
         },
         {
           "sectionId": "ch11",
@@ -523,7 +532,8 @@
           "anchor": "We are careful never to show intolerance or hatred of drinking",
           "label": "Not even about drink",
           "why": "The furthest possible test of the principle, and the book passes it.",
-          "paraIndex": 45
+          "paraIndex": 45,
+          "seedText": "We are careful never to show intolerance or hatred of drinking as an institution."
         },
         {
           "sectionId": "ch02",
@@ -589,7 +599,8 @@
           "anchor": "When writing or speaking publicly about alcoholism",
           "label": "“A Member of Alcoholics Anonymous”",
           "why": "The press-level anonymity instruction, in the 1939 Foreword, in one sentence.",
-          "paraIndex": 2
+          "paraIndex": 2,
+          "seedText": "When writing or speaking publicly about alcoholism, we urge each of our Fellowship to omit his personal name, designating himself instead as “A Member of Alcoholics Anonymous.”"
         },
         {
           "sectionId": "foreword",
@@ -648,7 +659,8 @@
           "anchor": "It is important that we remain anonymous because we are too few",
           "label": "Where it started, and why",
           "why": "Anonymity as a practical measure in 1939, before it was a spiritual principle.",
-          "paraIndex": 1
+          "paraIndex": 1,
+          "seedText": "It is important that we remain anonymous because we are too few, at present, to handle the overwhelming number of personal appeals which may result from this publication."
         },
         {
           "sectionId": "foreword",

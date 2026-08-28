@@ -1507,6 +1507,15 @@ async function openContents(page) {
     check('all twelve are there, named by topic', topics.length === 12 &&
         topics[2] === 'Membership' && topics[11] === 'Anonymity', topics.join(', '));
 
+    // The switch should land on the Traditions, not on a paragraph about
+    // copyright. It used to sit above the list; the Steps side never did.
+    check('the note about the wording sits below the twelve, as it does on the steps',
+        await page.evaluate(() => {
+            const list = document.getElementById('tradlist');
+            const note = document.getElementById('traditions-note');
+            return !!(list.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING);
+        }));
+
     /*
      * The bar this whole section is built around. The Traditions were written in
      * 1946 and first printed in the book at the second edition, which is under
@@ -1539,20 +1548,91 @@ async function openContents(page) {
 
     await page.click('#tradlist .step-item >> nth=2');
     await page.waitForSelector('#screen-tradition.is-active');
-    check('a Tradition page opens with the topic, not a quotation',
+    check('a Tradition page is named by its topic, never by a quotation of itself',
         (await page.textContent('#tradition-title')) === 'Tradition 3' &&
         (await page.textContent('#tradition-sub')) === 'Membership');
     check('and says on the page why the wording is not there',
         (await page.textContent('#tradition-wording')).includes('1946'),
         await page.textContent('#tradition-wording'));
+
+    /*
+     * The seed (2.35). A step page opens with the step's own words; a Tradition
+     * has none to print, so it opens with the 1939 sentence it was built on.
+     * That is the one place in this section where the book is quoted at the
+     * weight of a headline, so it is also the place a wrong quote would do the
+     * most damage — hence the check that every one of the twelve is in the book
+     * word for word, in the paragraph it claims.
+     */
+    check('the page opens with the 1939 passage, above everything else',
+        await page.evaluate(() => {
+            const body = document.getElementById('tradition-body');
+            const seed = document.getElementById('tradition-seed');
+            return body.firstElementChild === seed && !seed.hidden;
+        }));
+    check('and it is Tradition 3\u2019s own ground, in the book\u2019s face',
+        (await page.textContent('#tradition-seed-quote'))
+            .includes('only requirement for membership') &&
+        (await page.textContent('#tradition-seed-open')).includes('Foreword'),
+        await page.textContent('#tradition-seed-quote'));
+
+    const seeds = await page.evaluate(() => {
+        const flat = (t) => String(t).replace(/[\u2018\u2019\u02bc]/g, "'")
+            .replace(/[\u201c\u201d]/g, '"').replace(/[\u2013\u2014]/g, '-')
+            .replace(/\s+/g, ' ').trim().toLowerCase();
+        return Store.allTraditions().map((t) => {
+            const seed = t.references.filter((r) => r.seedText);
+            if (seed.length !== 1) return { n: t.number, ok: false, why: seed.length + ' seeds' };
+            const ref = seed[0];
+            const index = Store.resolveStepRef(ref);
+            const section = Store.getSection(ref.sectionId);
+            if (index === null || !section) return { n: t.number, ok: false, why: 'unresolved' };
+            const para = flat(section.paragraphs[index]);
+            return {
+                n: t.number,
+                ok: para.indexOf(flat(ref.seedText)) !== -1,
+                why: 'not in ' + ref.sectionId + ' \u00b6' + index
+            };
+        });
+    });
+    check('every one of the twelve has exactly one seed, and it is really in the book',
+        seeds.length === 12 && seeds.every((x) => x.ok),
+        seeds.filter((x) => !x.ok).map((x) => x.n + ': ' + x.why).join('; '));
+
+    check('the seed is not then repeated as the first row of the list below it',
+        await page.evaluate(() => {
+            const quote = document.getElementById('tradition-seed-quote').textContent.trim();
+            const rows = Array.from(document.querySelectorAll('#tradition-references .ref-quote'));
+            return rows.every((r) => r.textContent.indexOf(quote.slice(0, 40)) === -1);
+        }));
+
+    check('it carries the rest of the 1939 ground, and counts what is actually listed',
+        (await page.$$eval('#tradition-references .ref-item', (e) => e.length)) === 2 &&
+        (await page.$$eval('#tradition-references .is-missing', (e) => e.length)) === 0 &&
+        (await page.textContent('#tradition-ground')).includes('2 more passages'),
+        await page.textContent('#tradition-ground'));
+
+    // The passage is worth nothing if you cannot get to it in its own chapter.
+    // .is-target is the reader's own flash, and it clears itself after 2.2s, so
+    // this reads it while it is still on.
+    await page.click('#tradition-seed-open');
+    await page.waitForSelector('#screen-reader.is-active');
+    const landed = await page.$eval('#reader-content .para.is-target', (e) => e.textContent)
+        .catch(() => '');
+    check('and the seed opens the book at the paragraph it came from',
+        landed.indexOf('only requirement for membership') !== -1, landed.slice(0, 60));
+
+    // Back out of the book and stand on Tradition 3 again for the rest of these.
+    await page.click('#reader-back');
+    await page.waitForTimeout(200);
+    if (!(await page.isVisible('#screen-tradition.is-active'))) {
+        await page.click('.tab[data-screen="steps"]');
+        await page.waitForSelector('#screen-steps.is-active');
+        await page.click('#tradlist .step-item >> nth=2');
+    }
+    await page.waitForSelector('#screen-tradition.is-active');
     check('the Steps tab stays lit while you are inside one',
         await page.evaluate(() => document.querySelector('.tab[data-screen="steps"]')
             .classList.contains('is-active')));
-    check('it carries the 1939 ground, and says how much of it there is',
-        (await page.$$eval('#tradition-references .ref-item', (e) => e.length)) === 3 &&
-        (await page.$$eval('#tradition-references .is-missing', (e) => e.length)) === 0 &&
-        (await page.textContent('#tradition-ground')).includes('3 passages'),
-        await page.textContent('#tradition-ground'));
     check('and six questions of our own', (await page.$$eval('#tradition-questions .question',
         (e) => e.length)) === 6);
 

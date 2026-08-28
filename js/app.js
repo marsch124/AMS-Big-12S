@@ -4,7 +4,7 @@
 (function (global) {
     'use strict';
 
-    global.APP_VERSION = '2.34';
+    global.APP_VERSION = '2.35';
 
     function handleLaunchAction() {
         var action = new URLSearchParams(location.search).get('action');

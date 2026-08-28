@@ -342,14 +342,27 @@ the one after it, on signing yourself a member rather than by name, is Tradition
 
 So each page carries:
 
+- **The sentence it starts from**, at the top, where a step page shows the step's
+  own words. Tradition 7 opens on "There are no fees nor dues whatsoever";
+  Tradition 3 on "The only requirement for membership is an honest desire to stop
+  drinking" — the 1939 text, set in the book's own face, with the chapter it
+  comes from one tap away. The note about the missing wording is still on every
+  one of the twelve, as the caption underneath.
 - **What it asks of a group**, in plain terms. Ours, in the same register as the
   step explanations, and not official A.A. material.
-- **The 1939 passages behind it** — 33 in all, every one resolved against the
-  bundled text at build time and again at runtime, so an imported copy keeps the
-  links. Traditions 2 and 4 are thin, and those pages say so rather than reach.
+- **The rest of the 1939 passages behind it** — 33 in all, every one resolved
+  against the bundled text at build time and again at runtime, so an imported
+  copy keeps the links. The opening sentence is not counted twice: the list
+  below says how many are left. Traditions 2 and 4 are thin, and those pages say
+  so rather than reach.
 - **Six questions**, ours, answerable as often as you like. Answering again
   keeps the earlier answer underneath, dated, exactly as on a step.
 - **Notes**, dated and never overwritten.
+
+Nothing on those pages is quoted from memory. `tools/build-traditions.js` finds
+each opening sentence inside the paragraph it claims, refuses anything it cannot
+find, finds twice, or that starts or ends mid-sentence, and ships the book's own
+words rather than the ones typed into the source file.
 
 ### The log
 
@@ -596,6 +609,7 @@ python3 -m http.server 7801
     ├── epub-to-text.py EPUB → plain text, skipping publisher matter
     ├── build-book.js   Plain text → data/book.json
     ├── build-steps.js  steps.source.json → steps.json, resolving book references
+    ├── build-traditions.js  traditions.source.json → traditions.json, same bar
     ├── build-daily.js   daily.source.json → daily.json, verifying every quote
     ├── smoke-test.js   End-to-end browser checks
     └── make-icons.py   Regenerate the icon set
@@ -606,7 +620,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 346 checks
+node tools/smoke-test.js      # 501 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that
