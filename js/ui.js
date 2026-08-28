@@ -5008,8 +5008,56 @@
 
     /* ----------------------------------------------------------- settings */
 
+    /*
+     * What is true about this phone, in three lines, at the top of Backup and
+     * restore. It is deliberately specific — "12 days ago", "43 records" — so
+     * it can be acted on. "Your data is safe" is not a fact about anything.
+     */
+    function renderSafekeeping() {
+        var state = Safekeeping.status();
+
+        $('safety-kept').textContent = state.kept === true
+            ? 'The browser has agreed to keep this app’s data, even when the phone is short of space.'
+            : state.kept === false
+                ? 'The browser has not promised to keep this app’s data. On iOS that is normal in a ' +
+                  'tab — adding the app to the Home Screen makes it likelier. Make backup files more often.'
+                : 'This browser did not say whether it will keep the app’s data. Assume it might not.';
+
+        var last = state.lastExport;
+        var days = last ? daysSince(last) : null;
+        $('safety-export').textContent = !last
+            ? 'You have never made a backup file from this phone.'
+            : days <= 0 ? 'You made a backup file today.'
+            : days === 1 ? 'You made a backup file yesterday.'
+            : 'You last made a backup file ' + days + ' days ago, on ' + shortDate(last) + '.';
+
+        // The on-device copy is a second chance, not a backup: it lives in the
+        // same browser as the thing it is protecting, so it says so.
+        var copies = [];
+        if (state.current) {
+            copies.push(state.current.records + ' record' + (state.current.records === 1 ? '' : 's') +
+                (state.current.at ? ', ' + shortDate(state.current.at) : ''));
+        }
+        if (state.previous) {
+            copies.push('and an older one of ' + state.previous.records +
+                (state.previous.at ? ' from ' + shortDate(state.previous.at) : ''));
+        }
+        $('safety-copies').textContent = copies.length
+            ? 'On this phone the app keeps its own copy — ' + copies.join(', ') +
+              '. It is put back if the app ever comes up empty, but it lives in the same ' +
+              'browser as the original, so it is no substitute for a file you hold.'
+            : 'The app has not yet taken its own copy on this phone.';
+
+        $('safety-failed').hidden = !state.failedAt;
+        if (state.failedAt) {
+            $('safety-failed').textContent = 'The app could not save its own copy on ' +
+                shortDate(state.failedAt) + ' — this phone’s storage is full. Make a backup file.';
+        }
+    }
+
     function renderSettings() {
         var settings = Store.state.settings;
+        renderSafekeeping();
         renderRules();
         $('set-theme').value = settings.theme;
         $('set-typeface').value = settings.typeface;
@@ -5141,7 +5189,9 @@
             return;
         }
         status.textContent = 'Restoring…';
-        Backup.restoreBackup(payload, $('restore-mode').value)
+        Safekeeping.duringRestore(function () {
+            return Backup.restoreBackup(payload, $('restore-mode').value);
+        })
             .then(function (summary) {
                 applySettings();
                 status.textContent = 'Restored ' + summary.notes + ' note' + (summary.notes === 1 ? '' : 's') +
@@ -5577,6 +5627,10 @@
                     status.textContent = result.method === 'share'
                         ? 'Backup shared (' + kb + ' KB). Save it to Files or iCloud Drive.'
                         : 'Saved ' + result.name + ' (' + kb + ' KB) to your downloads.';
+                    // Only here, and not on a cancelled share: the panel below
+                    // counts days since a backup actually left the app.
+                    Safekeeping.noteExport();
+                    renderSafekeeping();
                 })
                 .catch(function (error) {
                     status.classList.add('is-error');
@@ -5587,7 +5641,11 @@
             var status = $('backup-status');
             status.classList.remove('is-error');
             Backup.copyBackupToClipboard({ includeBookText: $('backup-include-text').checked })
-                .then(function () { status.textContent = 'Backup copied to the clipboard. Paste it somewhere safe.'; })
+                .then(function () {
+                    status.textContent = 'Backup copied to the clipboard. Paste it somewhere safe.';
+                    Safekeeping.noteExport();
+                    renderSafekeeping();
+                })
                 .catch(function (error) {
                     status.classList.add('is-error');
                     status.textContent = error.message;

@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.36 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.37 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -333,6 +333,61 @@ HTML, which is why it is shaped this way — do not collapse it back.
 **`Store.clearPosition()` clears the localStorage mirror too.** Removing only the
 IndexedDB record would let `loadPosition()` find the mirror at the next boot and
 put the card straight back.
+
+## Safekeeping (2.37)
+
+**There is no server and no account, so the only real risk this app carries is
+loss, not compromise.** Nothing to harden against — no network calls after load,
+no other users, no input from anyone but Martin. The work is in one browser's
+IndexedDB and nowhere else, and a day count, an inventory and a craving log
+cannot be written again from memory.
+
+**`navigator.storage.persist()` was never called.** It is now, once, at boot,
+and the answer is shown rather than assumed — Chromium grants on its own
+heuristics, Safari grants to a Home Screen app and usually refuses a tab. Do
+not claim in the UI that this guarantees anything: the panel says what the
+browser actually answered, including "did not say".
+
+**The on-device copy is a second chance, not a backup.** It lives in
+localStorage in the same origin as the thing it protects, so a whole-origin
+eviction takes both. What it does cover is the commoner failure — a database
+that comes up empty after a bad upgrade or a half-finished write. **Say so
+plainly wherever it is described**; a copy that sounds like a backup is worse
+than no copy, because somebody stops making files.
+
+**One hook, at `DB.put` / `remove` / `putMany` / `clear`.** The sibling app
+wrapped fourteen `Store` functions by name and gained a fifteenth without one.
+Every write in this app goes through those four, debounced 1.5 s, plus a flush
+on `pagehide` and `visibilitychange` — the same four moments the reading
+position saves at, for the same iOS reason.
+
+**The copy never carries the book text.** `Backup.buildPayload({})`, always: the
+bundled book is on disk and an imported one can be imported again. 577 KB into
+a few megabytes of localStorage, on every note, would fill it and then fail
+quietly. A check holds the copy under 400 KB.
+
+**The two rules, and they pull against each other.**
+- A copy holding work is never replaced by one holding none. An empty database
+  at save time means something went wrong.
+- **But a record deleted on purpose must never come back.** That is the harder
+  one and it is what `ams-big-12s:safe-mark` exists for: the count of what the
+  database last held, written on *every* snapshot whether or not the copy was
+  replaced. An empty database with a mark of 0 was emptied deliberately and is
+  left alone; an empty database with a mark above 0 lost something and is
+  filled from the copy. **Found by testing it, not by thinking about it** — the
+  first cut restored a deliberately deleted note on the next launch, which in
+  this app means un-deleting somebody's private business.
+
+**Restoring happens before the UI exists**, between `Store.init()` and
+`UI.applySettings()`, because `Store.init()` itself ends in `recordVisit()` and
+any write over an empty database would save an empty copy over a full one.
+Snapshots are suspended until that decision is made, and again for the whole of
+a restore (`Safekeeping.duringRestore`), since a `replace` restore clears the
+stores first.
+
+**A recovery is never silent.** Finding the app has quietly rewritten itself is
+worse than being told it had to, so it toasts what it put back and suggests
+making a real file.
 
 ## The book's own paper (2.36)
 
@@ -1272,6 +1327,7 @@ js/db.js            IndexedDB wrapper (meta, book, notes, bookmarks, inventory,
                     cravings, meetings, checkins, breaks, messages, tradlog)
 js/store.js         Book, settings, position, notes, bookmarks, search
 js/backup.js        Export / restore
+js/safekeeping.js   Persistent-storage request, and the on-device copy
 js/ui.js            Screens, rendering, all event wiring
 js/app.js           Bootstrap
 data/book.json                      Parsed book the app reads (~577 KB)
@@ -1287,7 +1343,7 @@ tools/build-book.js    Plain text → data/book.json
 tools/build-steps.js   steps.source.json → steps.json, resolving book references
 tools/build-traditions.js  traditions.source.json → traditions.json, same bar
 tools/build-daily.js   daily.source.json → daily.json, verifying every quote
-tools/smoke-test.js    503 end-to-end browser checks
+tools/smoke-test.js    512 end-to-end browser checks
 tools/make-icons.py    Regenerate the PWA icon set
 ```
 
@@ -1299,7 +1355,7 @@ attaching globals (`DB`, `Store`, `Backup`, `UI`, `BookParser`).
 ```bash
 python3 -m http.server 7802 &
 npm install playwright                    # once, not committed
-node tools/smoke-test.js                  # 503 checks, expect 503/503
+node tools/smoke-test.js                  # 512 checks, expect 512/512
 ```
 
 `CHROMIUM_PATH` overrides the browser binary; `SHOT_DIR` writes screenshots.

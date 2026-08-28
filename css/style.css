@@ -1861,6 +1861,26 @@ button { cursor: pointer; }
   color: var(--text-dim);
 }
 
+/* ── Is this safe? (2.37) ─────────────────────────────────────────────────
+   Three facts about this phone, above the prose about what a backup is. On
+   --bg-sunken rather than a card, because it is a statement of condition
+   rather than a thing to act on — the buttons below it are the actions. */
+.safety {
+  margin: 0 0 14px;
+  padding: 13px 14px;
+  background: var(--bg-sunken);
+  border-radius: var(--radius-sm);
+}
+.safety-line {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.safety-line:last-child { margin-bottom: 0; }
+.safety-line.is-bad { color: var(--danger); font-weight: 500; }
+.safety-line[hidden] { display: none; }
+
 .step-prose {
   font-family: var(--reader-family);
   font-size: 16px;

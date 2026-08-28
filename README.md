@@ -525,6 +525,26 @@ name so their internal ids stay stable across re-imports.
 
 ## Backing up and moving to a new phone
 
+### What the app does on its own
+
+Two things, and **neither of them replaces making a backup file**.
+
+It **asks the browser to keep its data** rather than treat it as disposable.
+Chromium decides on its own heuristics; Safari tends to agree for an app on the
+Home Screen and refuse for a tab. Settings → Backup and restore says what your
+browser actually answered.
+
+It **keeps its own copy on the device**, in two generations, of everything
+except the book text — and puts it back if the app ever starts up with an empty
+database, telling you it has done so. That covers a database that failed to come
+back after an update. It does **not** cover losing the browser's storage
+altogether, because the copy lives in the same place as the original. A file you
+hold is the only thing that does.
+
+A record you delete on purpose is not brought back. The app keeps a count of
+what it last held, so an empty database it emptied itself is left alone.
+
+
 **On the old phone:** Settings → Backup → **Create backup**. On iOS this opens
 the share sheet — save it to Files, iCloud Drive, or mail it to yourself.
 
@@ -620,7 +640,7 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 503 checks
+node tools/smoke-test.js      # 512 checks
 ```
 
 It drives a real browser against the served copy and asserts the things that
@@ -639,6 +659,7 @@ backup, and the whole book is readable with the network switched off.
 | Questions you put away or added | IndexedDB, carried explicitly by the backup |
 | Messages you have sent from the app | IndexedDB, in its own store, carried by the backup |
 | The Traditions log | IndexedDB, in its own store, carried by the backup |
+| A second copy of all of the above, minus the book | localStorage, on this device only |
 | Settings, reading position | IndexedDB, mirrored to `localStorage` for a fast first paint |
 | An unsent message still in the box | `localStorage` only — a synchronous write survives the app being killed, and a draft is not a record to move to a new phone |
 | App shell and bundled text | Cache Storage, via the service worker |

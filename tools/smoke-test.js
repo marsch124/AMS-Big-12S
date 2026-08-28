@@ -3606,6 +3606,124 @@ async function openContents(page) {
         (await page.$$eval('#version-history .disclosure-list > .disclosure', (e) => e.length)) > 20);
     await page.click('#version-history > summary');
 
+    /*
+     * ── safekeeping (2.37) ────────────────────────────────────────────────
+     *
+     * There is no server and no account, so the work exists in one browser's
+     * IndexedDB and nowhere else. These checks are about the two things the app
+     * does about that, and about the one way each of them can go wrong.
+     *
+     * The destructive half runs in its own browser context, because deleting
+     * the database and rebooting is not something to do to the state the rest
+     * of this file has built up.
+     */
+    await page.click('.tab[data-screen="settings"]');
+    await page.waitForSelector('#screen-settings.is-active');
+    await page.waitForTimeout(200);
+
+    const kept = await page.evaluate(() => Safekeeping.status());
+    check('the app asks the browser to keep its data, and knows what it answered',
+        kept.kept === true || kept.kept === false || kept.kept === null,
+        'answer: ' + JSON.stringify(kept.kept));
+
+    const copy = await page.evaluate(() => {
+        const raw = localStorage.getItem(Safekeeping.KEYS.CURRENT);
+        const parsed = raw ? JSON.parse(raw) : null;
+        return {
+            bytes: raw ? raw.length : 0,
+            inCopy: parsed ? Safekeeping.countWork(parsed) : 0,
+            inApp: Safekeeping.countWork(Store.state),
+            hasBook: !!(parsed && parsed.book),
+            saysBook: parsed ? parsed.includesBookText : null,
+            mark: localStorage.getItem(Safekeeping.KEYS.MARK)
+        };
+    });
+    check('a copy of the work is kept on the device, matching what the app holds',
+        copy.inCopy > 0 && copy.inCopy === copy.inApp,
+        copy.inCopy + ' in the copy, ' + copy.inApp + ' in the app');
+    // The book is 577 KB and localStorage is a few megabytes. A copy that
+    // carried it would fill the allowance and then fail silently.
+    check('and it never carries the book text',
+        !copy.hasBook && copy.saysBook === false && copy.bytes < 400000,
+        Math.round(copy.bytes / 1024) + ' KB');
+    check('the mark records what the database last held',
+        copy.mark === String(copy.inApp), 'mark ' + copy.mark + ', app ' + copy.inApp);
+
+    await page.evaluate(() => { Safekeeping.noteExport(); UI.showScreen('settings'); });
+    await page.waitForTimeout(150);
+    const panel = await page.evaluate(() => ({
+        kept: document.getElementById('safety-kept').textContent,
+        exported: document.getElementById('safety-export').textContent,
+        copies: document.getElementById('safety-copies').textContent
+    }));
+    check('the panel says whether the browser promised, when you last made a file, and what is kept',
+        panel.kept.length > 40 && /today/.test(panel.exported) && /record/.test(panel.copies),
+        panel.exported);
+
+    /* The rule that cost the sibling app real data: an empty database at save
+     * time means something went wrong, not that the work is gone. */
+    const clobber = await page.evaluate(() => {
+        const before = localStorage.getItem(Safekeeping.KEYS.CURRENT);
+        const held = {};
+        ['notes', 'bookmarks', 'inventory', 'cravings', 'meetings', 'checkins',
+         'breaks', 'messages', 'tradlog'].forEach((k) => { held[k] = Store.state[k]; Store.state[k] = []; });
+        Safekeeping.snapshot();
+        const after = localStorage.getItem(Safekeeping.KEYS.CURRENT);
+        Object.keys(held).forEach((k) => { Store.state[k] = held[k]; });
+        Safekeeping.snapshot();
+        return { unchanged: before === after, had: Safekeeping.countWork(JSON.parse(before)) };
+    });
+    check('a copy holding work is never replaced by one holding none',
+        clobber.unchanged && clobber.had > 0,
+        clobber.had + ' records survived an empty save');
+
+    // ── safekeeping: the destructive half, in its own context ─────────────
+    const spare = await browser.newContext({ ...devices['iPhone 13'], hasTouch: true, isMobile: true });
+    const fresh = await spare.newPage();
+    const bootFresh = async () => {
+        await fresh.goto(BASE, { waitUntil: 'networkidle' });
+        await fresh.waitForFunction(() => window.Store && Store.state && Store.state.book,
+            null, { timeout: 20000 });
+        await fresh.waitForTimeout(700);
+    };
+    await bootFresh();
+    const noteId = await fresh.evaluate(async () => {
+        await Store.saveNote({ sectionId: 'ch05', paraIndex: 3, body: 'Kept, I hope.' });
+        const second = await Store.saveNote({ sectionId: 'ch02', paraIndex: 1, body: 'Deliberately deleted.' });
+        return second.id;
+    });
+    await fresh.waitForTimeout(2200);
+    check('work written in the app reaches the copy on its own',
+        (await fresh.evaluate(() =>
+            Safekeeping.countWork(JSON.parse(localStorage.getItem(Safekeeping.KEYS.CURRENT))))) === 2);
+
+    // Eviction, or a database that failed to come back.
+    await fresh.evaluate(() => new Promise((done) => {
+        const request = indexedDB.deleteDatabase('ams-big-12s');
+        request.onsuccess = request.onerror = request.onblocked = () => done();
+    }));
+    await bootFresh();
+    const back = await fresh.evaluate(() => ({
+        notes: Store.state.notes.length,
+        told: (document.querySelector('.toast') || {}).textContent || ''
+    }));
+    check('a database that comes up empty is filled from the copy, and says so',
+        back.notes === 2 && /put back/.test(back.told), back.notes + ' notes, toast: ' + back.told);
+
+    /* The other half of that rule, and the more dangerous one to get wrong.
+     * Deleting the last of something is a decision, and an app that quietly
+     * undoes it the next morning has un-deleted somebody's private business. */
+    await fresh.evaluate(async (id) => {
+        const notes = Store.state.notes.slice();
+        for (let i = 0; i < notes.length; i++) await Store.deleteNote(notes[i].id);
+    }, noteId);
+    await fresh.waitForTimeout(2200);
+    await bootFresh();
+    check('but a record deleted on purpose is never brought back',
+        (await fresh.evaluate(() => Store.state.notes.length)) === 0,
+        (await fresh.evaluate(() => Store.state.notes.map((n) => n.body).join(', '))) || 'nothing came back');
+    await spare.close();
+
     // ── offline ───────────────────────────────────────────────────────────
     await page.waitForTimeout(500);
     check('service worker registers',

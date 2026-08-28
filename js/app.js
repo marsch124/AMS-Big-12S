@@ -4,7 +4,7 @@
 (function (global) {
     'use strict';
 
-    global.APP_VERSION = '2.36';
+    global.APP_VERSION = '2.37';
 
     function handleLaunchAction() {
         var action = new URLSearchParams(location.search).get('action');
@@ -29,9 +29,19 @@
         UI.bind();
 
         Store.init()
-            .then(function () {
+            // Before the UI exists, because the UI writes: recording a visit
+            // over an empty database would save an empty copy over a full one.
+            .then(function () { return Safekeeping.openingUp(); })
+            .then(function (recovered) {
                 UI.applySettings();
                 if (!handleLaunchAction()) UI.showScreen('home');
+                // Never silently. Finding the app has quietly rewritten itself
+                // is worse than being told it had to.
+                if (recovered && recovered.restored) {
+                    UI.toast('Your work was put back from the copy kept on this phone — ' +
+                        recovered.restored + ' record' + (recovered.restored === 1 ? '' : 's') +
+                        '. Worth making a backup file now.', 9000);
+                }
             })
             .catch(function (error) {
                 console.error('Startup failed', error);

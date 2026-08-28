@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=48">
+<link rel="stylesheet" href="css/style.css?v=49">
 </head>
 <body>
 
@@ -884,6 +884,16 @@
       <details class="disclosure disclosure-section" id="settings-backup">
         <summary><span>Backup and restore</span></summary>
         <div class="section-body">
+        <!-- What is actually true about this phone right now, before the prose
+             about what a backup is. Whether the browser has promised to keep
+             the data, when a backup file last left the app, and what the copy
+             on the device holds. -->
+        <div class="safety" id="safekeeping">
+          <p class="safety-line" id="safety-kept"></p>
+          <p class="safety-line" id="safety-export"></p>
+          <p class="safety-line" id="safety-copies"></p>
+          <p class="safety-line is-bad" id="safety-failed" hidden></p>
+        </div>
         <p class="panel-note">One JSON file with your notes, your bookmarks, where you
            are and your settings. Nothing leaves this device until you send it.</p>
         <p class="panel-note">
@@ -1247,6 +1257,30 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>Keeping the work</span><span class="ver-tag">2.37</span></summary>
+          <div class="disclosure-body">
+            <p>There is no server behind this app, which is the point — and it means what
+               you write lives in one browser on one phone. Two things now guard that, and
+               <strong>neither of them replaces making a backup file</strong>.</p>
+            <p>The app <strong>asks the browser to keep its data</strong> rather than treat
+               it as disposable. Browsers answer that differently, and adding the app to
+               the Home Screen makes a yes far likelier than using it in a tab. Backup and
+               restore now tells you what yours actually said.</p>
+            <p>It also <strong>keeps its own copy on this phone</strong> — everything except
+               the book text, in two generations, one of them at least a day older. If the
+               app ever starts up with nothing in it, the copy goes back in and it tells
+               you it has. That covers a database that did not survive an update. It does
+               not cover losing the browser's storage altogether, because the copy sits in
+               the same place as the original.</p>
+            <p>Anything you delete on purpose stays deleted. The app keeps a count of what
+               it last held, so an empty list it emptied itself is left alone.</p>
+            <p>Backup and restore now opens with three plain facts: what the browser
+               promised, how many days since you made a file, and what the copy on the
+               phone holds.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>The book's own paper</span><span class="ver-tag">2.36</span></summary>
@@ -2907,8 +2941,9 @@
 <script src="js/parser.js?v=1"></script>
 <script src="js/db.js?v=8"></script>
 <script src="js/store.js?v=26"></script>
-<script src="js/backup.js?v=10"></script>
-<script src="js/ui.js?v=46"></script>
-<script src="js/app.js?v=28"></script>
+<script src="js/backup.js?v=11"></script>
+<script src="js/safekeeping.js?v=2"></script>
+<script src="js/ui.js?v=47"></script>
+<script src="js/app.js?v=29"></script>
 </body>
 </html>
