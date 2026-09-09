@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.37 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.38 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -725,6 +725,29 @@ agree — a violet heading over rose bullets is half a thought. The *What else
 helps* list keeps the screen's accent, correctly: that one belongs to nobody in
 particular.
 
+## The home screen, in the order it is used (2.38)
+
+**The day count is not on the home screen.** Martin asked for it off on
+2026-09-09. It is in Settings under *Counting the days*, directly above the date
+it is worked out from — which is exactly where tapping it used to take you, so
+it is a `<div>` now, not a button, and the deep link that pointed at that section
+went with it. `renderSettings()` draws it; the `change` handler on
+`#set-sober-since` re-draws it, because the number and the field it depends on
+are now a few pixels apart and a stale count next to its own input is a bug you
+can see. **Nothing about the counting changed** — `Store.daysAbstinent()` is
+untouched, and so is the stored date.
+
+**The order is: craving, where you stopped, today's passage, what brings you
+here.** Carrying on is the commonest reason for opening the app and it used to
+sit third. The craving row stays above everything, as always.
+
+**`#lastuse` sits under *Where you have got to*** rather than under the count it
+used to hang off. It is a count itself, and it now stands with the others.
+
+**`UI.showSettingsAt` is exported.** The smoke test used to drive the deep-link
+check by clicking the day count; there is no longer a button to click, so the
+door itself is on the `UI` object rather than one way through it.
+
 ## Where colour goes, and where it does not (2.24)
 
 **Headings are `--text`, not `--accent`.** They were the accent for exactly one
@@ -732,6 +755,18 @@ release and Martin said so: the colour on a screen belongs in the chips and the
 counts, not in the structure. `.passage-label` is `--text-dim` for the same
 reason. A smoke check compares the heading colour against the body ink, so the
 orange cannot come back by accident.
+
+**Every card on the home screen wears the colour of where it takes you (2.38).**
+Martin asked for more colour. It went on the **edges**, not the grounds: a 3px
+left border in the card's own hue, which is the same move `.passage-card` had
+already made. The six tiles take their `--tile`, the four counts take their
+`--stat`, and `.continue-main` takes `--hue-library` — the Read tab's blue, not
+the screen's accent, because a card is coloured by where it goes and that one
+opens the book. On the Library screen those are the same colour anyway.
+**The cards stayed white and the headings stayed ink** — the two rules above and
+below this one are what bounded the change, and a tinted card would have broken
+the first. `.shortcut.is-soon` drops back to `--rule`: a place held open has no
+colour to wear yet.
 
 **The craving screen is colour-coded, and that is legibility, not mood.** Five
 rows that look identical are five things to read at the worst possible moment,
@@ -751,6 +786,17 @@ pressure.
 wins for a step with no text. A twelve-colour rainbow was the other reading and
 was rejected: violet **is** that tab under the `[data-hue]` system, and a step
 is an ordinal, not a category. Same for the Traditions.
+
+**The reader's target flash raced the suite, and twice took it out (2.38).**
+`.para.is-target` is added when the reader scrolls to a paragraph and removed
+2.2 seconds later. Four checks read it straight after
+`waitForSelector('#screen-reader.is-active')` — but the screen goes active
+*before* the chapter paints, so on a slow run the class was not there yet: one
+check failed, and two unguarded `$eval`s threw and **aborted the whole run**,
+which is why the last third of the suite silently never ran. `targetPara()` waits
+for the flash now. **A check that reads a self-clearing class must wait for it,
+and every read of one needs a catch** — an assertion that throws is not a failing
+check, it is a suite that stopped.
 
 **Things that bit me here.** A blanket rename of a variable in the smoke test
 also rewrote a **selector string** (`#craving-moves` became

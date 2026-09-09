@@ -64,6 +64,24 @@ async function openSettings(page) {
     await page.waitForTimeout(120);
 }
 
+/*
+ * The reader paints its chapter a tick after its screen goes active, and the
+ * flash it puts on the paragraph clears itself 2.2 seconds later. Four checks
+ * read that class straight after waiting for the screen, which raced the render
+ * — on a slow run it read nothing, failed, and twice threw out of an unguarded
+ * $eval and took the whole rest of the suite with it. Wait for the flash rather
+ * than assume it has landed. An empty string still means it never came.
+ */
+async function targetPara(page, within) {
+    const selector = (within || '') + '.para.is-target';
+    try {
+        await page.waitForSelector(selector, { timeout: 4000 });
+        return await page.$eval(selector, (e) => e.textContent);
+    } catch (error) {
+        return '';
+    }
+}
+
 async function shot(page, name) {
     if (!SHOT_DIR) return;
     fs.mkdirSync(SHOT_DIR, { recursive: true });
@@ -501,13 +519,20 @@ async function openContents(page) {
         (await page.textContent('#stats .stat')).includes('0%'));
 
     // ── counting the days ─────────────────────────────────────────────────
+    // The count came off the home screen at 2.38 and now sits in Settings,
+    // directly above the date it is worked out from. The counting itself did
+    // not change, so these checks did not either — only where they read it.
+    check('the count is not on the home screen any more',
+        (await page.$('#screen-home #daycount')) === null &&
+        (await page.$('#settings-abstinence #daycount')) !== null);
+
     check('with no first day set, the counter is an invitation rather than a nought',
         (await page.$eval('#daycount', (e) => e.classList.contains('is-unset'))) &&
         (await page.textContent('#daycount-n')) === '');
 
     const dayOne = await page.evaluate(async () => {
         await Store.saveSettings({ soberSince: Store.todayISO() });
-        UI.showScreen('home');
+        UI.showScreen('settings');
         return document.getElementById('daycount-n').textContent + ' ' +
             document.getElementById('daycount-label').textContent;
     });
@@ -515,7 +540,7 @@ async function openContents(page) {
 
     const counted = await page.evaluate(async () => {
         await Store.saveSettings({ soberSince: '2023-03-03' });
-        UI.showScreen('home');
+        UI.showScreen('settings');
         const days = Store.daysAbstinent();
         return { days: days, shown: document.getElementById('daycount-n').textContent,
                  since: document.getElementById('daycount-since').textContent };
@@ -538,15 +563,34 @@ async function openContents(page) {
         await Store.saveSettings({ soberSince: Store.shiftDay(Store.todayISO(), 5) });
         const days = Store.daysAbstinent();
         await Store.saveSettings({ soberSince: '2023-03-03' });
-        UI.showScreen('home');
+        UI.showScreen('settings');
         return days;
     });
     check('a date in the future counts nothing rather than backwards', future === 0, String(future));
 
-    await page.click('#daycount');
-    await page.waitForSelector('#screen-settings.is-active');
-    check('tapping it goes to the day it counts from',
-        (await page.inputValue('#set-sober-since')) === '2023-03-03');
+    // It used to be a button that brought you here. It is here, so it is not a
+    // button, and it stands next to the field rather than pointing at it.
+    await openSettings(page);
+    check('the count stands with the date it is worked out from',
+        (await page.inputValue('#set-sober-since')) === '2023-03-03' &&
+        (await page.$eval('#daycount', (e) => e.tagName)) === 'DIV');
+
+    // Changing the date has to move the number on the same screen, straight
+    // away — there is no going back to the home screen to see it now.
+    const retitled = await page.evaluate(async () => {
+        document.getElementById('set-sober-since').value = '2024-01-01';
+        document.getElementById('set-sober-since').dispatchEvent(
+            new Event('change', { bubbles: true }));
+        await new Promise((r) => setTimeout(r, 250));
+        const shown = document.getElementById('daycount-n').textContent;
+        await Store.saveSettings({ soberSince: '2023-03-03' });
+        UI.renderSettings();
+        return shown;
+    });
+    check('and answers the moment the date changes', retitled !== '' && retitled !== '0',
+        retitled);
+    await page.click('.tab[data-screen="home"]');
+    await page.waitForSelector('#screen-home.is-active');
 
     // ── days running ──────────────────────────────────────────────────────
     const running = await page.evaluate(() => ({
@@ -682,6 +726,12 @@ async function openContents(page) {
     await page.waitForSelector('#screen-home.is-active');
 
     // ── whether you have been here ────────────────────────────────────────
+    // It sits with the counts now, under "Where you have got to", rather than
+    // under the day count that used to stand at the top of the page.
+    check('the line stands with the counts it belongs to',
+        await page.$eval('#lastuse', (n) =>
+            n.nextElementSibling.id === 'stats' &&
+            n.previousElementSibling.classList.contains('section-heading')));
     check('with nothing written, the line says exactly that',
         (await page.textContent('#lastuse')) === 'Nothing read or written yet.');
 
@@ -873,7 +923,7 @@ async function openContents(page) {
     await page.waitForSelector('#screen-reader.is-active');
     check('a reference opens its chapter',
         (await page.textContent('#reader-title')) === 'More About Alcoholism');
-    const targeted = await page.$eval('.para.is-target', (e) => e.textContent).catch(() => '');
+    const targeted = await targetPara(page);
     check('and lands on the right paragraph',
         targeted.startsWith('We learned that we had to fully concede'),
         JSON.stringify(targeted.slice(0, 40)));
@@ -899,8 +949,7 @@ async function openContents(page) {
     await page.waitForSelector('#screen-reader.is-active');
     check('a reference into another chapter still lands on its paragraph',
         (await page.textContent('#reader-title')) === 'A Vision For You' &&
-        (await page.$eval('.para.is-target', (e) => e.textContent))
-            .startsWith('Abandon yourself to God'),
+        (await targetPara(page)).startsWith('Abandon yourself to God'),
         await page.textContent('#reader-title'));
     await page.click('#reader-back');
     await page.click('#step-back');
@@ -1518,7 +1567,11 @@ async function openContents(page) {
     // A deep link has to open the door it points at, not scroll to a shut one.
     await page.click('.tab[data-screen="home"]');
     await page.waitForSelector('#screen-home.is-active');
-    await page.click('#daycount');
+    await page.evaluate(() => {
+        document.querySelectorAll('#screen-settings .disclosure-section')
+            .forEach((n) => { n.open = false; });
+        UI.showSettingsAt('settings-abstinence');
+    });
     await page.waitForSelector('#screen-settings.is-active');
     await page.waitForTimeout(200);
     check('a link into Settings opens the section it points at',
@@ -1670,12 +1723,11 @@ async function openContents(page) {
         await page.textContent('#tradition-ground'));
 
     // The passage is worth nothing if you cannot get to it in its own chapter.
-    // .is-target is the reader's own flash, and it clears itself after 2.2s, so
-    // this reads it while it is still on.
+    // .is-target is the reader's own flash — see targetPara() for why this waits
+    // for it rather than reading straight away.
     await page.click('#tradition-seed-open');
     await page.waitForSelector('#screen-reader.is-active');
-    const landed = await page.$eval('#reader-content .para.is-target', (e) => e.textContent)
-        .catch(() => '');
+    const landed = await targetPara(page, '#reader-content ');
     check('and the seed opens the book at the paragraph it came from',
         landed.indexOf('only requirement for membership') !== -1, landed.slice(0, 60));
 
@@ -3206,8 +3258,7 @@ async function openContents(page) {
     await page.waitForSelector('#screen-reader.is-active');
     check('and it opens at that passage in the right chapter',
         (await page.textContent('#reader-title')) === 'How It Works' &&
-        (await page.$eval('.para.is-target', (e) => e.textContent).catch(() => ''))
-            .indexOf('We were now at step three') === 0);
+        (await targetPara(page)).indexOf('We were now at step three') === 0);
     await page.click('#reader-back');
     await page.waitForSelector('#screen-step.is-active');
 

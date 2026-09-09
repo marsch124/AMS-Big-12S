@@ -222,29 +222,34 @@
         clockTimer = null;
     }
 
+    /*
+     * Where you stopped comes first: carrying on is the commonest reason for
+     * opening the app, and it used to sit third. The day count is not here at
+     * all any more — it lives in Settings beside the date it is worked out
+     * from, which is the only place it was ever tapped to reach.
+     */
     function renderHome() {
         startClock();
-        renderDayCount();
-        renderPassage();
         renderContinueCard('home-continue');
+        renderPassage();
         renderShortcuts();
+        renderLastUse();
         renderStats();
     }
 
     /*
-     * The day count. Tapping it goes to the date it counts from, which is the
-     * only thing there is to do with it.
+     * The day count, drawn in Settings under "Counting the days". It is not a
+     * button: it already sits on the screen it used to take you to.
      */
     function renderDayCount() {
         var card = $('daycount');
         var days = Store.daysAbstinent();
         var since = String(Store.state.settings.soberSince || '').trim();
 
-        renderLastUse();
         card.classList.toggle('is-unset', days === null);
         if (days === null) {
             $('daycount-n').textContent = '';
-            $('daycount-label').textContent = 'Count the days — set the first one';
+            $('daycount-label').textContent = 'No first day set';
             $('daycount-since').textContent = '';
         } else {
             $('daycount-n').textContent = days.toLocaleString();
@@ -5059,6 +5064,7 @@
         var settings = Store.state.settings;
         renderSafekeeping();
         renderRules();
+        renderDayCount();
         $('set-theme').value = settings.theme;
         $('set-typeface').value = settings.typeface;
         $('set-fontsize').value = settings.fontSize;
@@ -5596,11 +5602,11 @@
                 if (!Store.state.settings.keepAwake) releaseWakeLock();
             });
         });
-        $('daycount').addEventListener('click', function () {
-            showSettingsAt('settings-abstinence');
-        });
+        /* The count now sits on this screen, a few pixels above the field, so
+           it has to answer the moment the date changes rather than waiting for
+           the next time Settings is opened. */
         $('set-sober-since').addEventListener('change', function () {
-            Store.saveSettings({ soberSince: this.value });
+            Store.saveSettings({ soberSince: this.value }).then(renderDayCount);
         });
         ['sponsor', 'sponsee', 'spouse'].forEach(function (role) {
             $('set-' + role + '-name').addEventListener('change', function () {
@@ -5779,6 +5785,10 @@
         openTradition: openTradition,
         renderNotes: renderNotes,
         renderSettings: renderSettings,
+        /* Six callers deep-link into Settings. The day count used to be the
+           seventh and was the one the smoke test drove; it is not a button any
+           more, so the door itself is exported rather than one way through it. */
+        showSettingsAt: showSettingsAt,
         toast: toast
     };
 })(window);

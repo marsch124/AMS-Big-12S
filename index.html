@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon-64.png" sizes="64x64">
-<link rel="stylesheet" href="css/style.css?v=49">
+<link rel="stylesheet" href="css/style.css?v=50">
 </head>
 <body>
 
@@ -49,24 +49,9 @@
         <span class="do-go">›</span>
       </button>
 
-      <!-- Small, and first. It is the number he opens the app already knowing;
-           the app's job is to have counted it right, not to make a fuss of it. -->
-      <button class="daycount" id="daycount">
-        <span class="daycount-n" id="daycount-n"></span>
-        <span class="daycount-label" id="daycount-label"></span>
-        <span class="daycount-since" id="daycount-since"></span>
-      </button>
-
-      <!-- Whether the practice is still happening. Coloured, because it has a
-           direction: quiet while it is recent, warmer as it stretches out. -->
-      <p class="lastuse" id="lastuse"></p>
-
-      <button class="passage-card" id="passage-card">
-        <span class="passage-label">Today’s passage</span>
-        <span class="passage-text" id="passage-text"></span>
-        <span class="passage-where" id="passage-where"></span>
-      </button>
-
+      <!-- Where you stopped, first: the commonest reason for opening the app is
+           to carry on, and the count that used to stand here has gone to
+           Settings, beside the date it is set from (2.38, at Martin's ask). -->
       <div class="continue-card" id="home-continue" hidden>
         <button class="continue-main" id="home-continue-main">
           <span class="continue-label">Continue reading</span>
@@ -79,6 +64,12 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/></svg>
         </button>
       </div>
+
+      <button class="passage-card" id="passage-card">
+        <span class="passage-label">Today’s passage</span>
+        <span class="passage-text" id="passage-text"></span>
+        <span class="passage-where" id="passage-where"></span>
+      </button>
 
       <h2 class="section-heading">What brings you here</h2>
       <!-- Written in the first person, because that is how the reason arrives:
@@ -167,6 +158,10 @@
       </button>
 
       <h2 class="section-heading">Where you have got to</h2>
+      <!-- Whether the practice is still happening. Coloured, because it has a
+           direction: quiet while it is recent, warmer as it stretches out. It
+           sits with the counts now rather than at the top of the page. -->
+      <p class="lastuse" id="lastuse"></p>
       <div class="stats" id="stats"></div>
     </div>
   </section>
@@ -789,10 +784,18 @@
         <summary><span>Counting the days</span></summary>
         <div class="section-body">
         <p class="panel-note">
-          The first day, counted inclusively — set it to today and the home screen reads
-          <strong>1 day</strong>. Leave it empty and the counter stays off the home screen
-          altogether.
+          The first day, counted inclusively — set it to today and it reads <strong>1 day</strong>.
+          The count is here rather than on the home screen, next to the date it is worked out
+          from; leave the date empty and there is no count at all.
         </p>
+        <!-- Not a button any more. It used to sit on the home screen and take
+             you here when tapped; it is already here, so there is nowhere left
+             for a tap to go. -->
+        <div class="daycount" id="daycount">
+          <span class="daycount-n" id="daycount-n"></span>
+          <span class="daycount-label" id="daycount-label"></span>
+          <span class="daycount-since" id="daycount-since"></span>
+        </div>
         <label class="row">
           <span>First day</span>
           <input type="date" id="set-sober-since" class="row-input">
@@ -1064,7 +1067,8 @@
                background apps without warning.</p>
             <p>It remembers the <strong>paragraph</strong>, not just the chapter, so a long
                chapter picks up where you actually were. The <strong>Continue reading</strong>
-               card on the Read tab shows it, with how far through the book you are.</p>
+               card shows it, with how far through the book you are — first thing on the home
+               screen, and again on the Read tab.</p>
           </div>
         </details>
 
@@ -1257,6 +1261,27 @@
           <span class="ver-tag" id="version-history-tag"></span>
         </summary>
         <div class="disclosure-list">
+
+        <details class="disclosure">
+          <summary><span>The front page, in the order you use it</span><span class="ver-tag">2.38</span></summary>
+          <div class="disclosure-body">
+            <p>The home screen opens with <strong>where you stopped</strong> now, then
+               today's passage, then the reasons you might have come. Carrying on is the
+               commonest of them and it used to sit third.</p>
+            <p><strong>The day count has left the front page.</strong> It is in Settings,
+               under <em>Counting the days</em>, standing next to the date it is worked out
+               from — which is where tapping it always took you. Nothing about the counting
+               changed, and the date you set is untouched.</p>
+            <p><strong>The line about whether you have been here</strong> — <em>you read or
+               wrote something today</em> — has gone down to <em>Where you have got to</em>,
+               with the counts it belongs among.</p>
+            <p><strong>More colour.</strong> Every card on the home screen now carries the
+               colour of the place it takes you, on its edge as well as in its chip: the
+               six tiles, the four counts, and <em>Continue reading</em> in the Read tab's
+               own blue. The cards themselves stay white — nothing you have to read sits on
+               a tint — and the headings stay ink.</p>
+          </div>
+        </details>
 
         <details class="disclosure">
           <summary><span>Keeping the work</span><span class="ver-tag">2.37</span></summary>
@@ -2943,7 +2968,7 @@
 <script src="js/store.js?v=26"></script>
 <script src="js/backup.js?v=11"></script>
 <script src="js/safekeeping.js?v=2"></script>
-<script src="js/ui.js?v=47"></script>
+<script src="js/ui.js?v=48"></script>
 <script src="js/app.js?v=29"></script>
 </body>
 </html>

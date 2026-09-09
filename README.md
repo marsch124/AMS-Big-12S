@@ -10,9 +10,9 @@ without a signal.
 
 ## Features
 
-- 🏠 **A home screen** — the day count, the time and the date, a passage from the book for
-  today, where you stopped, the reasons you might have opened the app, and an honest count of
-  what you have done
+- 🏠 **A home screen** — the time and the date, where you stopped, a passage from the book
+  for today, the reasons you might have opened the app, and an honest count of what you have
+  done
 - 🧭 **Starting again** — if abstinence breaks, the three days after it: what to do, somewhere
   to write, and the book to hand
 - 🌊 **When a craving comes** — its own row at the top of the home screen, opening a page
@@ -60,16 +60,21 @@ without a signal.
 The app opens here rather than in the contents, because reading is not the only
 reason anyone picks it up.
 
-**Whether you have been here** sits just under the day count: how long since you
-actually read or wrote something. Opening the app does not count — standing in
-the doorway is not the practice. It stays grey for a day or two, takes the accent
-colour after that, and goes red past a week. The day count itself is *not*
-coloured, on purpose: a low number there is not a warning.
+**Where you stopped** is the first card, because carrying on is the commonest
+reason for opening the app. It shows the chapter, the last lines you were on and
+how far through the book you are, in the Read tab's own blue.
 
-**The day count** sits at the top. Set the first day in **Settings → Counting
-the days** and it counts inclusively, so the day you set it reads *1 day* —
-which is how anybody says it. Leave the date empty and the counter is not there
-at all; there is no nought on the home screen. Tapping it goes back to the date.
+**The day count is not on this screen.** It moved to **Settings → Counting the
+days** at 2.38, where it stands next to the date it is worked out from — which is
+where tapping it always took you. Set the first day there and it counts
+inclusively, so the day you set it reads *1 day*, which is how anybody says it.
+Leave the date empty and there is no count at all.
+
+**Whether you have been here** — how long since you actually read or wrote
+something — sits at the bottom under *Where you have got to*, with the counts it
+belongs among. Opening the app does not count; standing in the doorway is not the
+practice. It stays grey for a day or two, takes the accent colour after that, and
+goes red past a week.
 
 **Today's passage** is one passage from the book, the same one all day, changing
 at midnight. Tap it to read it where it sits in the chapter. There are 94 of
@@ -93,6 +98,11 @@ something down*. Meeting your sponsor or your sponsee opens the list of points
 still waiting for that conversation, with the count on the tile beforehand.
 Every one of them goes somewhere. When a new tile is added ahead of what it
 does, it says "Not built yet" when tapped rather than doing nothing quietly.
+
+**Every card wears the colour of the place it takes you** — on its edge as well
+as in its chip: the six tiles, the four counts, and *Continue reading* in the Read
+tab's blue. The cards themselves stay white, because nothing you have to read
+should sit on a tint, and the headings stay ink.
 
 **Where you have got to** is four counts: how far through the book, what you have
 written, how many of the twelve steps you have worked on, and how many days in a
