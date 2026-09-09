@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.39 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.40 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 

@@ -1040,8 +1040,14 @@ button { cursor: pointer; }
 .screen-body > .section-heading:first-child { margin-top: 4px; }
 
 /* The card is a card with two things in it now: the whole face of it resumes
-   reading, and a small control in the corner adjusts what it points at. */
-.continue-card { position: relative; }
+   reading, and a small control in the corner adjusts what it points at.
+
+   It carries its own bottom margin like every other card. It went without one
+   until 2.40 and nobody could see it: on both screens it stood directly before
+   a section heading, whose 28px top margin collapses with this 12px and won
+   anyway. Reordering the home screen in 2.38 put a card after it instead, and
+   the two sat flush. */
+.continue-card { position: relative; margin-bottom: 12px; }
 .continue-card[hidden] { display: none; }
 .continue-adjust {
   position: absolute;
