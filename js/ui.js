@@ -2917,6 +2917,11 @@
         } else {
             body.appendChild(renderDaily(step, work));
         }
+
+        // Everything is on the page now, so anything that has to be measured
+        // rather than assumed can be measured. Only the grids that already have
+        // a width answer here; the rest are left to their observers.
+        syncScrollHints(body);
     }
 
     /* ------------------------------------------------------------ step twelve */
@@ -3985,21 +3990,53 @@
         grid.appendChild(tbody);
         wrap.appendChild(grid);
 
-        // Say so only when a column is genuinely off-screen. Measured after
-        // layout for the same reason the notes fold is measured: the number of
-        // columns does not tell you whether they fit this phone.
+        // Say so only when a column is genuinely off-screen: the number of
+        // columns does not tell you whether they fit this phone. It starts
+        // hidden and is measured by syncScrollHint below, once there is a box
+        // to measure.
         var hint = document.createElement('p');
         hint.className = 'hint inv-scrollhint';
         hint.textContent = 'Scroll sideways for the rest of the columns.';
         hint.hidden = true;
-        requestAnimationFrame(function () {
-            hint.hidden = wrap.scrollWidth - wrap.clientWidth <= 2;
-        });
+
+        // A rotate is a resize, and four columns that did not fit in portrait
+        // often do in landscape — so the answer is not settled once. This also
+        // covers the grid that was built before its screen was shown, which
+        // measures nothing until it has a width.
+        if (window.ResizeObserver) {
+            new ResizeObserver(function () { syncScrollHint(wrap); }).observe(wrap);
+        } else {
+            requestAnimationFrame(function () { syncScrollHint(wrap); });
+        }
 
         var holder = document.createElement('div');
         holder.appendChild(wrap);
         holder.appendChild(hint);
         return holder;
+    }
+
+    /*
+     * Reveal the "scroll sideways" line only where a column really is off the
+     * edge. Reading scrollWidth forces the layout the answer needs, so this
+     * runs the moment the grid is on the page rather than a frame later. It
+     * used to wait for an animation frame, which left the line still saying
+     * "hidden" to anything that looked in between — the smoke test did, and
+     * failed on it.
+     *
+     * A grid that is detached, or on a screen not yet shown, measures zero.
+     * That is not "everything fits", it is "not asked yet": leave the line
+     * alone and let the observer answer once there is a box.
+     */
+    function syncScrollHint(wrap) {
+        var hint = wrap.parentNode &&
+            wrap.parentNode.querySelector('.inv-scrollhint');
+        if (!hint || !wrap.clientWidth) return;
+        hint.hidden = wrap.scrollWidth - wrap.clientWidth <= 2;
+    }
+
+    function syncScrollHints(root) {
+        Array.prototype.forEach.call(
+            (root || document).querySelectorAll('.inv-gridwrap'), syncScrollHint);
     }
 
     // A chip row for the states a step declares, returning what is chosen.

@@ -1263,6 +1263,20 @@
         <div class="disclosure-list">
 
         <details class="disclosure">
+          <summary><span>The sideways line, only when it is true</span><span class="ver-tag">2.39</span></summary>
+          <div class="disclosure-body">
+            <p>Reading an inventory back lays the rows out in columns, and four columns do
+               not fit a phone — so the grid scrolls sideways inside its own box and a line
+               underneath says so.</p>
+            <p><strong>That line now checks the screen it is actually on.</strong> It used
+               to work the answer out a moment late and then never look again, so turning
+               the phone on its side — where the columns often do fit — left it still
+               telling you to scroll. It is worked out the moment the table is on the page,
+               and again whenever the box changes size.</p>
+          </div>
+        </details>
+
+        <details class="disclosure">
           <summary><span>The front page, in the order you use it</span><span class="ver-tag">2.38</span></summary>
           <div class="disclosure-body">
             <p>The home screen opens with <strong>where you stopped</strong> now, then
@@ -2968,7 +2982,7 @@
 <script src="js/store.js?v=26"></script>
 <script src="js/backup.js?v=11"></script>
 <script src="js/safekeeping.js?v=2"></script>
-<script src="js/ui.js?v=48"></script>
-<script src="js/app.js?v=29"></script>
+<script src="js/ui.js?v=49"></script>
+<script src="js/app.js?v=30"></script>
 </body>
 </html>
