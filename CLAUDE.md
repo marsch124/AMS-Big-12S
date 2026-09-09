@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.40 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.41 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -724,6 +724,76 @@ so a slate accent made a styled control look like an unstyled one. Rose sits at
 agree — a violet heading over rose bullets is half a thought. The *What else
 helps* list keeps the screen's accent, correctly: that one belongs to nobody in
 particular.
+
+## Two gates, not one (2.41)
+
+**`tools/smoke-test.js` asks whether the app does the right thing.
+`tools/layout-audit.js` asks whether you can see it.** Run both before a
+release; neither is optional and neither covers the other.
+
+```bash
+python3 -m http.server 7802 &
+node tools/smoke-test.js      # 515 checks — behaviour, data, offline
+node tools/layout-audit.js    # 144 page states — geometry and contrast
+```
+
+**Why it exists.** Every fault Martin has reported off his own phone has been
+geometric, and not one of them had a failing check behind it: the flush cards at
+2.38, the scroll hint that never re-measured at 2.39. The suite was strong on
+logic and blind to layout. The audit walks all sixteen screen states at three
+viewport sizes (an SE, a modern phone, **and landscape** — that is where 2.39
+lived), empty and full, and the three themes, asserting seven geometric
+invariants and one contrast one.
+
+**`ONLY=phone/full/home node tools/layout-audit.js`** runs a single state, and
+`SHOT_DIR` writes a screenshot of every failing one.
+
+**A rule that cries wolf is a rule nobody reads.** The first tap-target rule used
+a flat 44px height and produced **372 findings**, which is the same as producing
+none. What makes a control hard to hit is being small in *both* directions, not
+falling 2px short in one — an 816×42 bar is trivial to land on. Every exclusion
+in that file is written down with its reason; add new ones the same way, and
+**verify the app really is right before excluding anything** (see the folded
+`<details>` note below).
+
+**Three of the first run's findings were the harness's own footprint.** Worth
+knowing, because each looked exactly like a bug:
+
+1. **Chrome lays out the contents of a closed `<details>`** — real rects,
+   `display: block`, `visibility: visible` — so all ten shut Settings sections
+   stacked their fields at the same coordinates and read as a pile of
+   overlapping inputs. They are genuinely unreachable (`elementFromPoint` over
+   one returns the `<summary>`, and Tab walks past them), which was **checked
+   before excluding them**. `isShown()` now knows about folded sections.
+2. **The tab-bar rule scrolls a screen to its end, and `showScreen()` does not
+   reset scroll on return**, so the second data state inherited the first one's
+   scroll position and every sticky topbar read as overlapping the content
+   under it. Nine findings, all phantom. The driver resets `.screen-body`
+   scroll before measuring now.
+3. **`.step-item` is a list row, not a card.** The twelve are flush by design,
+   the way a table is.
+
+**The audit is proven by putting a bug back.** Deleting `margin-bottom` from
+`.continue-card` — the exact 2.38 fault — makes it fail with
+`div#home-continue.continue-card and button#passage-card.passage-card are 0px
+apart`. Do that after any large change to the rules: a gate that passes
+everything is not a gate.
+
+**What it found on its first honest run (all fixed in 2.41):**
+
+- **`--who-*` was being used as a fill with `--accent-on: #ffffff` hard-coded**
+  on `#screen-checkin` and `#screen-message`. In Dark those colours are *light*,
+  because there they are read as type — so white on them measured 2.72, 2.51 and
+  2.78 to one. This is the same trap as 2.29, from the other side. There is now
+  a `--who-*-on` per theme and the screens use it. **Never hard-code an ink onto
+  a variable that flips lightness between themes.**
+- `.seed-where` was a 14px text button with `padding: 0` — a 17px tap target,
+  the smallest in the app. Padding plus matching negative margins gives it 44px
+  without moving the text.
+- `.continue-adjust` was 38×38, in a corner, on the first card of the home
+  screen.
+- Light's `--text-dim` was 4.44:1 **on `--bg-sunken` only** — fine on white and
+  on the page. One step darker (`#646b76`) clears 4.5 on all three.
 
 ## The home screen, in the order it is used (2.38)
 

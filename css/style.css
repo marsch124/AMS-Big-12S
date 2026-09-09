@@ -76,6 +76,13 @@
   --who-sponsor:  #704ac9;
   --who-sponsee:  #15733f;
   --who-spouse:   #c41940;
+  /* And the ink that goes ON one when it is used as a fill. This has to be a
+     token rather than the #ffffff that used to be hard-coded on the checkin and
+     message screens, because --who-* flips lightness between themes and white
+     only works on one side of that. See the dark block. */
+  --who-sponsor-on: #ffffff;
+  --who-sponsee-on: #ffffff;
+  --who-spouse-on:  #ffffff;
 
   /* The craving screen. Five rows that look identical are five things to read
      at the worst possible moment; a colour each is a thing to reach for, and
@@ -116,7 +123,10 @@
      warm, so the two days stay two days in the reader as well. */
   --paper:     #f9f5ea;
   --text:      #16191f;
-  --text-dim:  #666d78;
+  /* 4.44:1 on --bg-sunken, which is where .switch-opt's track and the backup
+     panel's lines sit — fine on white and on the page, short only there. One
+     step darker clears 4.5 on all three. */
+  --text-dim:  #646b76;
   /* A drawn edge rather than a hinted one: Light does its separating with
      lines where Morning does it with warmth. */
   --rule:      #d8dee7;
@@ -193,9 +203,16 @@
      a *fill* picked against white; used as type on a dark ground the sponsor
      violet came out at 3.67:1. Lifted here, the same way every --hue-* is.
      It is still one colour per person — the same hue, fit for the ground. */
+  /* Light in Dark, because on this ground these are read as TYPE. That makes
+     them the wrong thing to put white on: as a fill behind white they measured
+     2.72, 2.51 and 2.78 to one on the checkin and message screens, which is the
+     same trap 2.29 hit going the other way. The ink flips with them. */
   --who-sponsor:  #a78bfa;
   --who-sponsee:  #22bb66;
   --who-spouse:   #f4708d;
+  --who-sponsor-on: #1a1030;
+  --who-sponsee-on: #04220f;
+  --who-spouse-on:  #3d0713;
 
   --move-breathe: #0eb5c9;  --move-breathe-on: #04343b;
   --move-headon:  #8b5cf6;  --move-headon-on:  #1c0050;
@@ -219,16 +236,16 @@
    colour over the tab's: talking to your sponsor is violet all the way down,
    your sponsee green. Set on the screen itself, so it beats [data-hue] on the
    root without touching the tab that is lit. */
-#screen-checkin[data-who="sponsor"] { --accent: var(--who-sponsor); --accent-on: #ffffff; }
-#screen-checkin[data-who="sponsee"] { --accent: var(--who-sponsee); --accent-on: #ffffff; }
+#screen-checkin[data-who="sponsor"] { --accent: var(--who-sponsor); --accent-on: var(--who-sponsor-on); }
+#screen-checkin[data-who="sponsee"] { --accent: var(--who-sponsee); --accent-on: var(--who-sponsee-on); }
 #screen-checkin[data-who] .topbar { border-bottom: 3px solid var(--accent); }
 
 /* The same again for saying something to somebody. This screen is entirely
    about who it is going to, so it wears them: the chosen chip, the send rows
    and the band under the title all take that person's colour. */
-#screen-message[data-who="sponsor"] { --accent: var(--who-sponsor); --accent-on: #ffffff; }
-#screen-message[data-who="sponsee"] { --accent: var(--who-sponsee); --accent-on: #ffffff; }
-#screen-message[data-who="spouse"]  { --accent: var(--who-spouse);  --accent-on: #ffffff; }
+#screen-message[data-who="sponsor"] { --accent: var(--who-sponsor); --accent-on: var(--who-sponsor-on); }
+#screen-message[data-who="sponsee"] { --accent: var(--who-sponsee); --accent-on: var(--who-sponsee-on); }
+#screen-message[data-who="spouse"]  { --accent: var(--who-spouse);  --accent-on: var(--who-spouse-on); }
 #screen-message[data-who] .topbar { border-bottom: 3px solid var(--accent); }
 
 [data-typeface="sans"] {
@@ -1049,12 +1066,14 @@ button { cursor: pointer; }
    the two sat flush. */
 .continue-card { position: relative; margin-bottom: 12px; }
 .continue-card[hidden] { display: none; }
+/* Was 38×38. It is the only control on the first card of the home screen and
+   it sits in a corner, which is the hardest place on a phone to hit. */
 .continue-adjust {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 38px;
-  height: 38px;
+  top: 3px;
+  right: 3px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 10px;
   background: transparent;
@@ -1843,10 +1862,14 @@ button { cursor: pointer; }
   font-size: 17px;
   line-height: 1.5;
 }
+/* It reads as a line of type and it is a button, and at 14px with no padding
+   it was 17px tall — the smallest thing to aim at anywhere in the app. The
+   padding gives it a 44px target; the negative margins put the text back where
+   it was drawn, so nothing on the page moves. */
 .seed-where {
   display: inline-block;
-  margin: 12px 0 0;
-  padding: 0;
+  margin: -1px 0 -14px;
+  padding: 13px 0 14px;
   border: 0;
   background: none;
   font: inherit;

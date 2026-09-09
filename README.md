@@ -650,11 +650,24 @@ python3 -m http.server 7801
 ```bash
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
-node tools/smoke-test.js      # 512 checks
+node tools/smoke-test.js      # 515 checks — behaviour
+node tools/layout-audit.js    # 144 page states — layout
 ```
 
-It drives a real browser against the served copy and asserts the things that
-matter: the bundled text is complete, notes and bookmarks persist, the reading
+There are two suites and they ask different questions. The **smoke test** asks
+whether the app does the right thing. The **layout audit** asks whether you can
+see it — it walks every screen at three sizes including landscape, empty and
+full, in all three themes, and fails if two cards touch, if anything runs off
+the edge, if text is cut off without saying so, if two things you can tap
+overlap, if anything is too small to hit, or if any text falls below 4.5:1 on
+whatever is actually behind it. `ONLY=` runs one state; `SHOT_DIR=` photographs
+the failures.
+
+That second suite exists because every fault reported from a real phone so far
+has been geometric, and none of them had a failing check behind it.
+
+The smoke test drives a real browser against the served copy and asserts the
+things that matter: the bundled text is complete, notes and bookmarks persist, the reading
 position survives a reload, every step's work saves and round-trips through a
 backup, and the whole book is readable with the network switched off.
 `CHROMIUM_PATH` points at a browser binary if Playwright cannot find one;
