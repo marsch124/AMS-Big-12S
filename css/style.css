@@ -105,6 +105,25 @@
   --safe-top:    env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --tabbar-h: 56px;
+
+  /* The blur under the clock (2.42). On iOS 26, a Home Screen app that runs
+     under the status bar gets a soft blur drawn over the strip just below it:
+     flat at the top inset (62px on Martin's phone) and fading out about 50px
+     lower. Every title and back button sat at 74px, inside it, and looked out
+     of focus on the phone. The Simulator does not draw the blur, so nothing
+     short of the real device shows it.
+
+     50px, but only where there is a top inset at all: min(inset, 1px) is 1px
+     on a phone and 0 on the Mac, an iPad without one, or a desktop browser,
+     so nothing moves anywhere the blur cannot be. Added to the top bar's own
+     padding rather than as a margin, so the bar's ground still runs up under
+     the clock and there is no seam. The same AMS ColdShower 1.36 fix. */
+  --under-clock: calc(min(env(safe-area-inset-top, 0px), 1px) * 50);
+
+  /* A sheet tall enough to reach its cap used to stop at 88vh, which on the
+     phone is 105px from the top — its handle and title in the same blur.
+     Capped below it there; elsewhere this is still 88vh. */
+  --sheet-max: min(88vh, calc(100vh - var(--safe-top) - var(--under-clock) - 8px));
 }
 
 /* Light is not a slightly different Morning, and it had become one. Morning is
@@ -321,7 +340,7 @@ button { cursor: pointer; }
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: calc(var(--safe-top) + 12px) 14px 12px;
+  padding: calc(var(--safe-top) + var(--under-clock) + 12px) 14px 12px;
   /* --bg, not --bg-raised: --bg carries the screen's own tint, and a white bar
      over a coloured ground was a seam across the top of every screen. */
   background: var(--bg);
@@ -2386,7 +2405,7 @@ button:focus-visible,
   position: fixed;
   left: 0; right: 0; bottom: 0;
   z-index: 60;
-  max-height: 88vh;
+  max-height: var(--sheet-max);
   overflow-y: auto;
   background: var(--bg-raised);
   border-radius: 18px 18px 0 0;
@@ -2640,7 +2659,7 @@ button:focus-visible,
 
 /* The row editor carries up to four fields, so it needs more room than the
    note sheet and must stay scrollable on a short screen. */
-.sheet-tall { max-height: 88vh; overflow-y: auto; }
+.sheet-tall { max-height: var(--sheet-max); overflow-y: auto; }
 
 /* The copy-out preview. Smaller and tighter than a note box: it is there to be
    checked over before sending, not written in. It stays a real text box so

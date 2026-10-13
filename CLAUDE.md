@@ -14,7 +14,7 @@ resuming where the reader stopped. Built for Martin's iPhone; a sibling to his
   branch-and-merge step in front of him: he cannot read a diff on a phone, and
   the suite is the real gate. Only hold a change back if he asked for that piece
   of work to be held. A bad release is reverted, not prevented by asking.
-- **Current version:** 2.41 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
+- **Current version:** 2.42 (`APP_VERSION` in `js/app.js` *and* `sw.js`)
 
 ## Where this is up to
 
@@ -725,6 +725,39 @@ agree — a violet heading over rose bullets is half a thought. The *What else
 helps* list keeps the screen's accent, correctly: that one belongs to nobody in
 particular.
 
+## The blur under the clock (2.42)
+
+**On iOS 26 a Home Screen app that runs under the status bar gets a soft blur
+drawn over the strip just below it** — flat at the top safe-area inset (62px on
+Martin's phone) and fading out about 48px lower. Proven on his real phone with
+AMS ColdShower first. Every `.topbar` here put its first row at `safe-top + 12`
+= 74px, inside it, so every title and back button looked out of focus. **The
+iOS Simulator does not draw this blur, and neither does any desktop browser** —
+only the device shows it.
+
+The fix is one variable in `:root`:
+`--under-clock: calc(min(env(safe-area-inset-top, 0px), 1px) * 50)` — 50px where
+there is a top inset at all, 0 on the Mac, a desktop browser, or a phone in
+landscape (whose top inset is 0). It is added to `.topbar`'s own top padding,
+not given as a margin, so each bar's ground (`--wash` on home, `--paper` in the
+reader) still runs up under the clock with no seam. Sheets were the other
+place: `max-height: 88vh` let a full sheet reach 105px. Both `.sheet` and
+`.sheet-tall` now use `--sheet-max`, which is 88vh unless that would put the top
+inside the strip.
+
+**The gate for it lives in `tools/layout-audit.js` (`auditUnderClock`)**,
+because none of its three viewports had a safe-area inset and so it could never
+have seen this. It hands Chromium the phone's real insets (62/34) through CDP
+`Emulation.setSafeAreaInsetsOverride`, so the page's own `env()` sees them, and
+asserts that nothing in any screen's `.topbar` starts above 110px and no sheet
+filled past its cap starts above 110px; then with no inset, that every bar still
+has exactly 12px above it and every sheet still stops at 88vh. Found by
+structure, never by wording, so a screen or sheet added later is covered
+without being listed. **Proven both ways:** the 2.41 CSS gives 44 findings by
+name (`h1#home-greeting.topbar-title starts at 74px …`), and making the shift
+unconditional (`--under-clock: 50px`) fails the no-inset half on all sixteen
+screens. `ONLY=under-clock` runs just this part.
+
 ## Two gates, not one (2.41)
 
 **`tools/smoke-test.js` asks whether the app does the right thing.
@@ -734,7 +767,7 @@ release; neither is optional and neither covers the other.
 ```bash
 python3 -m http.server 7802 &
 node tools/smoke-test.js      # 515 checks — behaviour, data, offline
-node tools/layout-audit.js    # 144 page states — geometry and contrast
+node tools/layout-audit.js    # 178 page states — geometry and contrast
 ```
 
 **Why it exists.** Every fault Martin has reported off his own phone has been
