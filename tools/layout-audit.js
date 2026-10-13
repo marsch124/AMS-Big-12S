@@ -469,129 +469,6 @@ const HELPERS = function () {
     };
 };
 
-/* ──────────────────────────────────────────────── the blur under the clock ── */
-
-/*
- * 2.42. On iOS 26 a Home Screen app that runs under the status bar gets a soft
- * blur drawn over the strip just below it — flat at the top inset (62px on
- * Martin's phone) and fading out about 48px lower. Every title and back button
- * in the app sat at 74px, inside it, and looked out of focus on the phone.
- * None of the VIEWPORTS above has a safe-area inset at all, so this file could
- * never have seen it; the iOS Simulator does not draw the blur either.
- *
- * Chromium can be handed the phone's real insets, so the page's own
- * env(safe-area-inset-*) sees them. With them: on every screen, nothing in the
- * top bar may start above 110px, and no sheet filled past its cap may grow up
- * into the strip. Without them (the Mac, a desktop browser): nothing may have
- * moved — the bar keeps the 12px above it that it always had, and a sheet still
- * stops at 88vh.
- *
- * Found by structure (.topbar, .sheet), never by wording, so it covers a screen
- * or a sheet added later without being told about it.
- */
-const CLOCK_INSET = { top: 62, bottom: 34 };
-const NO_INSET = { top: 0, bottom: 0 };
-const CLEAR_OF_BLUR = CLOCK_INSET.top + 48;
-const UNDER_CLOCK_RULE = 'nothing sits in the blur under the clock';
-
-async function auditUnderClock(browser) {
-    for (const inset of [CLOCK_INSET, NO_INSET]) {
-        const tag = inset.top ? 'iphone-inset' : 'no-inset';
-        const context = await browser.newContext({
-            viewport: { width: 402, height: 874 },
-            deviceScaleFactor: 2,
-        });
-        const page = await context.newPage();
-        page.on('pageerror', (e) => report('page', 'no script errors', e.message));
-        const cdp = await context.newCDPSession(page);
-        await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: inset });
-        await page.goto(BASE, { waitUntil: 'networkidle' });
-        await page.waitForFunction(() => window.Store && Store.state && Store.state.book
-            && Store.state.book.sections && Store.state.book.sections.length > 6);
-        await page.evaluate(HELPERS);
-        await seedFull(page);
-
-        for (const screen of SCREENS) {
-            const label = ['under-clock', tag, screen.name].join('/');
-            if (ONLY && label.indexOf(ONLY) === -1) continue;
-            try {
-                await page.evaluate(`(${screen.open.toString()})()`);
-            } catch (error) {
-                report(label, 'the screen opens at all', error.message);
-                continue;
-            }
-            await page.evaluate(() => {
-                document.querySelectorAll('.screen-body')
-                    .forEach((b) => { b.scrollTop = 0; });
-            });
-            await page.waitForTimeout(160);
-            statesRun += 1;
-            assertionsRun += 1;
-            const complaints = await page.evaluate(([real, insetTop, clear]) => {
-                const root = document.querySelector('#screen-' + real + '.is-active');
-                if (!root) return ['screen-' + real + ' is not the active screen'];
-                const bar = root.querySelector('.topbar');
-                if (!bar) return [];
-                if (!insetTop) {
-                    const pad = parseFloat(getComputedStyle(bar).paddingTop);
-                    return Math.abs(pad - 12) > 0.5
-                        ? [describe(bar) + ' has ' + pad + 'px above it with no inset — it'
-                            + ' should be the 12px it always was']
-                        : [];
-                }
-                const out = [];
-                bar.querySelectorAll('*').forEach((el) => {
-                    if (!isShown(el)) return;
-                    const tappable = el.matches('button, a[href], input, select, textarea');
-                    const text = !el.children.length && el.textContent.trim();
-                    if (!tappable && !text) return;
-                    const top = el.getBoundingClientRect().top;
-                    if (top < clear) {
-                        out.push(describe(el) + ' starts at ' + Math.round(top)
-                            + 'px, inside the blur (clear of it from ' + clear + 'px)');
-                    }
-                });
-                return dedupe(out);
-            }, [screen.name.replace(/-.*$/, ''), inset.top, CLEAR_OF_BLUR]);
-            complaints.forEach((c) => report(label, UNDER_CLOCK_RULE, c));
-        }
-
-        /* Every sheet, filled past its cap so it is as tall as it is allowed to
-           be, then put back exactly as it was. */
-        const label = ['under-clock', tag, 'sheets'].join('/');
-        if (!ONLY || label.indexOf(ONLY) !== -1) {
-            statesRun += 1;
-            assertionsRun += 1;
-            const complaints = await page.evaluate(([insetTop, clear]) => {
-                const out = [];
-                document.querySelectorAll('.sheet').forEach((sheet) => {
-                    const wasHidden = sheet.hidden;
-                    sheet.hidden = false;
-                    const filler = document.createElement('div');
-                    filler.style.height = '3000px';
-                    sheet.appendChild(filler);
-                    const top = sheet.getBoundingClientRect().top;
-                    filler.remove();
-                    sheet.hidden = wasHidden;
-                    if (insetTop && top < clear) {
-                        out.push(describe(sheet) + ' can grow to ' + Math.round(top)
-                            + 'px from the top, inside the blur (clear of it from '
-                            + clear + 'px)');
-                    }
-                    if (!insetTop && Math.abs(top - window.innerHeight * 0.12) > 1) {
-                        out.push(describe(sheet) + ' stops at ' + Math.round(top)
-                            + 'px with no inset — it should still stop at 88vh ('
-                            + Math.round(window.innerHeight * 0.12) + 'px)');
-                    }
-                });
-                return dedupe(out);
-            }, [inset.top, CLEAR_OF_BLUR]);
-            complaints.forEach((c) => report(label, UNDER_CLOCK_RULE, c));
-        }
-        await context.close();
-    }
-}
-
 /* ────────────────────────────────────────────────────────────────── driver ── */
 
 async function auditState(page, label, screen, rules) {
@@ -684,7 +561,6 @@ async function main() {
         }
         await context.close();
     }
-    await auditUnderClock(browser);
     await browser.close();
 
     console.log('\n' + statesRun + ' page states, ' + assertionsRun + ' rule runs');

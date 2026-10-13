@@ -651,7 +651,7 @@ python3 -m http.server 7801
 python3 -m http.server 7802 &
 npm install playwright        # once, not committed
 node tools/smoke-test.js      # 515 checks — behaviour
-node tools/layout-audit.js    # 178 page states — layout
+node tools/layout-audit.js    # 144 page states — layout
 ```
 
 There are two suites and they ask different questions. The **smoke test** asks
